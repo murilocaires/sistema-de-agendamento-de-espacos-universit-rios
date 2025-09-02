@@ -1,11 +1,11 @@
 import React from "react";
 import Sidebar from "../components/Sidebar";
 
-const AdminLayout = ({ children }) => {
+const DashboardLayout = ({ children, userType = "ADMIN", menuItems = [] }) => {
   return (
     <div className="flex bg-gray-100 h-screen">
       {/* Sidebar */}
-      <Sidebar userType="ADMIN" />
+      <Sidebar userType={userType} menuItems={menuItems} />
 
       {/* Main Content Area */}
       <div className="flex-1 bg-white rounded-tl-[20px] overflow-hidden">
@@ -15,4 +15,4 @@ const AdminLayout = ({ children }) => {
   );
 };
 
-export default AdminLayout;
+export default DashboardLayout;

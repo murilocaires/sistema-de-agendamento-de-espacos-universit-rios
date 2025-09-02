@@ -1,61 +1,143 @@
-# 🔐 Credenciais do Administrador
+# 🔐 Credenciais de Acesso - SIRU
 
-## Acesso ao Sistema Admin
+## 👥 Usuários Disponíveis para Teste
 
-Para acessar a área administrativa do SIRU, utilize as seguintes credenciais:
-
-### 📧 **Email:**
-
-```
-admin@siru.com
-```
-
-### 🔑 **Senha:**
-
-```
-admin123
-```
+O sistema SIRU possui **6 usuários padrão** criados automaticamente para testar diferentes tipos de perfil:
 
 ---
 
-## 📋 Informações do Usuário Admin
+## 🔧 **ADMINISTRADOR**
 
+- **Email:** `admin@siru.com`
+- **Senha:** `admin123`
 - **Nome:** Administrador
-- **Email:** admin@siru.com
 - **SIAPE:** 000000
 - **Função:** Administrador
-- **Permissões:** Acesso completo ao sistema
+- **Menu:** Home, Reservas, Usuários, Salas
+
+---
+
+## 👨‍🏫 **PROFESSOR**
+
+- **Email:** `joao.silva@universidade.edu`
+- **Senha:** `professor123`
+- **Nome:** João Silva
+- **SIAPE:** 123456
+- **Função:** Professor
+- **Menu:** Home, Minhas Reservas, Nova Reserva, Histórico
+
+---
+
+## 👨‍💼 **COORDENADOR**
+
+- **Email:** `maria.santos@universidade.edu`
+- **Senha:** `coordenador123`
+- **Nome:** Maria Santos
+- **SIAPE:** 654321
+- **Função:** Coordenador
+- **Menu:** Home, Reservas, Professores, Relatórios
+
+---
+
+## 👨‍🎓 **ALUNO**
+
+- **Email:** `pedro.costa@aluno.universidade.edu`
+- **Senha:** `aluno123`
+- **Nome:** Pedro Costa
+- **SIAPE:** 111111
+- **Função:** Aluno
+- **Menu:** Home, Reservas, Nova Reserva, Histórico
+
+---
+
+## 🚪 **PORTARIA**
+
+- **Email:** `ana.oliveira@universidade.edu`
+- **Senha:** `portaria123`
+- **Nome:** Ana Oliveira
+- **SIAPE:** 222222
+- **Função:** Portaria
+- **Menu:** Home, Reservas, Confirmações, Relatórios
+
+---
+
+## 🏢 **DIREÇÃO**
+
+- **Email:** `carlos.ferreira@universidade.edu`
+- **Senha:** `direcao123`
+- **Nome:** Carlos Ferreira
+- **SIAPE:** 333333
+- **Função:** Direção
+- **Menu:** Home, Reservas, Usuários, Relatórios, Configurações
 
 ---
 
 ## 🚀 Como Acessar
 
-1. Acesse a página de login do sistema
-2. Digite o email: `admin@siru.com`
-3. Digite a senha: `admin123`
-4. Clique em "Entrar"
-5. Você será redirecionado para o dashboard administrativo
+1. **Acesse** a página de login do sistema
+2. **Digite** o email do usuário desejado
+3. **Digite** a senha correspondente
+4. **Clique** em "Entrar"
+5. **Será redirecionado** para o dashboard com sidebar específica do tipo de usuário
+
+---
+
+## 🎯 Testando a Sidebar Dinâmica
+
+Cada tipo de usuário terá:
+
+- ✅ **Header personalizado** com o tipo de usuário
+- ✅ **Menu específico** para suas funções
+- ✅ **Avatar dinâmico** com iniciais do nome
+- ✅ **Informações reais** do usuário logado
 
 ---
 
 ## ⚠️ Importante
 
-- Estas credenciais são para desenvolvimento/teste
-- Em produção, altere a senha padrão
-- Mantenha as credenciais seguras
-- O usuário admin é criado automaticamente na primeira execução do sistema
+- **Desenvolvimento:** Estas credenciais são para desenvolvimento/teste
+- **Produção:** Altere as senhas padrão em produção
+- **Segurança:** Mantenha as credenciais seguras
+- **Criação:** Usuários são criados automaticamente na primeira execução
 
 ---
 
-## 🛠️ Funcionalidades Disponíveis
+## 🛠️ Funcionalidades por Tipo
 
-Após o login como admin, você terá acesso a:
+### **ADMIN**
 
-- ✅ Dashboard administrativo
-- ✅ Gerenciamento de reservas
-- ✅ Gerenciamento de usuários
-- ✅ Gerenciamento de salas
-- ✅ Todas as funcionalidades do sistema
+- Gerenciamento completo do sistema
+- Acesso a todas as funcionalidades
+
+### **PROFESSOR**
+
+- Visualizar suas reservas
+- Criar novas reservas
+- Ver histórico
+
+### **COORDENADOR**
+
+- Gerenciar reservas
+- Visualizar professores
+- Gerar relatórios
+
+### **ALUNO**
+
+- Visualizar reservas
+- Criar novas reservas
+- Ver histórico
+
+### **PORTARIA**
+
+- Visualizar reservas
+- Confirmar presenças
+- Gerar relatórios
+
+### **DIREÇÃO**
+
+- Gerenciar usuários
+- Visualizar reservas
+- Configurações do sistema
 
 ---
 

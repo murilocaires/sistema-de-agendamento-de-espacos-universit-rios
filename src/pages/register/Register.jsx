@@ -14,6 +14,7 @@ const Register = ({ onBackToLogin }) => {
     email: "",
     siape: "",
     password: "",
+    role: "docente", // Valor padrão
   });
 
   // Sugestões de SIAPE (simulando dados reais)
@@ -70,6 +71,7 @@ const Register = ({ onBackToLogin }) => {
         email: "",
         siape: "",
         password: "",
+        role: "docente",
       });
 
       // Mostrar animação de sucesso
@@ -158,31 +160,59 @@ const Register = ({ onBackToLogin }) => {
                 />
               </div>
 
-              {/* Campo de SIAPE */}
-              <div className="mb-3 relative">
-                <label
-                  htmlFor="siape"
-                  className="block text-gray-300 text-xs font-medium mb-2"
-                >
-                  SIAPE
-                </label>
-                <input
-                  type="text"
-                  id="siape"
-                  name="siape"
-                  value={formData.siape}
-                  onChange={handleInputChange}
-                  onFocus={handleSiapeFocus}
-                  placeholder="Digite o seu siape"
-                  className="w-full py-2 border-b border-gray-400 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-dark transition-colors"
-                  required
-                />
-                <AutocompleteDropdown
-                  isOpen={showSiapeDropdown}
-                  suggestions={siapeSuggestions}
-                  onSelect={handleSiapeSelect}
-                  onClose={() => setShowSiapeDropdown(false)}
-                />
+              {/* Campo de SIAPE e Tipo de Usuário */}
+              <div className="mb-3 flex gap-6">
+                {/* SIAPE */}
+                <div className="flex-1 relative">
+                  <label
+                    htmlFor="siape"
+                    className="block text-gray-300 text-xs font-medium mb-2"
+                  >
+                    SIAPE
+                  </label>
+                  <input
+                    type="text"
+                    id="siape"
+                    name="siape"
+                    value={formData.siape}
+                    onChange={handleInputChange}
+                    onFocus={handleSiapeFocus}
+                    placeholder="Digite o seu siape"
+                    className="w-full py-2 border-b border-gray-400 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-dark transition-colors"
+                    required
+                  />
+                  <AutocompleteDropdown
+                    isOpen={showSiapeDropdown}
+                    suggestions={siapeSuggestions}
+                    onSelect={handleSiapeSelect}
+                    onClose={() => setShowSiapeDropdown(false)}
+                  />
+                </div>
+
+                {/* Tipo de Usuário */}
+                <div className="flex-1">
+                  <label
+                    htmlFor="role"
+                    className="block text-gray-300 text-xs font-medium mb-3"
+                  >
+                    TIPO DE USUÁRIO
+                  </label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    className="w-full py-2 border-b border-gray-400 text-gray-200 bg-white focus:outline-none focus:border-blue-dark transition-colors"
+                    required
+                  >
+                    <option value="docente" className="text-gray-800 bg-white">
+                      Docente
+                    </option>
+                    <option value="servidor" className="text-gray-800 bg-white">
+                      Servidor
+                    </option>
+                  </select>
+                </div>
               </div>
 
               {/* Campo de Senha */}

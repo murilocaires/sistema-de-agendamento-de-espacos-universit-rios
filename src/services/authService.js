@@ -6,18 +6,65 @@ const DB_KEY = "users_db";
 // Inicializar banco de dados se não existir
 const initializeDB = () => {
   if (!localStorage.getItem(DB_KEY)) {
-    // Criar usuário admin padrão
-    const adminUser = {
-      id: "admin-001",
-      name: "Administrador",
-      email: "admin@siru.com",
-      siape: "000000",
-      password: "admin123",
-      role: "admin",
-      createdAt: new Date().toISOString(),
-    };
+    // Criar usuários padrão para diferentes tipos
+    const defaultUsers = [
+      {
+        id: "admin-001",
+        name: "Administrador",
+        email: "admin@siru.com",
+        siape: "000000",
+        password: "admin123",
+        role: "admin",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "professor-001",
+        name: "João Silva",
+        email: "joao.silva@universidade.edu",
+        siape: "123456",
+        password: "professor123",
+        role: "professor",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "coordenador-001",
+        name: "Maria Santos",
+        email: "maria.santos@universidade.edu",
+        siape: "654321",
+        password: "coordenador123",
+        role: "coordenador",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "aluno-001",
+        name: "Pedro Costa",
+        email: "pedro.costa@aluno.universidade.edu",
+        siape: "111111",
+        password: "aluno123",
+        role: "aluno",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "portaria-001",
+        name: "Ana Oliveira",
+        email: "ana.oliveira@universidade.edu",
+        siape: "222222",
+        password: "portaria123",
+        role: "portaria",
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "direcao-001",
+        name: "Carlos Ferreira",
+        email: "carlos.ferreira@universidade.edu",
+        siape: "333333",
+        password: "direcao123",
+        role: "direcao",
+        createdAt: new Date().toISOString(),
+      },
+    ];
 
-    localStorage.setItem(DB_KEY, JSON.stringify([adminUser]));
+    localStorage.setItem(DB_KEY, JSON.stringify(defaultUsers));
   }
 };
 
@@ -66,7 +113,7 @@ export const registerUser = async (userData) => {
       email: userData.email,
       siape: userData.siape,
       password: userData.password, // Em produção, isso seria criptografado
-      role: "professor", // Todos os usuários são professores/coordenadores
+      role: userData.role || "docente", // Usar o role fornecido ou padrão
       createdAt: new Date().toISOString(),
     };
 
@@ -113,4 +160,19 @@ export const getUserById = (id) => {
     return userWithoutPassword;
   }
   return null;
+};
+
+// Resetar banco de dados (para desenvolvimento)
+export const resetDatabase = () => {
+  localStorage.removeItem(DB_KEY);
+  initializeDB();
+  console.log("Banco de dados resetado com sucesso!");
+  return getUsers();
+};
+
+// Verificar se os usuários existem
+export const checkUsers = () => {
+  const users = getUsers();
+  console.log("Usuários no banco:", users);
+  return users;
 };
