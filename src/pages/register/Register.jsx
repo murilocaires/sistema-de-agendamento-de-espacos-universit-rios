@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { registerUser } from "../../services/authService";
 import SuccessAnimation from "../../components/SuccessAnimation";
+import AutocompleteDropdown from "../../components/AutocompleteDropdown";
 
 const Register = ({ onBackToLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showSiapeDropdown, setShowSiapeDropdown] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,12 +16,43 @@ const Register = ({ onBackToLogin }) => {
     password: "",
   });
 
+  // Sugestões de SIAPE (simulando dados reais)
+  const siapeSuggestions = [
+    "Murilo",
+    "KernelCooperativo V2",
+    "Reunião de planejamento 2024",
+    "sala de reuniões",
+    "hjreher",
+    "Auditório",
+  ];
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
     }));
+
+    // Mostrar dropdown para SIAPE quando começar a digitar
+    if (name === "siape" && value.length > 0) {
+      setShowSiapeDropdown(true);
+    } else if (name === "siape" && value.length === 0) {
+      setShowSiapeDropdown(false);
+    }
+  };
+
+  const handleSiapeSelect = (suggestion) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      siape: suggestion,
+    }));
+    setShowSiapeDropdown(false);
+  };
+
+  const handleSiapeFocus = () => {
+    if (formData.siape.length > 0) {
+      setShowSiapeDropdown(true);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -58,10 +91,10 @@ const Register = ({ onBackToLogin }) => {
       {showSuccess && <SuccessAnimation onComplete={handleSuccessComplete} />}
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 flex">
         {/* Container branco - lado direito */}
-        <div className="bg-white w-full max-w-4xl rounded-tl-[20px] px-8 md:px-16 lg:px-24 py-8 md:py-12 shadow-2xl font-lato ml-auto">
+        <div className="bg-white w-full max-w-4xl rounded-tl-[20px] px-8 md:px-16 lg:px-24 py-16 md:py-12 shadow-2xl font-lato ml-auto">
           {/* Logo e título */}
           <div className="mb-8 flex justify-center">
-            <div className="flex items-center w-full max-w-md">
+            <div className="flex items-center justify-center w-full max-w-md">
               {/* Logo */}
               <img src="/logo.svg" alt="Logo" className="w-12 h-12 mr-3" />
               <h1 className="text-blue-dark font-bold text-lg leading-tight max-w-[286px]">
@@ -126,7 +159,7 @@ const Register = ({ onBackToLogin }) => {
               </div>
 
               {/* Campo de SIAPE */}
-              <div className="mb-3">
+              <div className="mb-3 relative">
                 <label
                   htmlFor="siape"
                   className="block text-gray-300 text-xs font-medium mb-2"
@@ -139,9 +172,16 @@ const Register = ({ onBackToLogin }) => {
                   name="siape"
                   value={formData.siape}
                   onChange={handleInputChange}
+                  onFocus={handleSiapeFocus}
                   placeholder="Digite o seu siape"
                   className="w-full py-2 border-b border-gray-400 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-dark transition-colors"
                   required
+                />
+                <AutocompleteDropdown
+                  isOpen={showSiapeDropdown}
+                  suggestions={siapeSuggestions}
+                  onSelect={handleSiapeSelect}
+                  onClose={() => setShowSiapeDropdown(false)}
                 />
               </div>
 

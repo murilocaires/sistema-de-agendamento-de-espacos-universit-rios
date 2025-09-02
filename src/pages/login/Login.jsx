@@ -35,10 +35,10 @@ const Login = ({ onShowRegister }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 flex">
       {/* Container branco - lado direito */}
-      <div className="bg-white w-full max-w-4xl rounded-tl-[20px] px-8 md:px-16 lg:px-24 py-8 md:py-12 shadow-2xl font-lato ml-auto">
+      <div className="bg-white w-full max-w-4xl rounded-tl-[20px] px-8 md:px-16 lg:px-24 py-16 md:py-12 shadow-2xl font-lato ml-auto">
         {/* Logo e título */}
         <div className="mb-12 flex justify-center">
-          <div className="flex items-center w-full max-w-md">
+          <div className="flex items-center justify-center w-full max-w-md">
             {/* Logo */}
             <img src="/logo.svg" alt="Logo" className="w-12 h-12 mr-3" />
             <h1 className="text-blue-dark font-bold text-lg leading-tight max-w-[286px]">

@@ -6,7 +6,18 @@ const DB_KEY = "users_db";
 // Inicializar banco de dados se não existir
 const initializeDB = () => {
   if (!localStorage.getItem(DB_KEY)) {
-    localStorage.setItem(DB_KEY, JSON.stringify([]));
+    // Criar usuário admin padrão
+    const adminUser = {
+      id: "admin-001",
+      name: "Administrador",
+      email: "admin@siru.com",
+      siape: "000000",
+      password: "admin123",
+      role: "admin",
+      createdAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(DB_KEY, JSON.stringify([adminUser]));
   }
 };
 
