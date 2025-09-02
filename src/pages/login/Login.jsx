@@ -33,7 +33,7 @@ const Login = ({ onShowRegister }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-blue-700 flex">
       {/* Container branco - lado direito */}
       <div className="bg-white w-full max-w-4xl rounded-tl-[20px] px-8 md:px-16 lg:px-24 py-16 md:py-12 shadow-2xl font-lato ml-auto">
         {/* Logo e título */}
