@@ -9,6 +9,8 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/dashboard/Dashboard";
+import Users from "./pages/admin/Users";
+import Logs from "./pages/admin/Logs";
 
 function App() {
   return (
@@ -24,6 +26,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rota protegida para gerenciar usuários (apenas admin) */}
+          <Route
+            path="/admin/usuarios"
+            element={
+              <ProtectedRoute>
+                <Users />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rota protegida para logs de auditoria (apenas admin) */}
+          <Route
+            path="/admin/logs"
+            element={
+              <ProtectedRoute>
+                <Logs />
               </ProtectedRoute>
             }
           />

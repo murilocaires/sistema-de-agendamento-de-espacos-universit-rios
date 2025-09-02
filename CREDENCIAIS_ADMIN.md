@@ -72,6 +72,17 @@ O sistema SIRU possui **6 usuários padrão** criados automaticamente para testa
 
 ---
 
+## 👩‍💼 **SERVIDOR**
+
+- **Email:** `lucia.mendes@universidade.edu`
+- **Senha:** `servidor123`
+- **Nome:** Lucia Mendes
+- **SIAPE:** 444444
+- **Função:** Servidor
+- **Menu:** Dashboard, Minhas Reservas, Nova Reserva, Histórico, Perfil
+
+---
+
 ## 🚀 Como Acessar
 
 1. **Acesse** a página de login do sistema
@@ -99,6 +110,7 @@ Cada tipo de usuário terá:
 - **Produção:** Altere as senhas padrão em produção
 - **Segurança:** Mantenha as credenciais seguras
 - **Criação:** Usuários são criados automaticamente na primeira execução
+- **Novo:** Tipo "Servidor" adicionado com mesmo nível de professor
 
 ---
 
@@ -114,6 +126,13 @@ Cada tipo de usuário terá:
 - Visualizar suas reservas
 - Criar novas reservas
 - Ver histórico
+
+### **SERVIDOR**
+
+- Visualizar suas reservas
+- Criar novas reservas  
+- Ver histórico
+- Mesmo nível que professor
 
 ### **COORDENADOR**
 

@@ -9,14 +9,16 @@ import {
   BookOpen,
   Clock,
   CheckCircle,
+  FileText,
 } from "lucide-react";
 
 // Menu do Administrador
 export const adminMenu = [
-  { id: "home", label: "Home", icon: LayoutDashboard },
-  { id: "reservas", label: "Reservas", icon: ClipboardList },
-  { id: "usuarios", label: "Usuários", icon: Users },
-  { id: "salas", label: "Salas", icon: DoorClosed },
+  { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/admin/reservas" },
+  { id: "usuarios", label: "Usuários", icon: Users, path: "/admin/usuarios" },
+  { id: "salas", label: "Salas", icon: DoorClosed, path: "/admin/salas" },
+  { id: "logs", label: "Logs", icon: FileText, path: "/admin/logs" },
 ];
 
 // Menu do Docente
@@ -77,6 +79,7 @@ export const getUserMenu = (userType) => {
     case "admin":
       return adminMenu;
     case "docente":
+    case "professor":
       return docenteMenu;
     case "servidor":
       return servidorMenu;
@@ -99,7 +102,8 @@ export const getUserTypeDisplay = (userType) => {
     case "admin":
       return "ADMIN";
     case "docente":
-      return "DOCENTE";
+    case "professor":
+      return "PROFESSOR";
     case "servidor":
       return "SERVIDOR";
     case "coordenador":

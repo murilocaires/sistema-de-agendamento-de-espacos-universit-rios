@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { authenticateUser, getUserById } from "../services/authService";
+import { authenticateUser, verifyToken } from "../services/authService";
 
 const AuthContext = createContext();
 
@@ -20,24 +20,34 @@ export const AuthProvider = ({ children }) => {
 
   // Verificar se o usuário está autenticado ao carregar a aplicação
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const userData = localStorage.getItem("userData");
+    const checkAuth = async () => {
+      const token = localStorage.getItem("authToken");
+      const userData = localStorage.getItem("userData");
 
-    if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
-    }
+      if (token && userData) {
+        try {
+          // Verificar se o token ainda é válido
+          const user = await verifyToken();
+          setIsAuthenticated(true);
+          setUser(user);
+        } catch (error) {
+          // Token inválido, limpar dados locais
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("userData");
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      }
 
-    setLoading(false);
+      setLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (email, password) => {
     try {
       const userData = await authenticateUser(email, password);
-      const token = "jwt-token-" + Date.now();
-
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("userData", JSON.stringify(userData));
 
       setIsAuthenticated(true);
       setUser(userData);
