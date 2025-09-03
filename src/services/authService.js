@@ -188,3 +188,163 @@ export const getUserById = async (userId) => {
     throw error;
   }
 };
+
+// === FUNÇÕES DE SALAS ===
+
+// Buscar todas as salas
+export const getRooms = async () => {
+  try {
+    const response = await apiRequest('/rooms');
+    return response.rooms;
+  } catch (error) {
+    console.error('Erro ao buscar salas:', error);
+    throw error;
+  }
+};
+
+// Criar nova sala
+export const createRoom = async (roomData) => {
+  try {
+    const response = await apiRequest('/rooms', {
+      method: 'POST',
+      body: JSON.stringify(roomData),
+    });
+    return response.room;
+  } catch (error) {
+    console.error('Erro ao criar sala:', error);
+    throw error;
+  }
+};
+
+// Atualizar sala
+export const updateRoom = async (roomId, roomData) => {
+  try {
+    const response = await apiRequest(`/rooms/${roomId}`, {
+      method: 'PUT',
+      body: JSON.stringify(roomData),
+    });
+    return response.room;
+  } catch (error) {
+    console.error('Erro ao atualizar sala:', error);
+    throw error;
+  }
+};
+
+// Deletar sala (soft delete)
+export const deleteRoom = async (roomId) => {
+  try {
+    const response = await apiRequest(`/rooms/${roomId}`, {
+      method: 'DELETE',
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao deletar sala:', error);
+    throw error;
+  }
+};
+
+// Buscar sala por ID
+export const getRoomById = async (roomId) => {
+  try {
+    const response = await apiRequest(`/rooms/${roomId}`);
+    return response.room;
+  } catch (error) {
+    console.error('Erro ao buscar sala:', error);
+    throw error;
+  }
+};
+
+// === FUNÇÕES DE RESERVAS ===
+
+// Buscar todas as reservas
+export const getReservations = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams(filters);
+    const response = await apiRequest(`/reservations?${params}`);
+    return response.reservations;
+  } catch (error) {
+    console.error('Erro ao buscar reservas:', error);
+    throw error;
+  }
+};
+
+// Criar nova reserva
+export const createReservation = async (reservationData) => {
+  try {
+    const response = await apiRequest('/reservations', {
+      method: 'POST',
+      body: JSON.stringify(reservationData),
+    });
+    return response.reservation;
+  } catch (error) {
+    console.error('Erro ao criar reserva:', error);
+    throw error;
+  }
+};
+
+// Atualizar reserva
+export const updateReservation = async (reservationId, reservationData) => {
+  try {
+    const response = await apiRequest(`/reservations/${reservationId}`, {
+      method: 'PUT',
+      body: JSON.stringify(reservationData),
+    });
+    return response.reservation;
+  } catch (error) {
+    console.error('Erro ao atualizar reserva:', error);
+    throw error;
+  }
+};
+
+// Deletar reserva
+export const deleteReservation = async (reservationId) => {
+  try {
+    const response = await apiRequest(`/reservations/${reservationId}`, {
+      method: 'DELETE',
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao deletar reserva:', error);
+    throw error;
+  }
+};
+
+// Buscar reserva por ID
+export const getReservationById = async (reservationId) => {
+  try {
+    const response = await apiRequest(`/reservations/${reservationId}`);
+    return response.reservation;
+  } catch (error) {
+    console.error('Erro ao buscar reserva:', error);
+    throw error;
+  }
+};
+
+// Buscar reservas pendentes para aprovação
+export const getPendingReservations = async () => {
+  try {
+    const response = await apiRequest('/reservations/approve');
+    return response.pending_reservations;
+  } catch (error) {
+    console.error('Erro ao buscar reservas pendentes:', error);
+    throw error;
+  }
+};
+
+// Aprovar ou rejeitar reserva
+export const approveReservation = async (reservationId, action, rejectionReason = null) => {
+  try {
+    const response = await apiRequest('/reservations/approve', {
+      method: 'POST',
+      body: JSON.stringify({
+        reservation_id: reservationId,
+        action,
+        rejection_reason: rejectionReason
+      }),
+    });
+    return response.reservation;
+  } catch (error) {
+    console.error('Erro ao aprovar/rejeitar reserva:', error);
+    throw error;
+  }
+};

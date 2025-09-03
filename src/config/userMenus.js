@@ -10,12 +10,15 @@ import {
   Clock,
   CheckCircle,
   FileText,
+  CalendarPlus,
+  CheckSquare,
 } from "lucide-react";
 
 // Menu do Administrador
 export const adminMenu = [
   { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
-  { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/admin/reservas" },
+  { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/admin/nova-reserva" },
+  { id: "aprovar-reservas", label: "Aprovar Reservas", icon: CheckSquare, path: "/admin/aprovar-reservas" },
   { id: "usuarios", label: "Usuários", icon: Users, path: "/admin/usuarios" },
   { id: "salas", label: "Salas", icon: DoorClosed, path: "/admin/salas" },
   { id: "logs", label: "Logs", icon: FileText, path: "/admin/logs" },

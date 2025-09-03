@@ -59,32 +59,62 @@ const defaultRooms = [
   {
     name: 'Auditório Principal',
     capacity: 200,
-    equipment: ['projetor', 'som', 'microfone', 'ar-condicionado'],
-    location: 'Bloco A - Térreo'
+    location: 'Bloco A - Térreo',
+    has_projector: true,
+    has_internet: true,
+    has_air_conditioning: true,
+    is_fixed_reservation: false,
+    description: 'Auditório principal com sistema de som e videoconferência'
   },
   {
     name: 'Sala de Aula 101',
     capacity: 40,
-    equipment: ['projetor', 'quadro-branco'],
-    location: 'Bloco A - 1º Andar'
+    location: 'Bloco A - 1º Andar',
+    has_projector: true,
+    has_internet: true,
+    has_air_conditioning: false,
+    is_fixed_reservation: false,
+    description: 'Sala de aula padrão com projetor'
   },
   {
     name: 'Laboratório de Informática 1',
     capacity: 30,
-    equipment: ['computadores', 'projetor', 'ar-condicionado'],
-    location: 'Bloco B - 2º Andar'
+    location: 'Bloco B - 2º Andar',
+    has_projector: true,
+    has_internet: true,
+    has_air_conditioning: true,
+    is_fixed_reservation: false,
+    description: 'Laboratório com 30 computadores'
   },
   {
-    name: 'Sala de Reuniões',
+    name: 'Sala de Reuniões Executiva',
     capacity: 12,
-    equipment: ['tv', 'mesa-de-reunião', 'ar-condicionado'],
-    location: 'Bloco A - 3º Andar'
+    location: 'Bloco A - 3º Andar',
+    has_projector: false,
+    has_internet: true,
+    has_air_conditioning: true,
+    is_fixed_reservation: true,
+    description: 'Sala de reuniões para diretoria - reserva fixa'
   },
   {
     name: 'Sala de Videoconferência',
     capacity: 20,
-    equipment: ['câmera', 'microfone', 'tv', 'sistema-videoconferência'],
-    location: 'Bloco C - 1º Andar'
+    location: 'Bloco C - 1º Andar',
+    has_projector: true,
+    has_internet: true,
+    has_air_conditioning: true,
+    is_fixed_reservation: false,
+    description: 'Sala equipada para videoconferências'
+  },
+  {
+    name: 'Sala de Estudos 201',
+    capacity: 8,
+    location: 'Bloco B - 2º Andar',
+    has_projector: false,
+    has_internet: true,
+    has_air_conditioning: false,
+    is_fixed_reservation: false,
+    description: 'Sala pequena para grupos de estudo'
   }
 ];
 
@@ -116,9 +146,9 @@ export const seedDatabase = async () => {
     console.log('🏢 Criando salas padrão...');
     for (const room of defaultRooms) {
       await query(
-        `INSERT INTO rooms (name, capacity, equipment, location) 
-         VALUES ($1, $2, $3, $4)`,
-        [room.name, room.capacity, room.equipment, room.location]
+        `INSERT INTO rooms (name, capacity, location, has_projector, has_internet, has_air_conditioning, is_fixed_reservation, description) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [room.name, room.capacity, room.location, room.has_projector, room.has_internet, room.has_air_conditioning, room.is_fixed_reservation, room.description]
       );
       console.log(`   ✓ Sala criada: ${room.name}`);
     }

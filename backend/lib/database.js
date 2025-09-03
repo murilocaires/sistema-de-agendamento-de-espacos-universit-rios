@@ -62,10 +62,15 @@ export const initializeDatabase = async () => {
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         capacity INTEGER NOT NULL,
-        equipment TEXT[],
         location VARCHAR(255),
+        has_projector BOOLEAN DEFAULT false,
+        has_internet BOOLEAN DEFAULT false,
+        has_air_conditioning BOOLEAN DEFAULT false,
+        is_fixed_reservation BOOLEAN DEFAULT false,
+        description TEXT,
         is_active BOOLEAN DEFAULT true,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
@@ -80,6 +85,13 @@ export const initializeDatabase = async () => {
         start_time TIMESTAMP NOT NULL,
         end_time TIMESTAMP NOT NULL,
         status VARCHAR(50) DEFAULT 'pending',
+        is_recurring BOOLEAN DEFAULT false,
+        recurrence_type VARCHAR(20),
+        recurrence_end_date TIMESTAMP,
+        approved_by INTEGER REFERENCES users(id),
+        approved_at TIMESTAMP,
+        rejection_reason TEXT,
+        priority INTEGER DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )

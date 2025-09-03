@@ -1,6 +1,6 @@
 // Script para inicializar o banco de dados
-import { testConnection, initializeDatabase } from '../lib/database.js';
-import { seedDatabase } from '../lib/seedDatabase.js';
+const { testConnection, initializeDatabase } = require('../lib/database.js');
+const { seedDatabase } = require('../lib/seedDatabase.js');
 
 const initDB = async () => {
   try {
