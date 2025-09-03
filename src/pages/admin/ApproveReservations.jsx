@@ -428,7 +428,7 @@ return (
                         onChange={(e) => setIsMinimized(e.target.checked)}
                         className="sr-only peer"
                     />
-                    <div className="w-5 h-5 bg-gray-100 border-2 border-gray-400 rounded-md peer-checked:bg-gray-700 peer-checked:border-gray-600 peer-focus:ring-2 peer-focus:ring-gray-500/20 peer-focus:border-gray-600 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-200 hover:border-gray-500">
+                    <div className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-700 peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-focus:border-blue-500 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:border-gray-400">
                         {isMinimized && (
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />

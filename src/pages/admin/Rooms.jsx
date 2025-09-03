@@ -247,19 +247,38 @@ const Rooms = () => {
           </button>
         </div>
 
-        {/* Mensagens */}
+        {/* Toast de Erro */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-            <AlertCircle className="text-red-500" size={20} />
-            <span className="text-red-700">{error}</span>
-          </div>
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+            <div className="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
+                <AlertCircle className="text-white" size={20} />
+                <span className="text-sm font-medium">{error}</span>
+                <button
+                    onClick={() => setError("")}
+                    className="ml-auto text-white/80 hover:text-white transition-colors"
+                >
+                    <X size={16} />
+                </button>
+            </div>
+        </div>
         )}
 
+        {/* Toast de Sucesso */}
         {successMessage && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-            <CheckCircle className="text-green-500" size={20} />
-            <span className="text-green-700">{successMessage}</span>
-          </div>
+        <div className={`fixed right-4 z-50 animate-in slide-in-from-top-2 duration-300 ${
+            error ? 'top-20' : 'top-4'
+        }`}>
+            <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
+                <CheckCircle className="text-white" size={20} />
+                <span className="text-sm font-medium">{successMessage}</span>
+                <button
+                    onClick={() => setSuccessMessage("")}
+                    className="ml-auto text-white/80 hover:text-white transition-colors"
+                >
+                    <X size={16} />
+                </button>
+            </div>
+        </div>
         )}
 
         {/* Estatísticas */}
@@ -420,16 +439,37 @@ const Rooms = () => {
                 </button>
               </div>
 
-              {/* Mensagens do formulário */}
+              {/* Toast de Erro do Formulário */}
               {formError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                  {formError}
+                <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+                    <div className="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
+                        <AlertCircle className="text-white" size={20} />
+                        <span className="text-sm font-medium">{formError}</span>
+                        <button
+                            onClick={() => setFormError("")}
+                            className="ml-auto text-white/80 hover:text-white transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
                 </div>
               )}
 
+              {/* Toast de Sucesso do Formulário */}
               {successMessage && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
-                  {successMessage}
+                <div className={`fixed right-4 z-50 animate-in slide-in-from-top-2 duration-300 ${
+                    formError ? 'top-20' : 'top-4'
+                }`}>
+                    <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
+                        <CheckCircle className="text-white" size={20} />
+                        <span className="text-sm font-medium">{successMessage}</span>
+                        <button
+                            onClick={() => setSuccessMessage("")}
+                            className="ml-auto text-white/80 hover:text-white transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
                 </div>
               )}
 
@@ -489,46 +529,82 @@ const Rooms = () => {
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="has_projector"
-                        checked={formData.has_projector}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
+                      <div className="relative mr-2">
+                        <input
+                          type="checkbox"
+                          name="has_projector"
+                          checked={formData.has_projector}
+                          onChange={handleInputChange}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-700 peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-focus:border-blue-500 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:border-gray-400">
+                          {formData.has_projector && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
                       <Monitor size={16} className="mr-1" />
                       Projetor
                     </label>
                     <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="has_internet"
-                        checked={formData.has_internet}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
+                      <div className="relative mr-2">
+                        <input
+                          type="checkbox"
+                          name="has_internet"
+                          checked={formData.has_internet}
+                          onChange={handleInputChange}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-700 peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-focus:border-blue-500 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:border-gray-400">
+                          {formData.has_internet && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
                       <Wifi size={16} className="mr-1" />
                       Internet
                     </label>
                     <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="has_air_conditioning"
-                        checked={formData.has_air_conditioning}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
+                      <div className="relative mr-2">
+                        <input
+                          type="checkbox"
+                          name="has_air_conditioning"
+                          checked={formData.has_air_conditioning}
+                          onChange={handleInputChange}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-700 peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-focus:border-blue-500 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:border-gray-400">
+                          {formData.has_air_conditioning && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
                       <Wind size={16} className="mr-1" />
                       Ar Condicionado
                     </label>
                     <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="is_fixed_reservation"
-                        checked={formData.is_fixed_reservation}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
+                      <div className="relative mr-2">
+                        <input
+                          type="checkbox"
+                          name="is_fixed_reservation"
+                          checked={formData.is_fixed_reservation}
+                          onChange={handleInputChange}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-700 peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-focus:border-blue-500 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:border-gray-400">
+                          {formData.is_fixed_reservation && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
                       <Lock size={16} className="mr-1" />
                       Reserva Fixa
                     </label>
@@ -554,13 +630,22 @@ const Rooms = () => {
                 {modalMode === "edit" && (
                   <div>
                     <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="is_active"
-                        checked={formData.is_active}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
+                      <div className="relative mr-2">
+                        <input
+                          type="checkbox"
+                          name="is_active"
+                          checked={formData.is_active}
+                          onChange={handleInputChange}
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-700 peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-focus:border-blue-500 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:border-gray-400">
+                          {formData.is_active && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
                       Sala ativa
                     </label>
                   </div>
