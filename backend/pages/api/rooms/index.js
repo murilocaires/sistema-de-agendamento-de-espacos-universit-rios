@@ -1,0 +1,114 @@
+import { authMiddleware, requireRole } from '../../../lib/auth.js';
+import { query } from '../../../lib/database.js';
+import { withAuditLog, logCreate } from '../../../lib/auditLog.js';
+
+async function handler(req, res) {
+  // Configurar CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method === 'GET') {
+    try {
+      // Buscar todas as salas (incluindo inativas para admin)
+      const result = await query(
+        `SELECT id, name, capacity, location, has_projector, has_internet, 
+                has_air_conditioning, is_fixed_reservation, description, is_active, 
+                created_at, updated_at 
+         FROM rooms 
+         ORDER BY name`
+      );
+
+      return res.status(200).json({
+        success: true,
+        rooms: result.rows
+      });
+
+    } catch (error) {
+      console.error('Erro ao buscar salas:', error);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+
+  } else if (req.method === 'POST') {
+    // Criar nova sala
+    try {
+      const { 
+        name, 
+        capacity, 
+        location, 
+        has_projector = false, 
+        has_internet = false, 
+        has_air_conditioning = false, 
+        is_fixed_reservation = false, 
+        description = '' 
+      } = req.body;
+
+      // Validar dados obrigatórios
+      if (!name || !capacity || !location) {
+        return res.status(400).json({ error: 'Nome, capacidade e localização são obrigatórios' });
+      }
+
+      if (capacity < 1) {
+        return res.status(400).json({ error: 'Capacidade deve ser maior que zero' });
+      }
+
+      // Verificar se nome já existe
+      const nameExists = await query(
+        'SELECT id FROM rooms WHERE name = $1',
+        [name]
+      );
+
+      if (nameExists.rows.length > 0) {
+        return res.status(409).json({ error: 'Já existe uma sala com este nome' });
+      }
+
+      // Inserir nova sala
+      const result = await query(
+        `INSERT INTO rooms (name, capacity, location, has_projector, has_internet, 
+                           has_air_conditioning, is_fixed_reservation, description) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+         RETURNING id, name, capacity, location, has_projector, has_internet, 
+                   has_air_conditioning, is_fixed_reservation, description, 
+                   is_active, created_at`,
+        [name, capacity, location, has_projector, has_internet, 
+         has_air_conditioning, is_fixed_reservation, description]
+      );
+
+      const newRoom = result.rows[0];
+
+      // Registrar log de auditoria
+      await logCreate(req, 'rooms', newRoom.id, {
+        name: newRoom.name,
+        capacity: newRoom.capacity,
+        location: newRoom.location,
+        has_projector: newRoom.has_projector,
+        has_internet: newRoom.has_internet,
+        has_air_conditioning: newRoom.has_air_conditioning,
+        is_fixed_reservation: newRoom.is_fixed_reservation,
+        description: newRoom.description,
+        is_active: newRoom.is_active,
+        created_at: newRoom.created_at
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Sala criada com sucesso',
+        room: newRoom
+      });
+
+    } catch (error) {
+      console.error('Erro ao criar sala:', error);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+
+  } else {
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
+}
+
+// Apenas admins podem gerenciar salas
+export default requireRole(['admin'])(withAuditLog('rooms')(handler));

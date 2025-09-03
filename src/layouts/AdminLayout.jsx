@@ -8,7 +8,7 @@ const AdminLayout = ({ children }) => {
       <Sidebar userType="ADMIN" />
 
       {/* Main Content Area */}
-      <div className="flex-1 bg-white rounded-tl-[20px] overflow-hidden">
+      <div className="flex-1 bg-white rounded-tl-[20px] overflow-y-auto main-content-scroll">
         {children}
       </div>
     </div>

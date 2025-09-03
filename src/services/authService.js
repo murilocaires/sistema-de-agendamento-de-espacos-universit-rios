@@ -1,131 +1,79 @@
-// Simulação de um banco de dados local usando localStorage
-// Em produção, isso seria substituído por chamadas para uma API real
+// Configuração da API Backend
+const API_BASE_URL = 'http://localhost:3001/api';
 
-const DB_KEY = "users_db";
+// Função para fazer requisições HTTP
+const apiRequest = async (endpoint, options = {}) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const config = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  };
 
-// Inicializar banco de dados se não existir
-const initializeDB = () => {
-  if (!localStorage.getItem(DB_KEY)) {
-    // Criar usuários padrão para diferentes tipos
-    const defaultUsers = [
-      {
-        id: "admin-001",
-        name: "Administrador",
-        email: "admin@siru.com",
-        siape: "000000",
-        password: "admin123",
-        role: "admin",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "professor-001",
-        name: "João Silva",
-        email: "joao.silva@universidade.edu",
-        siape: "123456",
-        password: "professor123",
-        role: "professor",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "coordenador-001",
-        name: "Maria Santos",
-        email: "maria.santos@universidade.edu",
-        siape: "654321",
-        password: "coordenador123",
-        role: "coordenador",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "aluno-001",
-        name: "Pedro Costa",
-        email: "pedro.costa@aluno.universidade.edu",
-        siape: "111111",
-        password: "aluno123",
-        role: "aluno",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "portaria-001",
-        name: "Ana Oliveira",
-        email: "ana.oliveira@universidade.edu",
-        siape: "222222",
-        password: "portaria123",
-        role: "portaria",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "direcao-001",
-        name: "Carlos Ferreira",
-        email: "carlos.ferreira@universidade.edu",
-        siape: "333333",
-        password: "direcao123",
-        role: "direcao",
-        createdAt: new Date().toISOString(),
-      },
-    ];
+  // Adicionar token de autenticação se existir
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
 
-    localStorage.setItem(DB_KEY, JSON.stringify(defaultUsers));
+  try {
+    const response = await fetch(url, config);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Erro na requisição');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Erro na API:', error);
+    throw error;
   }
 };
 
 // Buscar todos os usuários
-export const getUsers = () => {
-  initializeDB();
-  return JSON.parse(localStorage.getItem(DB_KEY) || "[]");
+export const getUsers = async () => {
+  try {
+    const response = await apiRequest('/users');
+    return response.users;
+  } catch (error) {
+    console.error('Erro ao buscar usuários:', error);
+    throw error;
+  }
 };
 
-// Buscar usuário por email
-export const getUserByEmail = (email) => {
-  const users = getUsers();
-  return users.find((user) => user.email === email);
-};
-
-// Buscar usuário por SIAPE
-export const getUserBySiape = (siape) => {
-  const users = getUsers();
-  return users.find((user) => user.siape === siape);
+// Inicializar banco de dados
+export const initializeDatabase = async () => {
+  try {
+    const response = await apiRequest('/init', {
+      method: 'POST',
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao inicializar banco:', error);
+    throw error;
+  }
 };
 
 // Cadastrar novo usuário
 export const registerUser = async (userData) => {
   try {
-    // Validar se o email já existe
-    const existingUser = getUserByEmail(userData.email);
-    if (existingUser) {
-      throw new Error("Email já cadastrado");
+    const response = await apiRequest('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+
+    // Salvar token e dados do usuário no localStorage
+    if (response.token) {
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('userData', JSON.stringify(response.user));
     }
 
-    // Validar se o SIAPE já existe
-    const existingSiape = getUserBySiape(userData.siape);
-    if (existingSiape) {
-      throw new Error("SIAPE já cadastrado");
-    }
-
-    // Validar senha
-    if (userData.password.length < 6) {
-      throw new Error("Senha deve ter no mínimo 6 caracteres");
-    }
-
-    // Criar novo usuário
-    const newUser = {
-      id: Date.now().toString(),
-      name: userData.name,
-      email: userData.email,
-      siape: userData.siape,
-      password: userData.password, // Em produção, isso seria criptografado
-      role: userData.role || "docente", // Usar o role fornecido ou padrão
-      createdAt: new Date().toISOString(),
-    };
-
-    // Salvar no banco de dados
-    const users = getUsers();
-    users.push(newUser);
-    localStorage.setItem(DB_KEY, JSON.stringify(users));
-
-    // Retornar dados do usuário (sem senha)
-    const { password, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
+    return response.user;
   } catch (error) {
+    console.error('Erro no cadastro:', error);
     throw error;
   }
 };
@@ -133,46 +81,270 @@ export const registerUser = async (userData) => {
 // Autenticar usuário
 export const authenticateUser = async (email, password) => {
   try {
-    const user = getUserByEmail(email);
+    const response = await apiRequest('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
 
-    if (!user) {
-      throw new Error("Usuário não encontrado");
+    // Salvar token e dados do usuário no localStorage
+    if (response.token) {
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('userData', JSON.stringify(response.user));
     }
 
-    if (user.password !== password) {
-      throw new Error("Senha incorreta");
-    }
-
-    // Retornar dados do usuário (sem senha)
-    const { password: userPassword, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return response.user;
   } catch (error) {
+    console.error('Erro na autenticação:', error);
+    throw error;
+  }
+};
+
+// Verificar token de autenticação
+export const verifyToken = async () => {
+  try {
+    const response = await apiRequest('/auth/verify');
+    return response.user;
+  } catch (error) {
+    console.error('Erro na verificação do token:', error);
+    // Limpar dados locais se o token for inválido
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    throw error;
+  }
+};
+
+// Resetar banco de dados (para desenvolvimento)
+export const resetDatabase = async () => {
+  try {
+    const response = await initializeDatabase();
+    console.log("Banco de dados resetado com sucesso!");
+    return response;
+  } catch (error) {
+    console.error('Erro ao resetar banco:', error);
+    throw error;
+  }
+};
+
+// Verificar se os usuários existem
+export const checkUsers = async () => {
+  try {
+    const users = await getUsers();
+    console.log("Usuários no banco:", users);
+    return users;
+  } catch (error) {
+    console.error('Erro ao verificar usuários:', error);
+    throw error;
+  }
+};
+
+// Criar novo usuário (apenas admin)
+export const createUser = async (userData) => {
+  try {
+    const response = await apiRequest('/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+    return response.user;
+  } catch (error) {
+    console.error('Erro ao criar usuário:', error);
+    throw error;
+  }
+};
+
+// Atualizar usuário (apenas admin)
+export const updateUser = async (userId, userData) => {
+  try {
+    const response = await apiRequest(`/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+    return response.user;
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    throw error;
+  }
+};
+
+// Deletar usuário (apenas admin)
+export const deleteUser = async (userId) => {
+  try {
+    const response = await apiRequest(`/users/${userId}`, {
+      method: 'DELETE',
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao deletar usuário:', error);
     throw error;
   }
 };
 
 // Buscar usuário por ID
-export const getUserById = (id) => {
-  const users = getUsers();
-  const user = users.find((user) => user.id === id);
-  if (user) {
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+export const getUserById = async (userId) => {
+  try {
+    const response = await apiRequest(`/users/${userId}`);
+    return response.user;
+  } catch (error) {
+    console.error('Erro ao buscar usuário:', error);
+    throw error;
   }
-  return null;
 };
 
-// Resetar banco de dados (para desenvolvimento)
-export const resetDatabase = () => {
-  localStorage.removeItem(DB_KEY);
-  initializeDB();
-  console.log("Banco de dados resetado com sucesso!");
-  return getUsers();
+// === FUNÇÕES DE SALAS ===
+
+// Buscar todas as salas
+export const getRooms = async () => {
+  try {
+    const response = await apiRequest('/rooms');
+    return response.rooms;
+  } catch (error) {
+    console.error('Erro ao buscar salas:', error);
+    throw error;
+  }
 };
 
-// Verificar se os usuários existem
-export const checkUsers = () => {
-  const users = getUsers();
-  console.log("Usuários no banco:", users);
-  return users;
+// Criar nova sala
+export const createRoom = async (roomData) => {
+  try {
+    const response = await apiRequest('/rooms', {
+      method: 'POST',
+      body: JSON.stringify(roomData),
+    });
+    return response.room;
+  } catch (error) {
+    console.error('Erro ao criar sala:', error);
+    throw error;
+  }
+};
+
+// Atualizar sala
+export const updateRoom = async (roomId, roomData) => {
+  try {
+    const response = await apiRequest(`/rooms/${roomId}`, {
+      method: 'PUT',
+      body: JSON.stringify(roomData),
+    });
+    return response.room;
+  } catch (error) {
+    console.error('Erro ao atualizar sala:', error);
+    throw error;
+  }
+};
+
+// Deletar sala (soft delete)
+export const deleteRoom = async (roomId) => {
+  try {
+    const response = await apiRequest(`/rooms/${roomId}`, {
+      method: 'DELETE',
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao deletar sala:', error);
+    throw error;
+  }
+};
+
+// Buscar sala por ID
+export const getRoomById = async (roomId) => {
+  try {
+    const response = await apiRequest(`/rooms/${roomId}`);
+    return response.room;
+  } catch (error) {
+    console.error('Erro ao buscar sala:', error);
+    throw error;
+  }
+};
+
+// === FUNÇÕES DE RESERVAS ===
+
+// Buscar todas as reservas
+export const getReservations = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams(filters);
+    const response = await apiRequest(`/reservations?${params}`);
+    return response.reservations;
+  } catch (error) {
+    console.error('Erro ao buscar reservas:', error);
+    throw error;
+  }
+};
+
+// Criar nova reserva
+export const createReservation = async (reservationData) => {
+  try {
+    const response = await apiRequest('/reservations', {
+      method: 'POST',
+      body: JSON.stringify(reservationData),
+    });
+    return response.reservation;
+  } catch (error) {
+    console.error('Erro ao criar reserva:', error);
+    throw error;
+  }
+};
+
+// Atualizar reserva
+export const updateReservation = async (reservationId, reservationData) => {
+  try {
+    const response = await apiRequest(`/reservations/${reservationId}`, {
+      method: 'PUT',
+      body: JSON.stringify(reservationData),
+    });
+    return response.reservation;
+  } catch (error) {
+    console.error('Erro ao atualizar reserva:', error);
+    throw error;
+  }
+};
+
+// Deletar reserva
+export const deleteReservation = async (reservationId) => {
+  try {
+    const response = await apiRequest(`/reservations/${reservationId}`, {
+      method: 'DELETE',
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao deletar reserva:', error);
+    throw error;
+  }
+};
+
+// Buscar reserva por ID
+export const getReservationById = async (reservationId) => {
+  try {
+    const response = await apiRequest(`/reservations/${reservationId}`);
+    return response.reservation;
+  } catch (error) {
+    console.error('Erro ao buscar reserva:', error);
+    throw error;
+  }
+};
+
+// Buscar reservas pendentes para aprovação
+export const getPendingReservations = async () => {
+  try {
+    const response = await apiRequest('/reservations/approve');
+    return response.pending_reservations;
+  } catch (error) {
+    console.error('Erro ao buscar reservas pendentes:', error);
+    throw error;
+  }
+};
+
+// Aprovar ou rejeitar reserva
+export const approveReservation = async (reservationId, action, rejectionReason = null) => {
+  try {
+    const response = await apiRequest('/reservations/approve', {
+      method: 'POST',
+      body: JSON.stringify({
+        reservation_id: reservationId,
+        action,
+        rejection_reason: rejectionReason
+      }),
+    });
+    return response.reservation;
+  } catch (error) {
+    console.error('Erro ao aprovar/rejeitar reserva:', error);
+    throw error;
+  }
 };

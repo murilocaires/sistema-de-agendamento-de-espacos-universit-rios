@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   ClipboardList,
   Users,
@@ -11,7 +12,9 @@ import {
 
 const Sidebar = ({ menuItems = [], userType = "ADMIN" }) => {
   const { logout, user } = useAuth();
-  const [activeLink, setActiveLink] = useState("home");
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeLink, setActiveLink] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -25,9 +28,21 @@ const Sidebar = ({ menuItems = [], userType = "ADMIN" }) => {
 
   const finalMenuItems = menuItems.length > 0 ? menuItems : defaultMenuItems;
 
-  const handleLinkClick = (id) => {
-    setActiveLink(id);
+  const handleLinkClick = (item) => {
+    setActiveLink(item.id);
+    if (item.path) {
+      navigate(item.path);
+    }
   };
+
+  // Atualizar link ativo baseado na rota atual
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const activeItem = finalMenuItems.find(item => item.path === currentPath);
+    if (activeItem) {
+      setActiveLink(activeItem.id);
+    }
+  }, [location.pathname, finalMenuItems]);
 
   const handleLogout = () => {
     logout();
@@ -73,7 +88,7 @@ const Sidebar = ({ menuItems = [], userType = "ADMIN" }) => {
         {finalMenuItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => handleLinkClick(item.id)}
+            onClick={() => handleLinkClick(item)}
             className={`w-full flex items-center gap-3 px-4 py-3 mb-5 rounded-[5px] transition-all duration-200 focus:outline-none ${
               activeLink === item.id
                 ? "bg-blue-base text-white"
