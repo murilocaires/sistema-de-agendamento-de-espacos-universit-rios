@@ -14,7 +14,7 @@ const Sidebar = ({ menuItems = [], userType = "ADMIN" }) => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeLink, setActiveLink] = useState("home");
+  const [activeLink, setActiveLink] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const dropdownRef = useRef(null);
 

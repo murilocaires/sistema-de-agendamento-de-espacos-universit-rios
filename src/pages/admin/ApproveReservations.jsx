@@ -37,10 +37,13 @@ const userTypeDisplay = getUserTypeDisplay(userType);
 // Estados
 const [reservations, setReservations] = useState([]);
 const [approvedReservations, setApprovedReservations] = useState([]);
+const [rejectedReservations, setRejectedReservations] = useState([]);
 const [rooms, setRooms] = useState([]);
 const [selectedRoom, setSelectedRoom] = useState("");
 const [weeklyReservations, setWeeklyReservations] = useState([]);
-const [showApproved, setShowApproved] = useState(false);
+const [viewType, setViewType] = useState('pending'); // 'pending', 'approved', 'rejected'
+const [isMinimized, setIsMinimized] = useState(false);
+const [filterType, setFilterType] = useState('all');
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState("");
 const [successMessage, setSuccessMessage] = useState("");
@@ -61,14 +64,16 @@ const loadAllData = async () => {
     setLoading(true);
     setError("");
     
-    const [pendingData, approvedData, roomsData] = await Promise.all([
+    const [pendingData, approvedData, rejectedData, roomsData] = await Promise.all([
         getPendingReservations(),
         getReservations({ status: 'approved' }),
+        getReservations({ status: 'rejected' }),
         getRooms()
     ]);
     
     setReservations(pendingData);
     setApprovedReservations(approvedData);
+    setRejectedReservations(rejectedData);
     setRooms(roomsData.filter(room => room.is_active));
     
     // Definir sala padrão se houver salas disponíveis
@@ -187,10 +192,20 @@ const handleReject = async () => {
     }
 };
 
+// Selecionar sala automaticamente
+const selectRoomFromReservation = (reservation) => {
+    if (reservation.room_id) {
+        setSelectedRoom(reservation.room_id.toString());
+    }
+};
+
 // Abrir modal de detalhes
 const openDetailsModal = (reservation) => {
     setDetailsReservation(reservation);
     setShowDetailsModal(true);
+    
+    // Selecionar automaticamente a sala na agenda semanal
+    selectRoomFromReservation(reservation);
 };
 
 // Formatar data
@@ -243,6 +258,48 @@ const getReservationsForDay = (date) => {
     });
 };
 
+// Função para filtrar e ordenar reservas
+const getFilteredReservations = (reservationList) => {
+    const now = new Date();
+    
+    let filtered;
+    switch (filterType) {
+    case 'past':
+        filtered = reservationList.filter(r => new Date(r.end_time) < now);
+        break;
+    case 'upcoming':
+        filtered = reservationList.filter(r => new Date(r.start_time) > now);
+        break;
+    case 'today':
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        filtered = reservationList.filter(r => {
+        const startDate = new Date(r.start_time);
+        return startDate >= today && startDate < tomorrow;
+        });
+        break;
+    case 'oldest':
+        return [...reservationList].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    default:
+        filtered = reservationList;
+    }
+    
+    // Ordenação padrão: mais próximas do horário atual primeiro
+    return [...filtered].sort((a, b) => {
+        const timeA = new Date(a.start_time).getTime();
+        const timeB = new Date(b.start_time).getTime();
+        const nowTime = now.getTime();
+        
+        // Calcular distância absoluta do horário atual
+        const distanceA = Math.abs(timeA - nowTime);
+        const distanceB = Math.abs(timeB - nowTime);
+        
+        return distanceA - distanceB;
+    });
+};
+
 // Obter nome da sala selecionada
 const getSelectedRoomName = () => {
     const room = rooms.find(r => r.id.toString() === selectedRoom);
@@ -276,17 +333,37 @@ return (
         </div>
 
         {/* Mensagens */}
+        {/* Toast de Erro */}
         {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-            <AlertCircle className="text-red-500" size={18} />
-            <span className="text-sm text-red-700">{error}</span>
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+            <div className="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
+                <AlertCircle className="text-white" size={20} />
+                <span className="text-sm font-medium">{error}</span>
+                <button
+                    onClick={() => setError("")}
+                    className="ml-auto text-white/80 hover:text-white transition-colors"
+                >
+                    <X size={16} />
+                </button>
+            </div>
         </div>
         )}
 
+        {/* Toast de Sucesso */}
         {successMessage && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-            <CheckCircle className="text-green-500" size={18} />
-            <span className="text-sm text-green-700">{successMessage}</span>
+        <div className={`fixed right-4 z-50 animate-in slide-in-from-top-2 duration-300 ${
+            error ? 'top-20' : 'top-4'
+        }`}>
+            <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
+                <CheckCircle className="text-white" size={20} />
+                <span className="text-sm font-medium">{successMessage}</span>
+                <button
+                    onClick={() => setSuccessMessage("")}
+                    className="ml-auto text-white/80 hover:text-white transition-colors"
+                >
+                    <X size={16} />
+                </button>
+            </div>
         </div>
         )}
 
@@ -295,7 +372,7 @@ return (
         {/* Coluna Esquerda - Reservas */}
         <div className="lg:col-span-2">
             {/* Estatísticas */}
-            <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="bg-white p-3 rounded-lg shadow border">
                 <div className="flex items-center justify-between">
                 <div>
@@ -317,8 +394,17 @@ return (
             <div className="bg-white p-3 rounded-lg shadow border">
                 <div className="flex items-center justify-between">
                 <div>
+                    <p className="text-xs text-gray-700">Reprovadas</p>
+                    <p className="text-xl font-bold text-red-600">{rejectedReservations.length}</p>
+                </div>
+                <X className="text-red-400" size={20} />
+                </div>
+            </div>
+            <div className="bg-white p-3 rounded-lg shadow border">
+                <div className="flex items-center justify-between">
+                <div>
                     <p className="text-xs text-gray-700">Total</p>
-                    <p className="text-xl font-bold text-blue-600">{reservations.length + approvedReservations.length}</p>
+                    <p className="text-xl font-bold text-blue-600">{reservations.length + approvedReservations.length + rejectedReservations.length}</p>
                 </div>
                 <Filter className="text-blue-400" size={20} />
                 </div>
@@ -326,18 +412,87 @@ return (
             </div>
 
             {/* Controles */}
-            <div className="mb-4 flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-gray-800">
-                {showApproved ? 'Reservas Aprovadas' : 'Reservas Pendentes'}
-            </h2>
-            <button
-                onClick={() => setShowApproved(!showApproved)}
-                className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-500 hover:bg-gray-400 rounded-lg text-gray-700"
-            >
-                {showApproved ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                {showApproved ? 'Ver Pendentes' : 'Ver Aprovadas'}
-            </button>
+            <div className="mb-4">
+            <div className="flex justify-between items-center mb-3">
+                <h2 className="text-lg font-semibold text-gray-800">
+                {viewType === 'approved' ? 'Reservas Aprovadas' : 
+                 viewType === 'rejected' ? 'Reservas Reprovadas' : 'Reservas Pendentes'}
+                </h2>
+                <div className="flex items-center gap-3">
+                {/* Botão de Minimizar */}
+                <label className="flex items-center gap-2 cursor-pointer">
+                <div className="relative">
+                    <input
+                        type="checkbox"
+                        checked={isMinimized}
+                        onChange={(e) => setIsMinimized(e.target.checked)}
+                        className="sr-only peer"
+                    />
+                    <div className="w-5 h-5 bg-gray-100 border-2 border-gray-400 rounded-md peer-checked:bg-gray-700 peer-checked:border-gray-600 peer-focus:ring-2 peer-focus:ring-gray-500/20 peer-focus:border-gray-600 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-200 hover:border-gray-500">
+                        {isMinimized && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                        )}
+                    </div>
+                </div>
+                <span className="text-sm text-gray-700">Minimizar</span>
+                </label>
+
+                {/* Botões de Tipo de Reserva */}
+                <div className="flex rounded-lg p-1">
+                <button
+                    onClick={() => setViewType('pending')}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    viewType === 'pending'
+                        ? 'bg-gray-500/90 text-black shadow-sm font-medium' 
+                        : 'text-gray-700 hover:text-gray-900'
+                    }`}
+                >
+                    Pendentes
+                </button>
+                <button
+                    onClick={() => setViewType('approved')}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    viewType === 'approved'
+                        ? 'bg-gray-500/90 text-black shadow-sm font-medium' 
+                        : 'text-gray-700 hover:text-gray-900'
+                    }`}
+                >
+                    Aprovadas
+                </button>
+                <button
+                    onClick={() => setViewType('rejected')}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    viewType === 'rejected'
+                        ? 'bg-gray-500/90 text-black font-medium' 
+                        : 'text-gray-700 hover:text-gray-900'
+                    }`}
+                >
+                    Reprovadas
+                </button>
+                </div>
+
+                {/* Dropdown de Filtros */}
+                <div className="relative">
+                <select
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-1 pr-8 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="all">Todas</option>
+                    <option value="today">Hoje</option>
+                    <option value="upcoming">Futuras</option>
+                    <option value="past">Passadas</option>
+                    <option value="oldest">Mais Antigas</option>
+                </select>
+                <Filter className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                </div>
             </div>
+            </div>
+            </div>
+            
+            
 
             {/* Lista de Reservas */}
             {loading ? (
@@ -345,20 +500,81 @@ return (
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-3 text-sm text-gray-600">Carregando...</p>
             </div>
-            ) : (showApproved ? approvedReservations : reservations).length === 0 ? (
+            ) : getFilteredReservations(
+                viewType === 'approved' ? approvedReservations : 
+                viewType === 'rejected' ? rejectedReservations : reservations
+            ).length === 0 ? (
             <div className="text-center py-8 bg-white rounded-lg shadow border">
                 <CheckCircle className="mx-auto h-8 w-8 text-green-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">
-                {showApproved ? 'Nenhuma reserva aprovada' : 'Nenhuma reserva pendente'}
+                {viewType === 'approved' ? 'Nenhuma reserva aprovada' : 
+                 viewType === 'rejected' ? 'Nenhuma reserva reprovada' : 'Nenhuma reserva pendente'}
                 </h3>
                 <p className="mt-1 text-xs text-gray-500">
-                {showApproved ? 'Ainda não há reservas aprovadas' : 'Todas as reservas foram processadas!'}
+                {viewType === 'approved' ? 'Ainda não há reservas aprovadas' : 
+                 viewType === 'rejected' ? 'Ainda não há reservas reprovadas' : 'Todas as reservas foram processadas!'}
                 </p>
             </div>
             ) : (
-            <div className="space-y-10 max-h-screen overflow-y-auto pr-2">
-                {(showApproved ? approvedReservations : reservations).map((reservation) => (
-                <div key={reservation.id} className="bg-white rounded-lg shadow border p-4">
+            <div className="space-y-2 max-h-screen overflow-y-auto pr-2">
+                {getFilteredReservations(
+                    viewType === 'approved' ? approvedReservations : 
+                    viewType === 'rejected' ? rejectedReservations : reservations
+                ).map((reservation) => (
+                isMinimized ? (
+                    // Visualização Minimizada
+                    <div 
+                        key={reservation.id} 
+                        className="bg-white rounded-lg shadow border p-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer"
+                        onClick={() => selectRoomFromReservation(reservation)}
+                    >
+                    <div className="flex items-center gap-4 flex-1">
+                        <div className="flex items-center gap-2">
+                        <DoorClosed size={14} className="text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900">{reservation.room_name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                        <Calendar size={14} className="text-gray-500" />
+                        <span className="text-sm text-gray-700">{formatDateTime(reservation.start_time)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                        <User size={14} className="text-gray-500" />
+                        <span className="text-sm text-gray-700">{reservation.user_name}</span>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">{reservation.title}</span>
+                        {reservation.status === 'approved' && (
+                        <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                            Aprovada
+                        </span>
+                        )}
+                        {reservation.status === 'pending' && (
+                        <span className="px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">
+                            Pendente
+                        </span>
+                        )}
+                        {reservation.status === 'rejected' && (
+                        <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+                            Reprovada
+                        </span>
+                        )}
+                    </div>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDetailsModal(reservation);
+                        }}
+                        className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                    >
+                        Ver detalhes
+                    </button>
+                    </div>
+                ) : (
+                    // Visualização Normal
+                <div 
+                    key={reservation.id} 
+                    className="bg-white rounded-lg shadow border p-4 cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => selectRoomFromReservation(reservation)}
+                >
                     {/* Header Compacto */}
                     <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
@@ -375,7 +591,10 @@ return (
                         </p>
                     </div>
                     <button
-                        onClick={() => openDetailsModal(reservation)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDetailsModal(reservation);
+                        }}
                         className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
                         title="Ver detalhes"
                     >
@@ -438,10 +657,13 @@ return (
                     )}
 
                     {/* Botões de Ação Compactos */}
-                    {!showApproved && (
+                    {viewType === 'pending' && (
                     <div className="flex justify-end gap-2 pt-3 border-t">
                         <button
-                        onClick={() => openRejectModal(reservation)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openRejectModal(reservation);
+                        }}
                         disabled={processingIds.has(reservation.id)}
                         className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 disabled:opacity-50 flex items-center gap-1"
                         >
@@ -454,7 +676,10 @@ return (
                         </button>
                         
                         <button
-                        onClick={() => handleApprove(reservation.id)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleApprove(reservation.id);
+                        }}
                         disabled={processingIds.has(reservation.id)}
                         className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 border border-transparent rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
                         >
@@ -469,7 +694,7 @@ return (
                     )}
 
                     {/* Status para reservas aprovadas */}
-                    {showApproved && (
+                    {viewType === 'approved' && (
                     <div className="pt-3 border-t">
                         <div className="flex items-center justify-between">
                         <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
@@ -483,7 +708,24 @@ return (
                         </div>
                     </div>
                     )}
+
+                    {/* Status para reservas reprovadas */}
+                    {viewType === 'rejected' && (
+                    <div className="pt-3 border-t">
+                        <div className="flex items-center justify-between">
+                        <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                            ✗ Reprovada
+                        </span>
+                        {reservation.rejection_reason && (
+                            <span className="text-xs text-gray-700">
+                            {reservation.rejection_reason}
+                            </span>
+                        )}
+                        </div>
+                    </div>
+                    )}
                 </div>
+                )
                 ))}
             </div>
             )}
@@ -808,6 +1050,16 @@ return (
                     <span className="px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-md">
                         ✗ Rejeitada
                     </span>
+                    <button
+                        onClick={() => {
+                            setShowDetailsModal(false);
+                            handleApprove(detailsReservation.id);
+                        }}
+                        className="px-3 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
+                        title="Aprovar reserva rejeitada"
+                    >
+                        Aprovar
+                    </button>
                 </div>
                 )}
             </div>

@@ -54,7 +54,12 @@ async function handler(req, res) {
         // Apenas admins podem rejeitar reservas já aprovadas
         if (action === 'reject' && reservation.status === 'approved' && req.user.role === 'admin') {
           // Permitir que admin revogue aprovação
-        } else {
+        } 
+        // Permitir aprovação de reservas rejeitadas
+        else if (action === 'approve' && reservation.status === 'rejected') {
+          // Permitir que reservas rejeitadas sejam aprovadas novamente
+        }
+        else {
           return res.status(400).json({ 
             error: `Reserva já foi ${reservation.status === 'approved' ? 'aprovada' : 'rejeitada'}` 
           });
@@ -142,7 +147,7 @@ async function handler(req, res) {
       // Determinar mensagem baseada na ação e status anterior
       let message;
       if (action === 'approve') {
-        message = 'Reserva aprovada com sucesso';
+        message = reservation.status === 'rejected' ? 'Reserva rejeitada foi aprovada com sucesso' : 'Reserva aprovada com sucesso';
       } else if (action === 'reject') {
         message = reservation.status === 'approved' ? 'Aprovação revogada com sucesso' : 'Reserva rejeitada';
       }

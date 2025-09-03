@@ -26,54 +26,54 @@ export const adminMenu = [
 
 // Menu do Docente
 export const docenteMenu = [
-  { id: "home", label: "Dashboard", icon: LayoutDashboard },
-  { id: "minhas-reservas", label: "Minhas Reservas", icon: ClipboardList },
-  { id: "nova-reserva", label: "Nova Reserva", icon: Calendar },
-  { id: "historico", label: "Histórico", icon: Clock },
-  { id: "perfil", label: "Meu Perfil", icon: Users },
+  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "minhas-reservas", label: "Minhas Reservas", icon: ClipboardList, path: "/professor/reservas" },
+  { id: "nova-reserva", label: "Nova Reserva", icon: Calendar, path: "/professor/nova-reserva" },
+  { id: "historico", label: "Histórico", icon: Clock, path: "/professor/historico" },
+  { id: "perfil", label: "Meu Perfil", icon: Users, path: "/professor/perfil" },
 ];
 
 // Menu do Servidor
 export const servidorMenu = [
-  { id: "home", label: "Dashboard", icon: LayoutDashboard },
-  { id: "minhas-reservas", label: "Minhas Reservas", icon: ClipboardList },
-  { id: "nova-reserva", label: "Nova Reserva", icon: Calendar },
-  { id: "historico", label: "Histórico", icon: Clock },
-  { id: "perfil", label: "Meu Perfil", icon: Users },
+  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "minhas-reservas", label: "Minhas Reservas", icon: ClipboardList, path: "/servidor/reservas" },
+  { id: "nova-reserva", label: "Nova Reserva", icon: Calendar, path: "/servidor/nova-reserva" },
+  { id: "historico", label: "Histórico", icon: Clock, path: "/servidor/historico" },
+  { id: "perfil", label: "Meu Perfil", icon: Users, path: "/servidor/perfil" },
 ];
 
 // Menu do Coordenador
 export const coordenadorMenu = [
-  { id: "home", label: "Home", icon: LayoutDashboard },
-  { id: "reservas", label: "Reservas", icon: ClipboardList },
-  { id: "professores", label: "Professores", icon: Users },
-  { id: "relatorios", label: "Relatórios", icon: BarChart3 },
+  { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/coordenador/reservas" },
+  { id: "professores", label: "Professores", icon: Users, path: "/coordenador/professores" },
+  { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/coordenador/relatorios" },
 ];
 
 // Menu do Aluno
 export const alunoMenu = [
-  { id: "home", label: "Dashboard", icon: LayoutDashboard },
-  { id: "reservas", label: "Minhas Reservas", icon: ClipboardList },
-  { id: "nova-reserva", label: "Nova Reserva", icon: Calendar },
-  { id: "historico", label: "Histórico", icon: Clock },
-  { id: "perfil", label: "Meu Perfil", icon: Users },
+  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "reservas", label: "Minhas Reservas", icon: ClipboardList, path: "/aluno/reservas" },
+  { id: "nova-reserva", label: "Nova Reserva", icon: Calendar, path: "/aluno/nova-reserva" },
+  { id: "historico", label: "Histórico", icon: Clock, path: "/aluno/historico" },
+  { id: "perfil", label: "Meu Perfil", icon: Users, path: "/aluno/perfil" },
 ];
 
 // Menu da Portaria
 export const portariaMenu = [
-  { id: "home", label: "Home", icon: LayoutDashboard },
-  { id: "reservas", label: "Reservas", icon: ClipboardList },
-  { id: "confirmacoes", label: "Confirmações", icon: CheckCircle },
-  { id: "relatorios", label: "Relatórios", icon: BarChart3 },
+  { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/portaria/reservas" },
+  { id: "confirmacoes", label: "Confirmações", icon: CheckCircle, path: "/portaria/confirmacoes" },
+  { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/portaria/relatorios" },
 ];
 
 // Menu da Direção
 export const direcaoMenu = [
-  { id: "home", label: "Home", icon: LayoutDashboard },
-  { id: "reservas", label: "Reservas", icon: ClipboardList },
-  { id: "usuarios", label: "Usuários", icon: Users },
-  { id: "relatorios", label: "Relatórios", icon: BarChart3 },
-  { id: "configuracoes", label: "Configurações", icon: Settings },
+  { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/direcao/reservas" },
+  { id: "usuarios", label: "Usuários", icon: Users, path: "/direcao/usuarios" },
+  { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/direcao/relatorios" },
+  { id: "configuracoes", label: "Configurações", icon: Settings, path: "/direcao/configuracoes" },
 ];
 
 // Função para obter o menu baseado no tipo de usuário
