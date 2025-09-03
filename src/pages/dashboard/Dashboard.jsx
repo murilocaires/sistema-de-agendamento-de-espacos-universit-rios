@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import { getUserMenu, getUserTypeDisplay } from "../../config/userMenus";
 import { useAuth } from "../../context/AuthContext";
@@ -6,9 +7,26 @@ import DebugUsers from "../../components/DebugUsers";
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const userType = user?.role || "admin";
   const menuItems = getUserMenu(userType);
   const userTypeDisplay = getUserTypeDisplay(userType);
+
+  // Redirecionar admin para dashboard específico
+  useEffect(() => {
+    if (userType === "admin") {
+      navigate("/admin/dashboard", { replace: true });
+    }
+  }, [userType, navigate]);
+
+  // Se for admin, não renderizar nada (será redirecionado)
+  if (userType === "admin") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <DashboardLayout userType={userTypeDisplay} menuItems={menuItems}>

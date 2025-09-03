@@ -16,7 +16,8 @@ import {
 
 // Menu do Administrador
 export const adminMenu = [
-  { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "home", label: "Home", icon: LayoutDashboard, path: "/admin/dashboard" },
+  { id: "calendario-geral", label: "Calendário Geral", icon: Calendar, path: "/admin/calendario-geral" },
   { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/admin/nova-reserva" },
   { id: "aprovar-reservas", label: "Aprovar Reservas", icon: CheckSquare, path: "/admin/aprovar-reservas" },
   { id: "usuarios", label: "Usuários", icon: Users, path: "/admin/usuarios" },
