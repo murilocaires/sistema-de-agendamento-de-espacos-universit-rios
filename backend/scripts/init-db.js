@@ -29,7 +29,6 @@ const initDB = async () => {
     console.log('   • Coordenador: maria.santos@universidade.edu / coordenador123');
     console.log('   • Aluno: pedro.costa@aluno.universidade.edu / aluno123');
     console.log('   • Portaria: ana.oliveira@universidade.edu / portaria123');
-    console.log('   • Direção: carlos.ferreira@universidade.edu / direcao123');
     console.log('');
     console.log('🎉 Pronto para uso!');
 

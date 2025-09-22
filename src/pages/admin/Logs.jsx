@@ -178,7 +178,7 @@ return (
             <h1 className="text-2xl font-bold text-gray-800">
             Logs de Auditoria
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-700">
             Visualize todas as alterações realizadas no sistema
             </p>
         </div>

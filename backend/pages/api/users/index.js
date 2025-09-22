@@ -30,6 +30,11 @@ async function handler(req, res) {
     }
 
   } else if (req.method === 'POST') {
+    // Apenas admins podem criar usuários
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Apenas administradores podem criar usuários' });
+    }
+    
     // Criar novo usuário
     try {
       const { name, email, siape, password, role } = req.body;
@@ -101,5 +106,5 @@ async function handler(req, res) {
   }
 }
 
-// Apenas admins podem gerenciar usuários
-export default requireRole(['admin'])(withAuditLog('users')(handler));
+// Admins e coordenadores podem acessar usuários (coordenadores só podem ver)
+export default requireRole(['admin', 'coordenador'])(withAuditLog('users')(handler));

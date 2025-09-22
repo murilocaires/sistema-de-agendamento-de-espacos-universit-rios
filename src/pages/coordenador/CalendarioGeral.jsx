@@ -101,90 +101,35 @@ useEffect(() => {
     }
 }, [reservations, selectedRoom, selectedDate]);
 
-// Função para expandir reservas recorrentes simples
-const expandRecurringReservations = (reservation) => {
-    if (!reservation.is_recurring || !reservation.recurrence_end_date) {
-        return [reservation];
-    }
-
-    const occurrences = [];
-    const startDate = moment(reservation.start_time);
-    const endDate = moment(reservation.recurrence_end_date);
-    const startTime = moment(reservation.start_time).format('HH:mm');
-    const endTime = moment(reservation.end_time).format('HH:mm');
-
-    // Para reservas semanais simples, gerar uma ocorrência por semana
-    let currentDate = moment(startDate);
-    let weekCount = 0;
-    const maxWeeks = 52; // Limite de 1 ano
-
-    while (currentDate.isSameOrBefore(endDate) && weekCount < maxWeeks) {
-        const occurrenceStart = moment(currentDate).set({
-            hour: moment(startTime, 'HH:mm').hour(),
-            minute: moment(startTime, 'HH:mm').minute(),
-            second: 0,
-            millisecond: 0
-        });
-        
-        const occurrenceEnd = moment(currentDate).set({
-            hour: moment(endTime, 'HH:mm').hour(),
-            minute: moment(endTime, 'HH:mm').minute(),
-            second: 0,
-            millisecond: 0
-        });
-
-        occurrences.push({
-            ...reservation,
-            id: `${reservation.id}_${currentDate.format('YYYY-MM-DD')}`,
-            start_time: occurrenceStart.toISOString(),
-            end_time: occurrenceEnd.toISOString(),
-            is_recurrence_instance: true,
-            original_reservation_id: reservation.id
-        });
-
-        currentDate.add(1, 'week');
-        weekCount++;
-    }
-
-    return occurrences.length > 0 ? occurrences : [reservation];
-};
-
 // Processar dados das reservas
 const processReservationData = () => {
-    let approvedReservations = reservations.filter(reservation => 
-        reservation.status === 'approved'
+    let filteredReservations = reservations.filter(reservation => 
+    reservation.status === 'approved'
     );
-
-    // Expandir reservas recorrentes
-    let expandedReservations = [];
-    approvedReservations.forEach(reservation => {
-        const occurrences = expandRecurringReservations(reservation);
-        expandedReservations.push(...occurrences);
-    });
 
     // Filtrar por sala se selecionada
     if (selectedRoom) {
-        expandedReservations = expandedReservations.filter(
-            reservation => reservation.room_id.toString() === selectedRoom
-        );
+    filteredReservations = filteredReservations.filter(
+        reservation => reservation.room_id.toString() === selectedRoom
+    );
     }
 
     // Converter para eventos do calendário
-    const events = expandedReservations.map(reservation => {
-        const room = rooms.find(r => r.id === reservation.room_id);
-        return {
-            id: reservation.id,
-            title: reservation.title,
-            start: new Date(reservation.start_time),
-            end: new Date(reservation.end_time),
-            resource: {
-                user: reservation.user_name || 'Usuário',
-                room: room?.name || 'Sala não encontrada',
-                room_id: reservation.room_id,
-                description: reservation.description,
-                reservation: reservation
-            }
-        };
+    const events = filteredReservations.map(reservation => {
+    const room = rooms.find(r => r.id === reservation.room_id);
+    return {
+        id: reservation.id,
+        title: reservation.title,
+        start: new Date(reservation.start_time),
+        end: new Date(reservation.end_time),
+        resource: {
+        user: reservation.user_name || 'Usuário',
+        room: room?.name || 'Sala não encontrada',
+        room_id: reservation.room_id,
+        description: reservation.description,
+        reservation: reservation
+        }
+    };
     });
 
     setCalendarEvents(events);
@@ -201,15 +146,15 @@ const processReservationData = () => {
     const dayCountMap = new Map();
     
     events.forEach(event => {
-        const eventDate = moment(event.start).format('YYYY-MM-DD');
-        
-        if (moment(event.start).isSame(currentMonth, 'month')) {
-            daysSet.add(eventDate);
-        }
-        
-        // Contar reservas por dia (para todo o período, não só o mês atual)
-        const currentCount = dayCountMap.get(eventDate) || 0;
-        dayCountMap.set(eventDate, currentCount + 1);
+    const eventDate = moment(event.start).format('YYYY-MM-DD');
+    
+    if (moment(event.start).isSame(currentMonth, 'month')) {
+        daysSet.add(eventDate);
+    }
+    
+    // Contar reservas por dia (para todo o período, não só o mês atual)
+    const currentCount = dayCountMap.get(eventDate) || 0;
+    dayCountMap.set(eventDate, currentCount + 1);
     });
     
     setDaysWithReservations(daysSet);
@@ -371,8 +316,8 @@ return (
                 </div>
 
                 <div className="grid grid-cols-7 gap-1 text-center">
-                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
-                    <div key={day} className="text-xs font-medium text-gray-800 py-2">
+                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, index) => (
+                    <div key={`day-${index}`} className="text-xs font-medium text-gray-800 py-2">
                     {day}
                     </div>
                 ))}

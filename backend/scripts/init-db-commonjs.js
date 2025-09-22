@@ -169,13 +169,6 @@ const defaultUsers = [
     role: 'portaria'
   },
   {
-    name: 'Carlos Ferreira',
-    email: 'carlos.ferreira@universidade.edu',
-    siape: '666666',
-    password: 'direcao123',
-    role: 'direcao'
-  },
-  {
     name: 'Lucia Mendes',
     email: 'lucia.mendes@universidade.edu',
     siape: '444444',
@@ -324,7 +317,6 @@ const initDB = async () => {
     console.log('   • Coordenador: maria.santos@universidade.edu / coordenador123');
     console.log('   • Aluno: pedro.costa@aluno.universidade.edu / aluno123');
     console.log('   • Portaria: ana.oliveira@universidade.edu / portaria123');
-    console.log('   • Direção: carlos.ferreira@universidade.edu / direcao123');
     console.log('');
     console.log('🏢 Salas criadas: 6 salas com diferentes recursos');
     console.log('');

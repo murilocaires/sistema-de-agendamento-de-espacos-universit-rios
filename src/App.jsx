@@ -13,9 +13,12 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Users from "./pages/admin/Users";
 import Rooms from "./pages/admin/Rooms";
 import CalendarioGeral from "./pages/admin/CalendarioGeral";
+import CalendarioGeralCoordenador from "./pages/coordenador/CalendarioGeral";
 import NewReservation from "./pages/admin/NewReservation";
+import NewReservationCoordenador from "./pages/coordenador/NewReservation";
 import ApproveReservations from "./pages/admin/ApproveReservations";
 import Logs from "./pages/admin/Logs";
+import ReservasPortaria from "./pages/portaria/ReservasPortaria";
 
 function App() {
   return (
@@ -101,6 +104,36 @@ function App() {
             element={
               <ProtectedRoute>
                 <Logs />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rota protegida para calendário geral (coordenador) */}
+          <Route
+            path="/coordenador/calendario-geral"
+            element={
+              <ProtectedRoute>
+                <CalendarioGeralCoordenador />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rota protegida para nova reserva (coordenador) */}
+          <Route
+            path="/coordenador/nova-reserva"
+            element={
+              <ProtectedRoute>
+                <NewReservationCoordenador />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rota protegida para visualizar reservas (portaria) */}
+          <Route
+            path="/portaria/reservas"
+            element={
+              <ProtectedRoute>
+                <ReservasPortaria />
               </ProtectedRoute>
             }
           />

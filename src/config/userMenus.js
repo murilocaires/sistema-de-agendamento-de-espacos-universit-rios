@@ -46,6 +46,8 @@ export const servidorMenu = [
 // Menu do Coordenador
 export const coordenadorMenu = [
   { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "calendario-geral", label: "Calendário Geral", icon: Calendar, path: "/coordenador/calendario-geral" },
+  { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/coordenador/nova-reserva" },
   { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/coordenador/reservas" },
   { id: "professores", label: "Professores", icon: Users, path: "/coordenador/professores" },
   { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/coordenador/relatorios" },
@@ -64,18 +66,9 @@ export const alunoMenu = [
 export const portariaMenu = [
   { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
   { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/portaria/reservas" },
-  { id: "confirmacoes", label: "Confirmações", icon: CheckCircle, path: "/portaria/confirmacoes" },
   { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/portaria/relatorios" },
 ];
 
-// Menu da Direção
-export const direcaoMenu = [
-  { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
-  { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/direcao/reservas" },
-  { id: "usuarios", label: "Usuários", icon: Users, path: "/direcao/usuarios" },
-  { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/direcao/relatorios" },
-  { id: "configuracoes", label: "Configurações", icon: Settings, path: "/direcao/configuracoes" },
-];
 
 // Função para obter o menu baseado no tipo de usuário
 export const getUserMenu = (userType) => {
@@ -93,8 +86,6 @@ export const getUserMenu = (userType) => {
       return alunoMenu;
     case "portaria":
       return portariaMenu;
-    case "direcao":
-      return direcaoMenu;
     default:
       return adminMenu;
   }
@@ -116,8 +107,6 @@ export const getUserTypeDisplay = (userType) => {
       return "ALUNO";
     case "portaria":
       return "PORTARIA";
-    case "direcao":
-      return "DIREÇÃO";
     default:
       return "ADMIN";
   }

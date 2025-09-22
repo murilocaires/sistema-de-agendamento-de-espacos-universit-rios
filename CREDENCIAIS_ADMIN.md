@@ -61,16 +61,6 @@ O sistema SIRU possui **6 usuários padrão** criados automaticamente para testa
 
 ---
 
-## 🏢 **DIREÇÃO**
-
-- **Email:** `carlos.ferreira@universidade.edu`
-- **Senha:** `direcao123`
-- **Nome:** Carlos Ferreira
-- **SIAPE:** 333333
-- **Função:** Direção
-- **Menu:** Home, Reservas, Usuários, Relatórios, Configurações
-
----
 
 ## 👩‍💼 **SERVIDOR**
 
@@ -152,11 +142,6 @@ Cada tipo de usuário terá:
 - Confirmar presenças
 - Gerar relatórios
 
-### **DIREÇÃO**
-
-- Gerenciar usuários
-- Visualizar reservas
-- Configurações do sistema
 
 ---
 

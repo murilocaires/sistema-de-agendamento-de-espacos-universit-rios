@@ -34,6 +34,11 @@ async function handler(req, res) {
     }
 
   } else if (req.method === 'POST') {
+    // Apenas admins podem criar salas
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Apenas administradores podem criar salas' });
+    }
+    
     // Criar nova sala
     try {
       const { 
@@ -110,5 +115,5 @@ async function handler(req, res) {
   }
 }
 
-// Apenas admins podem gerenciar salas
-export default requireRole(['admin'])(withAuditLog('rooms')(handler));
+// Admins, coordenadores e portaria podem acessar salas (portaria só pode ver)
+export default requireRole(['admin', 'coordenador', 'portaria'])(withAuditLog('rooms')(handler));

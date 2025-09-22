@@ -99,19 +99,6 @@ A sidebar do SIRU é **dinâmica** e se adapta automaticamente baseada no **tipo
 
 ---
 
-### 🏢 **DIREÇÃO**
-
-**Header:** "DIREÇÃO"
-
-```
-📊 Home
-📋 Reservas (Institucionais)
-👥 Usuários
-📈 Relatórios
-⚙️ Configurações
-```
-
-**Função:** Gestão institucional e relatórios
 
 ## 🔄 Como é Determinado
 
@@ -193,8 +180,6 @@ const userTypeDisplay = getUserTypeDisplay(userType); // "PROFESSOR"
 
    - Menu: Home, Reservas, Confirmações, Relatórios
 
-7. **Direção:** `carlos.ferreira@universidade.edu` / `direcao123`
-   - Menu: Home, Reservas, Usuários, Relatórios, Configurações
 
 ## 🔧 Configuração Técnica
 

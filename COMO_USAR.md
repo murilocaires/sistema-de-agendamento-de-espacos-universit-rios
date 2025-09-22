@@ -80,11 +80,11 @@ Local: http://localhost:5173
 | Tipo | Email | Senha | Funcionalidades |
 |------|-------|-------|----------------|
 | **Admin** | admin@siru.com | admin123 | Acesso total |
-| **Professor** | joao.silva@universidade.edu | professor123 | Reservas, histórico |
+| **Professor** | joao.silva@universidade.edu | professor123 | Reservas, histórico | cria ALUNO E PROJETO
 | **Coordenador** | maria.santos@universidade.edu | coordenador123 | Gerenciar reservas |
-| **Aluno** | pedro.costa@aluno.universidade.edu | aluno123 | Fazer reservas |
+| **Aluno** | pedro.costa@aluno.universidade.edu | aluno123 | Fazer reservas | PRECISA DE UM PROJETO VINCULADO
 | **Portaria** | ana.oliveira@universidade.edu | portaria123 | Confirmações |
-| **Direção** | carlos.ferreira@universidade.edu | direcao123 | Relatórios |
+
 
 ## 🔧 **Resolução de Problemas**
 

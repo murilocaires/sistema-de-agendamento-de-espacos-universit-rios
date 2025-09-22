@@ -70,10 +70,6 @@ Após resetar, use estas credenciais:
 - **Email:** `ana.oliveira@universidade.edu`
 - **Senha:** `portaria123`
 
-### **DIREÇÃO**
-
-- **Email:** `carlos.ferreira@universidade.edu`
-- **Senha:** `direcao123`
 
 ## 🎯 Passos para Resolver
 

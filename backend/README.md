@@ -89,7 +89,7 @@ Authorization: Bearer {token}
 GET /api/users
 Authorization: Bearer {token}
 ```
-*Requer role: admin, coordenador ou direcao*
+*Requer role: admin ou coordenador*
 
 ### 🔧 Sistema
 
@@ -109,7 +109,6 @@ O sistema cria automaticamente 6 usuários para teste:
 | **Coordenador** | maria.santos@universidade.edu | coordenador123 | coordenador |
 | **Aluno** | pedro.costa@aluno.universidade.edu | aluno123 | aluno |
 | **Portaria** | ana.oliveira@universidade.edu | portaria123 | portaria |
-| **Direção** | carlos.ferreira@universidade.edu | direcao123 | direcao |
 
 ## 🗄️ Estrutura do Banco
 

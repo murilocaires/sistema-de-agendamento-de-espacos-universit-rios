@@ -130,6 +130,85 @@ async function handler(req, res) {
         });
       }
 
+      // Função para extrair dados de recorrência da descrição
+      const extractRecurrenceData = (description) => {
+        try {
+          const daysMatch = description?.match(/• Dias da semana: \[([^\]]+)\]/);
+          const schedulesMatch = description?.match(/• Horários: ({.*})/);
+          
+          const recurrenceDays = daysMatch ? daysMatch[1].split(', ').map(d => d.trim()) : [];
+          const weeklySchedules = schedulesMatch ? JSON.parse(schedulesMatch[1]) : {};
+          
+          return { recurrenceDays, weeklySchedules };
+        } catch (e) {
+          return { recurrenceDays: [], weeklySchedules: {} };
+        }
+      };
+
+      // Função para gerar todas as ocorrências de uma reserva recorrente
+      const generateRecurrenceOccurrences = (reservation) => {
+        if (!reservation.is_recurring) {
+          return [{
+            start: new Date(reservation.start_time),
+            end: new Date(reservation.end_time)
+          }];
+        }
+
+        const occurrences = [];
+        const startDate = new Date(reservation.start_time);
+        const endDate = new Date(reservation.recurrence_end_date);
+        const { recurrenceDays, weeklySchedules } = extractRecurrenceData(reservation.description);
+
+        if (recurrenceDays.length === 0) {
+          // Fallback: usar dados da reserva original
+          return [{
+            start: new Date(reservation.start_time),
+            end: new Date(reservation.end_time)
+          }];
+        }
+
+        const currentDate = new Date(startDate);
+        let weekCount = 0;
+
+        while (currentDate <= endDate && weekCount < 200) {
+          for (const dayOfWeek of recurrenceDays) {
+            const daySchedule = weeklySchedules[dayOfWeek];
+            if (!daySchedule) continue;
+
+            const targetDate = new Date(currentDate);
+            const currentDayOfWeek = targetDate.getDay();
+            const targetDayOfWeek = parseInt(dayOfWeek);
+            const daysToAdd = (targetDayOfWeek - currentDayOfWeek + 7) % 7;
+            targetDate.setDate(targetDate.getDate() + daysToAdd);
+
+            if (targetDate >= startDate && targetDate <= endDate) {
+              const occurrenceStart = new Date(targetDate);
+              const occurrenceEnd = new Date(targetDate);
+
+              const [startHour, startMin] = daySchedule.start_time.split(':');
+              const [endHour, endMin] = daySchedule.end_time.split(':');
+
+              occurrenceStart.setHours(parseInt(startHour), parseInt(startMin), 0, 0);
+              occurrenceEnd.setHours(parseInt(endHour), parseInt(endMin), 0, 0);
+
+              occurrences.push({
+                start: occurrenceStart,
+                end: occurrenceEnd
+              });
+            }
+          }
+          currentDate.setDate(currentDate.getDate() + 7);
+          weekCount++;
+        }
+
+        return occurrences;
+      };
+
+      // Função para verificar se dois períodos se sobrepõem
+      const timesOverlap = (start1, end1, start2, end2) => {
+        return start1 < end2 && start2 < end1;
+      };
+
       // Verificar se a sala existe e está ativa
       const roomCheck = await query(
         'SELECT id, name, is_active FROM rooms WHERE id = $1',
@@ -144,25 +223,51 @@ async function handler(req, res) {
         return res.status(400).json({ error: 'Sala não está ativa' });
       }
 
-      // Verificar conflitos de horário
-      const conflictCheck = await query(`
-        SELECT id, title, start_time, end_time 
+      // Verificar conflitos com outras reservas aprovadas na mesma sala
+      const existingReservations = await query(`
+        SELECT id, title, start_time, end_time, is_recurring, recurrence_end_date, description
         FROM reservations 
         WHERE room_id = $1 
         AND status IN ('approved', 'pending')
         AND (
-          (start_time <= $2 AND end_time > $2) OR
-          (start_time < $3 AND end_time >= $3) OR
-          (start_time >= $2 AND end_time <= $3)
+          (is_recurring = false AND start_time < $3 AND end_time > $2) OR
+          (is_recurring = true AND recurrence_end_date >= $2 AND start_time <= $3)
         )
       `, [room_id, start_time, end_time]);
 
-      if (conflictCheck.rows.length > 0) {
-        return res.status(409).json({ 
-          error: 'Já existe uma reserva para este horário',
-          conflict: conflictCheck.rows[0]
-        });
+      // Preparar dados da nova reserva para verificação de conflitos
+      const newReservationData = {
+        start_time,
+        end_time,
+        is_recurring,
+        recurrence_end_date,
+        description: is_recurring ? 
+          `${description}\n\n📊 Dados técnicos:\n• Dias da semana: [${req.body.recurrence_days?.join(', ') || ''}]\n• Horários: ${JSON.stringify(req.body.weekly_schedules || {})}` :
+          description
+      };
+
+      // Gerar ocorrências da nova reserva
+      const newOccurrences = generateRecurrenceOccurrences(newReservationData);
+
+      // Verificar conflitos com reservas existentes
+      for (const existingReservation of existingReservations.rows) {
+        const existingOccurrences = generateRecurrenceOccurrences(existingReservation);
+        
+        for (const newOcc of newOccurrences) {
+          for (const existingOcc of existingOccurrences) {
+            if (timesOverlap(newOcc.start, newOcc.end, existingOcc.start, existingOcc.end)) {
+              const conflictDate = newOcc.start.toLocaleDateString('pt-BR');
+              const conflictTimeNew = `${newOcc.start.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} - ${newOcc.end.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}`;
+              const conflictTimeExisting = `${existingOcc.start.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} - ${existingOcc.end.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}`;
+              
+              return res.status(409).json({ 
+                error: `Conflito de horário detectado!\n\nData: ${conflictDate}\nSua reserva: ${conflictTimeNew}\nReserva existente: "${existingReservation.title}" (${conflictTimeExisting})\n\nEscolha outro horário ou sala.`
+              });
+            }
+          }
+        }
       }
+
 
       // Determinar status inicial baseado no papel do usuário
       let initialStatus = 'pending';

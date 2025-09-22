@@ -53,7 +53,6 @@ Após inicializar o banco, use estas credenciais:
 | **Coordenador** | maria.santos@universidade.edu | coordenador123 |
 | **Aluno** | pedro.costa@aluno.universidade.edu | aluno123 |
 | **Portaria** | ana.oliveira@universidade.edu | portaria123 |
-| **Direção** | carlos.ferreira@universidade.edu | direcao123 |
 
 ## 📁 Estrutura criada
 
