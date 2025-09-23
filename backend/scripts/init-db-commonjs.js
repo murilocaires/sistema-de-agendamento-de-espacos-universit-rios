@@ -49,9 +49,11 @@ const initializeDatabase = async () => {
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
-        siape VARCHAR(20) UNIQUE NOT NULL,
+        siape VARCHAR(20) UNIQUE,
+        matricula_sigaa VARCHAR(20) UNIQUE,
         password_hash VARCHAR(255) NOT NULL,
         role VARCHAR(50) NOT NULL DEFAULT 'professor',
+        first_login BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -91,6 +93,29 @@ const initializeDatabase = async () => {
       )
     `);
 
+    // Criar tabela de projetos
+    await query(`
+      CREATE TABLE IF NOT EXISTS projects (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        type VARCHAR(100) NOT NULL,
+        professor_id INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Criar tabela de relacionamento projeto-aluno
+    await query(`
+      CREATE TABLE IF NOT EXISTS project_students (
+        id SERIAL PRIMARY KEY,
+        project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+        student_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(project_id, student_id)
+      )
+    `);
+
     // Criar tabela de logs de auditoria
     await query(`
       CREATE TABLE IF NOT EXISTS audit_logs (
@@ -121,6 +146,19 @@ const initializeDatabase = async () => {
     
     await query(`
       CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+    `);
+
+    // Criar índices para projetos
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_projects_professor_id ON projects(professor_id);
+    `);
+    
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_project_students_project_id ON project_students(project_id);
+    `);
+    
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_project_students_student_id ON project_students(student_id);
     `);
 
     console.log('✅ Tabelas do banco de dados criadas/verificadas com sucesso');

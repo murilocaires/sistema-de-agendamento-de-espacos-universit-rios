@@ -28,6 +28,10 @@ async function handler(req, res) {
       }
 
       if (user_id) {
+        // Professores só podem ver suas próprias reservas
+        if (req.user.role === 'professor' && parseInt(user_id) !== req.user.id) {
+          return res.status(403).json({ error: 'Você só pode visualizar suas próprias reservas' });
+        }
         paramCount++;
         whereConditions.push(`r.user_id = $${paramCount}`);
         queryParams.push(user_id);
@@ -51,11 +55,18 @@ async function handler(req, res) {
         queryParams.push(end_date);
       }
 
+      // Professores veem apenas reservas aprovadas por padrão, exceto suas próprias
+      if (req.user.role === 'professor' && !status && !user_id) {
+        paramCount++;
+        whereConditions.push(`r.status = $${paramCount}`);
+        queryParams.push('approved');
+      }
+
       const whereClause = whereConditions.length > 0 
         ? `WHERE ${whereConditions.join(' AND ')}`
         : '';
 
-      // Buscar reservas com informações de usuário, sala e aprovador
+      // Buscar reservas com informações de usuário, sala, projeto e aprovador
       const result = await query(`
         SELECT 
           r.*,
@@ -65,10 +76,13 @@ async function handler(req, res) {
           rm.name as room_name,
           rm.location as room_location,
           rm.capacity as room_capacity,
+          p.name as project_name,
+          p.type as project_type,
           approver.name as approved_by_name
         FROM reservations r
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN rooms rm ON r.room_id = rm.id
+        LEFT JOIN projects p ON r.project_id = p.id
         LEFT JOIN users approver ON r.approved_by = approver.id
         ${whereClause}
         ORDER BY r.start_time DESC
@@ -90,6 +104,7 @@ async function handler(req, res) {
       const { 
         user_id: requested_user_id,
         room_id,
+        project_id,
         title,
         description = '',
         start_time,
@@ -97,6 +112,7 @@ async function handler(req, res) {
         is_recurring = false,
         recurrence_type = null,
         recurrence_end_date = null,
+        recurrence_interval = null,
         priority = 1
       } = req.body;
 
@@ -108,6 +124,13 @@ async function handler(req, res) {
       if (!user_id || !room_id || !title || !start_time || !end_time) {
         return res.status(400).json({ 
           error: 'Usuário, sala, título, data/hora de início e fim são obrigatórios' 
+        });
+      }
+
+      // Para alunos, projeto é obrigatório
+      if (user_role === 'aluno' && !project_id) {
+        return res.status(400).json({ 
+          error: 'Projeto é obrigatório para alunos' 
         });
       }
 
@@ -223,6 +246,22 @@ async function handler(req, res) {
         return res.status(400).json({ error: 'Sala não está ativa' });
       }
 
+      // Verificar se o usuário é aluno e tem projeto associado
+      if (user_role === 'aluno') {
+        const projectCheck = await query(`
+          SELECT ps.id, p.name as project_name, p.type as project_type
+          FROM project_students ps
+          LEFT JOIN projects p ON ps.project_id = p.id
+          WHERE ps.student_id = $1 AND ps.project_id = $2
+        `, [user_id, project_id]);
+
+        if (projectCheck.rows.length === 0) {
+          return res.status(400).json({ 
+            error: 'Aluno não está associado ao projeto selecionado' 
+          });
+        }
+      }
+
       // Verificar conflitos com outras reservas aprovadas na mesma sala
       const existingReservations = await query(`
         SELECT id, title, start_time, end_time, is_recurring, recurrence_end_date, description
@@ -289,14 +328,14 @@ async function handler(req, res) {
       // Inserir nova reserva
       const result = await query(`
         INSERT INTO reservations (
-          user_id, room_id, title, description, start_time, end_time,
-          status, is_recurring, recurrence_type, recurrence_end_date,
+          user_id, room_id, project_id, title, description, start_time, end_time,
+          status, is_recurring, recurrence_type, recurrence_end_date, recurrence_interval,
           approved_by, approved_at, priority
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         RETURNING *
       `, [
-        user_id, room_id, title, description, start_time, end_time,
-        initialStatus, is_recurring, recurrence_type, recurrence_end_date,
+        user_id, room_id, project_id, title, description, start_time, end_time,
+        initialStatus, is_recurring, recurrence_type, recurrence_end_date, recurrence_interval,
         approved_by, approved_at, priority
       ]);
 
@@ -321,10 +360,13 @@ async function handler(req, res) {
           u.name as user_name,
           u.email as user_email,
           rm.name as room_name,
-          rm.location as room_location
+          rm.location as room_location,
+          p.name as project_name,
+          p.type as project_type
         FROM reservations r
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN rooms rm ON r.room_id = rm.id
+        LEFT JOIN projects p ON r.project_id = p.id
         WHERE r.id = $1
       `, [newReservation.id]);
 

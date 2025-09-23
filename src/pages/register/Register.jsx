@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { registerUser } from "../../services/authService";
 import SuccessAnimation from "../../components/SuccessAnimation";
+import PendingApprovalAnimation from "../../components/PendingApprovalAnimation";
 import AutocompleteDropdown from "../../components/AutocompleteDropdown";
 
 const Register = ({ onBackToLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPendingApproval, setShowPendingApproval] = useState(false);
   const [showSiapeDropdown, setShowSiapeDropdown] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -63,7 +65,7 @@ const Register = ({ onBackToLogin }) => {
 
     try {
       // Cadastrar usuário no banco de dados
-      await registerUser(formData);
+      const response = await registerUser(formData);
 
       // Limpar formulário
       setFormData({
@@ -74,8 +76,8 @@ const Register = ({ onBackToLogin }) => {
         role: "docente",
       });
 
-      // Mostrar animação de sucesso
-      setShowSuccess(true);
+      // Mostrar animação de aprovação pendente
+      setShowPendingApproval(true);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -88,9 +90,15 @@ const Register = ({ onBackToLogin }) => {
     onBackToLogin();
   };
 
+  const handlePendingApprovalComplete = () => {
+    setShowPendingApproval(false);
+    onBackToLogin();
+  };
+
   return (
     <>
       {showSuccess && <SuccessAnimation onComplete={handleSuccessComplete} />}
+      {showPendingApproval && <PendingApprovalAnimation onComplete={handlePendingApprovalComplete} />}
       <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-blue-700 flex">
         {/* Container branco - lado direito */}
         <div className="bg-white w-full max-w-4xl rounded-tl-[20px] px-8 md:px-16 lg:px-24 py-16 md:py-12 shadow-2xl font-lato ml-auto">

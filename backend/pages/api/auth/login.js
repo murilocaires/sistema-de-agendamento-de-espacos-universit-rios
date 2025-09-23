@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
     // Buscar usuário no banco
     const result = await query(
-      'SELECT id, name, email, siape, password_hash, role FROM users WHERE email = $1',
+      'SELECT id, name, email, siape, matricula_sigaa, password_hash, role, first_login, status FROM users WHERE email = $1',
       [email.toLowerCase()]
     );
 
@@ -35,6 +35,19 @@ export default async function handler(req, res) {
     }
 
     const user = result.rows[0];
+
+    // Verificar se a conta está aprovada
+    if (user.status !== 'approved') {
+      if (user.status === 'pending') {
+        return res.status(403).json({ 
+          error: 'Sua conta ainda está aguardando aprovação de um administrador. Tente novamente mais tarde.' 
+        });
+      } else if (user.status === 'rejected') {
+        return res.status(403).json({ 
+          error: 'Sua conta foi rejeitada. Entre em contato com o administrador.' 
+        });
+      }
+    }
 
     // Verificar senha
     const isPasswordValid = await verifyPassword(password, user.password_hash);
@@ -51,7 +64,9 @@ export default async function handler(req, res) {
       name: user.name,
       email: user.email,
       siape: user.siape,
-      role: user.role
+      matricula_sigaa: user.matricula_sigaa,
+      role: user.role,
+      first_login: user.first_login
     };
 
     // Registrar log de login bem-sucedido

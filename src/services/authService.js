@@ -33,6 +33,32 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
+// Função para fazer requisições HTTP sem autenticação
+const apiRequestNoAuth = async (endpoint, options = {}) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const config = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    ...options,
+  };
+
+  try {
+    const response = await fetch(url, config);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Erro na requisição');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Erro na API:', error);
+    throw error;
+  }
+};
+
 // Buscar todos os usuários
 export const getUsers = async () => {
   try {
@@ -60,7 +86,7 @@ export const initializeDatabase = async () => {
 // Cadastrar novo usuário
 export const registerUser = async (userData) => {
   try {
-    const response = await apiRequest('/auth/register', {
+    const response = await apiRequestNoAuth('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
@@ -81,7 +107,7 @@ export const registerUser = async (userData) => {
 // Autenticar usuário
 export const authenticateUser = async (email, password) => {
   try {
-    const response = await apiRequest('/auth/login', {
+    const response = await apiRequestNoAuth('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
@@ -323,7 +349,7 @@ export const getReservationById = async (reservationId) => {
 // Buscar reservas pendentes para aprovação
 export const getPendingReservations = async () => {
   try {
-    const response = await apiRequest('/reservations/approve');
+    const response = await apiRequest('/reservations/pending');
     return response.pending_reservations;
   } catch (error) {
     console.error('Erro ao buscar reservas pendentes:', error);
@@ -345,6 +371,286 @@ export const approveReservation = async (reservationId, action, rejectionReason 
     return response.reservation;
   } catch (error) {
     console.error('Erro ao aprovar/rejeitar reserva:', error);
+    throw error;
+  }
+};
+
+// ===== FUNÇÕES DE PROJETOS =====
+
+// Buscar projetos
+export const getProjects = async (filters = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (filters.professor_id) queryParams.append('professor_id', filters.professor_id);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/projects${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiRequest(endpoint);
+    return response.projects;
+  } catch (error) {
+    console.error('Erro ao buscar projetos:', error);
+    throw error;
+  }
+};
+
+// Criar projeto
+export const createProject = async (projectData) => {
+  try {
+    const response = await apiRequest('/projects', {
+      method: 'POST',
+      body: JSON.stringify(projectData),
+    });
+    return response.project;
+  } catch (error) {
+    console.error('Erro ao criar projeto:', error);
+    throw error;
+  }
+};
+
+// Excluir projeto
+export const deleteProject = async (projectId) => {
+  try {
+    const response = await apiRequest(`/projects/${projectId}`, {
+      method: 'DELETE',
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao excluir projeto:', error);
+    throw error;
+  }
+};
+
+// Buscar alunos disponíveis
+export const getAvailableStudents = async (projectId, search = '') => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (projectId) queryParams.append('project_id', projectId);
+    if (search) queryParams.append('search', search);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/students/available${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiRequest(endpoint);
+    return response.students;
+  } catch (error) {
+    console.error('Erro ao buscar alunos disponíveis:', error);
+    throw error;
+  }
+};
+
+// Buscar alunos de um projeto
+export const getProjectStudents = async (projectId) => {
+  try {
+    const response = await apiRequest(`/projects/${projectId}/students`);
+    return response.students;
+  } catch (error) {
+    console.error('Erro ao buscar alunos do projeto:', error);
+    throw error;
+  }
+};
+
+// Adicionar aluno ao projeto
+export const addStudentToProject = async (projectId, studentId) => {
+  try {
+    const response = await apiRequest(`/projects/${projectId}/students`, {
+      method: 'POST',
+      body: JSON.stringify({ student_id: studentId }),
+    });
+    return response.project_student;
+  } catch (error) {
+    console.error('Erro ao adicionar aluno ao projeto:', error);
+    throw error;
+  }
+};
+
+// Remover aluno do projeto
+export const removeStudentFromProject = async (projectId, studentId) => {
+  try {
+    const response = await apiRequest(`/projects/${projectId}/students`, {
+      method: 'DELETE',
+      body: JSON.stringify({ student_id: studentId }),
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao remover aluno do projeto:', error);
+    throw error;
+  }
+};
+
+// ===== FUNÇÕES DE ALUNOS =====
+
+// Cadastrar aluno
+export const createStudent = async (studentData) => {
+  try {
+    const response = await apiRequest('/students/create', {
+      method: 'POST',
+      body: JSON.stringify(studentData),
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao cadastrar aluno:', error);
+    throw error;
+  }
+};
+
+// Redefinir senha (primeiro acesso)
+export const resetPassword = async (passwordData) => {
+  try {
+    const response = await apiRequest('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(passwordData),
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao redefinir senha:', error);
+    throw error;
+  }
+};
+
+// ===== FUNÇÕES DE APROVAÇÃO DE CONTAS =====
+
+// Buscar usuários pendentes de aprovação
+export const getPendingUsers = async () => {
+  try {
+    const response = await apiRequest('/users/pending');
+    return response.users;
+  } catch (error) {
+    console.error('Erro ao buscar usuários pendentes:', error);
+    throw error;
+  }
+};
+
+// Aprovar ou rejeitar usuário
+export const approveUser = async (userId, action) => {
+  try {
+    const response = await apiRequest('/users/approve', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, action }),
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao processar aprovação:', error);
+    throw error;
+  }
+};
+
+// ===== FUNÇÕES DE PROJETOS PARA ALUNOS =====
+
+// Buscar projetos disponíveis para alunos
+export const getAvailableProjects = async () => {
+  try {
+    const response = await apiRequest('/projects/available');
+    return response.projects;
+  } catch (error) {
+    console.error('Erro ao buscar projetos disponíveis:', error);
+    throw error;
+  }
+};
+
+// Buscar projetos que o aluno está participando
+export const getMyProjects = async () => {
+  try {
+    const response = await apiRequest('/projects/my-projects');
+    return response.projects || [];
+  } catch (error) {
+    console.error('Erro ao buscar meus projetos:', error);
+    throw error;
+  }
+};
+
+// Solicitar entrada em projeto
+export const requestProjectAccess = async (projectData) => {
+  try {
+    const response = await apiRequest('/projects/requests', {
+      method: 'POST',
+      body: JSON.stringify(projectData),
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao solicitar acesso ao projeto:', error);
+    throw error;
+  }
+};
+
+// Buscar solicitações de projeto do aluno
+export const getMyProjectRequests = async () => {
+  try {
+    const response = await apiRequest('/projects/requests?student_id=me');
+    return response.requests;
+  } catch (error) {
+    console.error('Erro ao buscar minhas solicitações:', error);
+    throw error;
+  }
+};
+
+// ===== FUNÇÕES DE NOTIFICAÇÕES PARA PROFESSORES =====
+
+// Buscar notificações de solicitações de projeto
+export const getProjectRequestNotifications = async (status = 'pending') => {
+  try {
+    const response = await apiRequest(`/notifications/project-requests?status=${status}`);
+    return response.requests;
+  } catch (error) {
+    console.error('Erro ao buscar notificações:', error);
+    throw error;
+  }
+};
+
+// Buscar notificações de reservas pendentes para professores
+export const getReservationNotifications = async () => {
+  try {
+    const response = await apiRequest('/notifications/reservations');
+    return response.reservations || [];
+  } catch (error) {
+    console.error('Erro ao buscar notificações de reservas:', error);
+    throw error;
+  }
+};
+
+// Aprovar ou rejeitar reserva
+export const processReservation = async (reservationId, action, rejectionReason = null) => {
+  try {
+    const response = await apiRequest('/reservations/approve', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        reservation_id: reservationId, 
+        action: action,
+        rejection_reason: rejectionReason
+      }),
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao processar reserva:', error);
+    throw error;
+  }
+};
+
+// Buscar notificações de reservas para admin (aprovadas pelo professor)
+export const getAdminReservationNotifications = async () => {
+  try {
+    const response = await apiRequest('/notifications/admin-reservations');
+    return response.reservations || [];
+  } catch (error) {
+    console.error('Erro ao buscar notificações de reservas para admin:', error);
+    throw error;
+  }
+};
+
+// Processar solicitação de projeto (aprovar/rejeitar)
+export const processProjectRequest = async (requestId, action) => {
+  try {
+    // Converter action para o formato esperado pelo backend
+    const backendAction = action === 'approve' ? 'approved' : 'rejected';
+    
+    const response = await apiRequest('/projects/requests', {
+      method: 'PUT',
+      body: JSON.stringify({ request_id: requestId, action: backendAction }),
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao processar solicitação:', error);
     throw error;
   }
 };

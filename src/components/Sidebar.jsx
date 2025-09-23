@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, memo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -19,14 +19,17 @@ const Sidebar = ({ menuItems = [], userType = "ADMIN" }) => {
   const dropdownRef = useRef(null);
 
   // Menu padrão para admin se não for fornecido
-  const defaultMenuItems = [
+  const defaultMenuItems = useMemo(() => [
     { id: "home", label: "Home", icon: LayoutDashboard },
     { id: "reservas", label: "Reservas", icon: ClipboardList },
     { id: "usuarios", label: "Usuários", icon: Users },
     { id: "salas", label: "Salas", icon: DoorClosed },
-  ];
+  ], []);
 
-  const finalMenuItems = menuItems.length > 0 ? menuItems : defaultMenuItems;
+  const finalMenuItems = useMemo(() => 
+    menuItems.length > 0 ? menuItems : defaultMenuItems, 
+    [menuItems, defaultMenuItems]
+  );
 
   const handleLinkClick = (item) => {
     setActiveLink(item.id);
@@ -158,4 +161,11 @@ const Sidebar = ({ menuItems = [], userType = "ADMIN" }) => {
   );
 };
 
-export default Sidebar;
+// Usar React.memo para evitar re-renderizações desnecessárias
+export default memo(Sidebar, (prevProps, nextProps) => {
+  // Comparar props para determinar se deve re-renderizar
+  return (
+    prevProps.userType === nextProps.userType &&
+    prevProps.menuItems === nextProps.menuItems
+  );
+});

@@ -14,14 +14,24 @@ async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      // Buscar todas as salas (incluindo inativas para admin)
-      const result = await query(
-        `SELECT id, name, capacity, location, has_projector, has_internet, 
-                has_air_conditioning, is_fixed_reservation, description, is_active, 
-                created_at, updated_at 
-         FROM rooms 
-         ORDER BY name`
-      );
+      // Buscar salas - professores veem apenas ativas, admins veem todas
+      let queryText;
+      if (req.user.role === 'admin') {
+        queryText = `SELECT id, name, capacity, location, has_projector, has_internet, 
+                            has_air_conditioning, is_fixed_reservation, description, is_active, 
+                            created_at, updated_at 
+                     FROM rooms 
+                     ORDER BY name`;
+      } else {
+        queryText = `SELECT id, name, capacity, location, has_projector, has_internet, 
+                            has_air_conditioning, is_fixed_reservation, description, is_active, 
+                            created_at, updated_at 
+                     FROM rooms 
+                     WHERE is_active = true
+                     ORDER BY name`;
+      }
+
+      const result = await query(queryText);
 
       return res.status(200).json({
         success: true,
@@ -115,5 +125,5 @@ async function handler(req, res) {
   }
 }
 
-// Admins, coordenadores e portaria podem acessar salas (portaria só pode ver)
-export default requireRole(['admin', 'coordenador', 'portaria'])(withAuditLog('rooms')(handler));
+// Admins, coordenadores, portaria, professores e alunos podem acessar salas (alunos, professores e portaria só podem ver)
+export default requireRole(['admin', 'coordenador', 'portaria', 'professor', 'aluno'])(withAuditLog('rooms')(handler));

@@ -17,8 +17,23 @@ import CalendarioGeralCoordenador from "./pages/coordenador/CalendarioGeral";
 import NewReservation from "./pages/admin/NewReservation";
 import NewReservationCoordenador from "./pages/coordenador/NewReservation";
 import ApproveReservations from "./pages/admin/ApproveReservations";
+import AprovarContas from "./pages/admin/AprovarContas";
 import Logs from "./pages/admin/Logs";
 import ReservasPortaria from "./pages/portaria/ReservasPortaria";
+import DashboardProfessor from "./pages/professor/DashboardProfessor";
+import ReservasSistema from "./pages/professor/ReservasSistema";
+import MinhasReservas from "./pages/professor/MinhasReservas";
+import NovaReserva from "./pages/professor/NovaReserva";
+import Projetos from "./pages/professor/Projetos";
+import CadastrarAlunos from "./pages/professor/CadastrarAlunos";
+import Configuracoes from "./pages/professor/Configuracoes";
+import DashboardAluno from "./pages/aluno/DashboardAluno";
+import ProjetosAluno from "./pages/aluno/ProjetosAluno";
+import ReservasAluno from "./pages/aluno/ReservasAluno";
+import NovaReservaAluno from "./pages/aluno/NovaReservaAluno";
+import HistoricoAluno from "./pages/aluno/HistoricoAluno";
+import PerfilAluno from "./pages/aluno/PerfilAluno";
+import SmartRedirect from "./components/SmartRedirect";
 
 function App() {
   return (
@@ -98,6 +113,15 @@ function App() {
             }
           />
 
+          <Route
+            path="/admin/aprovar-contas"
+            element={
+              <ProtectedRoute>
+                <AprovarContas />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Rota protegida para logs de auditoria (apenas admin) */}
           <Route
             path="/admin/logs"
@@ -138,11 +162,131 @@ function App() {
             }
           />
 
-          {/* Redirecionar rota raiz para dashboard */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Rotas protegidas para professor */}
+          <Route
+            path="/professor/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardProfessor />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Redirecionar rotas não encontradas para dashboard */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route
+            path="/professor/reservas-sistema"
+            element={
+              <ProtectedRoute>
+                <ReservasSistema />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/professor/minhas-reservas"
+            element={
+              <ProtectedRoute>
+                <MinhasReservas />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/professor/nova-reserva"
+            element={
+              <ProtectedRoute>
+                <NovaReserva />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/professor/projetos"
+            element={
+              <ProtectedRoute>
+                <Projetos />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/professor/cadastrar-alunos"
+            element={
+              <ProtectedRoute>
+                <CadastrarAlunos />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/professor/configuracoes"
+            element={
+              <ProtectedRoute>
+                <Configuracoes />
+              </ProtectedRoute>
+            }
+          />
+
+
+          {/* Rotas do Aluno */}
+          <Route
+            path="/aluno/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardAluno />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/aluno/projetos"
+            element={
+              <ProtectedRoute>
+                <ProjetosAluno />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/aluno/reservas"
+            element={
+              <ProtectedRoute>
+                <ReservasAluno />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/aluno/nova-reserva"
+            element={
+              <ProtectedRoute>
+                <NovaReservaAluno />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/aluno/historico"
+            element={
+              <ProtectedRoute>
+                <HistoricoAluno />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/aluno/perfil"
+            element={
+              <ProtectedRoute>
+                <PerfilAluno />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Redirecionar rota raiz para dashboard correto */}
+          <Route path="/" element={<SmartRedirect />} />
+
+          {/* Redirecionar rotas não encontradas para dashboard correto */}
+          <Route path="*" element={<SmartRedirect />} />
         </Routes>
       </AuthProvider>
     </Router>

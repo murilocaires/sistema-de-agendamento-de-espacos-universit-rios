@@ -12,11 +12,14 @@ import {
   FileText,
   CalendarPlus,
   CheckSquare,
+  FolderOpen,
+  Bell,
 } from "lucide-react";
 
 // Menu do Administrador
 export const adminMenu = [
   { id: "home", label: "Home", icon: LayoutDashboard, path: "/admin/dashboard" },
+  { id: "aprovar-contas", label: "Aprovar Contas", icon: Users, path: "/admin/aprovar-contas" },
   { id: "calendario-geral", label: "Calendário Geral", icon: Calendar, path: "/admin/calendario-geral" },
   { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/admin/nova-reserva" },
   { id: "aprovar-reservas", label: "Aprovar Reservas", icon: CheckSquare, path: "/admin/aprovar-reservas" },
@@ -27,11 +30,14 @@ export const adminMenu = [
 
 // Menu do Docente
 export const docenteMenu = [
-  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { id: "minhas-reservas", label: "Minhas Reservas", icon: ClipboardList, path: "/professor/reservas" },
-  { id: "nova-reserva", label: "Nova Reserva", icon: Calendar, path: "/professor/nova-reserva" },
+  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/professor/dashboard" },
+  { id: "projetos", label: "Meus Projetos", icon: FolderOpen, path: "/professor/projetos" },
+  { id: "cadastrar-alunos", label: "Cadastrar Alunos", icon: Users, path: "/professor/cadastrar-alunos" },
+  { id: "reservas-sistema", label: "Reservas do Sistema", icon: ClipboardList, path: "/professor/reservas-sistema" },
+  { id: "minhas-reservas", label: "Minhas Reservas", icon: Calendar, path: "/professor/minhas-reservas" },
+  { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/professor/nova-reserva" },
   { id: "historico", label: "Histórico", icon: Clock, path: "/professor/historico" },
-  { id: "perfil", label: "Meu Perfil", icon: Users, path: "/professor/perfil" },
+  { id: "configuracoes", label: "Configurações", icon: Settings, path: "/professor/configuracoes" },
 ];
 
 // Menu do Servidor
@@ -55,7 +61,8 @@ export const coordenadorMenu = [
 
 // Menu do Aluno
 export const alunoMenu = [
-  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/aluno/dashboard" },
+  { id: "projetos", label: "Projetos", icon: FolderOpen, path: "/aluno/projetos" },
   { id: "reservas", label: "Minhas Reservas", icon: ClipboardList, path: "/aluno/reservas" },
   { id: "nova-reserva", label: "Nova Reserva", icon: Calendar, path: "/aluno/nova-reserva" },
   { id: "historico", label: "Histórico", icon: Clock, path: "/aluno/historico" },
@@ -70,25 +77,45 @@ export const portariaMenu = [
 ];
 
 
+// Cache para menus para evitar recriações
+const menuCache = new Map();
+
 // Função para obter o menu baseado no tipo de usuário
 export const getUserMenu = (userType) => {
-  switch (userType.toLowerCase()) {
+  const key = userType.toLowerCase();
+  
+  if (menuCache.has(key)) {
+    return menuCache.get(key);
+  }
+  
+  let menu;
+  switch (key) {
     case "admin":
-      return adminMenu;
+      menu = adminMenu;
+      break;
     case "docente":
     case "professor":
-      return docenteMenu;
+      menu = docenteMenu;
+      break;
     case "servidor":
-      return servidorMenu;
+      menu = servidorMenu;
+      break;
     case "coordenador":
-      return coordenadorMenu;
+      menu = coordenadorMenu;
+      break;
     case "aluno":
-      return alunoMenu;
+      menu = alunoMenu;
+      break;
     case "portaria":
-      return portariaMenu;
+      menu = portariaMenu;
+      break;
     default:
-      return adminMenu;
+      menu = adminMenu;
   }
+  
+  // Cache o menu para evitar recriações
+  menuCache.set(key, menu);
+  return menu;
 };
 
 // Função para obter o tipo de usuário formatado

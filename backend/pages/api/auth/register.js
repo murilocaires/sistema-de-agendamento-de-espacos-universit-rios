@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -50,24 +50,27 @@ export default async function handler(req, res) {
     // Hash da senha
     const hashedPassword = await hashPassword(password);
 
-    // Inserir novo usuário
+    // Inserir novo usuário com status pending
     const result = await query(
-      `INSERT INTO users (name, email, siape, password_hash, role) 
-       VALUES ($1, $2, $3, $4, $5) 
-       RETURNING id, name, email, siape, role`,
-      [name, email.toLowerCase(), siape, hashedPassword, role || 'professor']
+      `INSERT INTO users (name, email, siape, password_hash, role, status) 
+        VALUES ($1, $2, $3, $4, $5, $6) 
+        RETURNING id, name, email, siape, role, status`,
+      [name, email.toLowerCase(), siape, hashedPassword, role || 'professor', 'pending']
     );
 
     const newUser = result.rows[0];
 
-    // Gerar token JWT
-    const token = generateToken(newUser.id, newUser.email, newUser.role);
-
     return res.status(201).json({
       success: true,
-      message: 'Usuário cadastrado com sucesso',
-      user: newUser,
-      token
+      message: 'Conta criada com sucesso! Aguarde a aprovação de um administrador para fazer login.',
+      user: {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        siape: newUser.siape,
+        role: newUser.role,
+        status: newUser.status
+      }
     });
 
   } catch (error) {

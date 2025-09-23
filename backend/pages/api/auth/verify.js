@@ -9,8 +9,8 @@ async function handler(req, res) {
   try {
     // Buscar dados atualizados do usuário no banco
     const result = await query(
-      'SELECT id, name, email, siape, role FROM users WHERE id = $1',
-      [req.user.userId]
+      'SELECT id, name, email, siape, matricula_sigaa, role, first_login, status FROM users WHERE id = $1',
+      [req.user.id]
     );
 
     if (result.rows.length === 0) {

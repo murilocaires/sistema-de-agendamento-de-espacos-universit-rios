@@ -15,6 +15,7 @@ export const verifyPassword = async (password, hashedPassword) => {
 // Gerar JWT token
 export const generateToken = (userId, email, role) => {
   const payload = {
+    id: userId,
     userId,
     email,
     role,

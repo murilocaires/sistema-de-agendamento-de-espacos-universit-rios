@@ -1,5 +1,6 @@
 import React from "react";
 import Sidebar from "../components/Sidebar";
+import NotificationIcon from "../components/NotificationIcon";
 
 const DashboardLayout = ({ children, userType = "ADMIN", menuItems = [] }) => {
   return (
@@ -11,6 +12,9 @@ const DashboardLayout = ({ children, userType = "ADMIN", menuItems = [] }) => {
       <div className="flex-1 bg-white rounded-tl-[20px] overflow-y-auto main-content-scroll">
         {children}
       </div>
+
+      {/* Ícone de Notificações Flutuante */}
+      <NotificationIcon />
     </div>
   );
 };

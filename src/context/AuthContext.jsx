@@ -52,8 +52,27 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setUser(userData);
 
-      // Redirecionar para a página principal após o login
-      navigate("/dashboard");
+      // Redirecionar para o dashboard específico baseado no tipo de usuário
+      const getDashboardPath = (role) => {
+        switch (role) {
+          case 'admin':
+            return '/admin/dashboard';
+          case 'professor':
+            return '/professor/dashboard';
+          case 'coordenador':
+            return '/coordenador/dashboard';
+          case 'portaria':
+            return '/portaria/dashboard';
+          case 'aluno':
+            return '/aluno/dashboard';
+          case 'servidor':
+            return '/servidor/dashboard';
+          default:
+            return '/dashboard';
+        }
+      };
+
+      navigate(getDashboardPath(userData.role));
     } catch (error) {
       throw error;
     }
@@ -78,5 +97,9 @@ export const AuthProvider = ({ children }) => {
     logout,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

@@ -15,6 +15,7 @@ async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       // Buscar todos os usuários (sem senhas)
+      // Professores veem apenas informações básicas
       const result = await query(
         'SELECT id, name, email, siape, role, created_at, updated_at FROM users ORDER BY name'
       );
@@ -106,5 +107,5 @@ async function handler(req, res) {
   }
 }
 
-// Admins e coordenadores podem acessar usuários (coordenadores só podem ver)
-export default requireRole(['admin', 'coordenador'])(withAuditLog('users')(handler));
+// Admins, coordenadores, professores e alunos podem acessar usuários (alunos, professores e coordenadores só podem ver)
+export default requireRole(['admin', 'coordenador', 'professor', 'aluno'])(withAuditLog('users')(handler));
