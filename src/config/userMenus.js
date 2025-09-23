@@ -20,6 +20,8 @@ import {
 export const adminMenu = [
   { id: "home", label: "Home", icon: LayoutDashboard, path: "/admin/dashboard" },
   { id: "aprovar-contas", label: "Aprovar Contas", icon: Users, path: "/admin/aprovar-contas" },
+  { id: "projetos", label: "Meus Projetos", icon: FolderOpen, path: "/admin/projetos" },
+  { id: "cadastrar-alunos", label: "Cadastrar Alunos", icon: Users, path: "/admin/cadastrar-alunos" },
   { id: "calendario-geral", label: "Calendário Geral", icon: Calendar, path: "/admin/calendario-geral" },
   { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/admin/nova-reserva" },
   { id: "aprovar-reservas", label: "Aprovar Reservas", icon: CheckSquare, path: "/admin/aprovar-reservas" },

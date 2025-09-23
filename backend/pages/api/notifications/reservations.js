@@ -13,10 +13,9 @@ async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const professor_id = req.user.id;
       const { status = 'pending' } = req.query;
 
-      // Buscar reservas pendentes de alunos dos projetos do professor
+      // Buscar reservas pendentes para admin
       const result = await query(`
         SELECT 
           r.id,
@@ -28,27 +27,22 @@ async function handler(req, res) {
           r.created_at,
           r.room_id,
           r.project_id,
-          r.professor_approved_by,
-          r.professor_approved_at,
+          r.people_count,
           u.name as student_name,
           u.email as student_email,
           u.matricula_sigaa as student_matricula,
           rm.name as room_name,
           rm.location as room_location,
+          rm.capacity as room_capacity,
           p.name as project_name,
-          p.type as project_type,
-          prof.name as professor_name
+          p.type as project_type
         FROM reservations r
         JOIN users u ON r.user_id = u.id
         JOIN rooms rm ON r.room_id = rm.id
         LEFT JOIN projects p ON r.project_id = p.id
-        LEFT JOIN users prof ON r.professor_approved_by = prof.id
         WHERE r.status = $1 
-        AND r.project_id IN (
-          SELECT id FROM projects WHERE professor_id = $2
-        )
         ORDER BY r.created_at DESC
-      `, [status, professor_id]);
+      `, [status]);
 
       return res.status(200).json({
         success: true,
@@ -66,5 +60,5 @@ async function handler(req, res) {
   }
 }
 
-// Apenas professores podem acessar
-export default requireRole(['professor'])(authMiddleware(handler));
+// Apenas admins podem acessar
+export default requireRole(['admin'])(authMiddleware(handler));

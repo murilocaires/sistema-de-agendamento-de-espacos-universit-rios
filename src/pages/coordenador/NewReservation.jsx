@@ -85,6 +85,7 @@ const [formData, setFormData] = useState({
     start_time: "",
     end_date: "",
     end_time: "",
+    people_count: 1,
     is_recurring: false,
     recurrence_type: "weekly",
     recurrence_end_date: "",
@@ -448,6 +449,7 @@ const handleSubmit = async (e) => {
             description: fullDescription,
             start_time: startDateTime,
             end_time: endDateTime,
+            people_count: parseInt(formData.people_count),
             is_recurring: true,
             recurrence_type: formData.recurrence_type,
             recurrence_end_date: `${formData.recurrence_end_date}T23:59:59`,
@@ -467,6 +469,7 @@ const handleSubmit = async (e) => {
             description: formData.description.trim(),
             start_time: startDateTime,
             end_time: endDateTime,
+            people_count: parseInt(formData.people_count),
             is_recurring: false,
             recurrence_type: null,
             recurrence_end_date: null,
@@ -685,6 +688,30 @@ return (
                 placeholder="Detalhes adicionais sobre a reserva..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+            </div>
+
+            {/* Quantidade de Pessoas */}
+            <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+                <UsersIcon size={16} className="inline mr-1" />
+                Quantidade de Pessoas
+            </label>
+            <input
+                type="number"
+                name="people_count"
+                value={formData.people_count}
+                onChange={handleInputChange}
+                min="1"
+                max={selectedRoom ? selectedRoom.capacity : 100}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Digite a quantidade de pessoas"
+            />
+            {selectedRoom && (
+                <p className="mt-1 text-sm text-gray-600">
+                    Capacidade da sala: {selectedRoom.capacity} pessoas
+                </p>
+            )}
             </div>
 
             {/* Seção de Datas e Horários */}

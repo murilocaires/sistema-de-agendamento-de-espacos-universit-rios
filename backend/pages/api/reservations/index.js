@@ -109,6 +109,7 @@ async function handler(req, res) {
         description = '',
         start_time,
         end_time,
+        people_count = 1,
         is_recurring = false,
         recurrence_type = null,
         recurrence_end_date = null,
@@ -124,6 +125,13 @@ async function handler(req, res) {
       if (!user_id || !room_id || !title || !start_time || !end_time) {
         return res.status(400).json({ 
           error: 'Usuário, sala, título, data/hora de início e fim são obrigatórios' 
+        });
+      }
+
+      // Validar quantidade de pessoas
+      if (!people_count || people_count < 1) {
+        return res.status(400).json({ 
+          error: 'Quantidade de pessoas deve ser pelo menos 1' 
         });
       }
 
@@ -234,7 +242,7 @@ async function handler(req, res) {
 
       // Verificar se a sala existe e está ativa
       const roomCheck = await query(
-        'SELECT id, name, is_active FROM rooms WHERE id = $1',
+        'SELECT id, name, is_active, capacity FROM rooms WHERE id = $1',
         [room_id]
       );
 
@@ -244,6 +252,14 @@ async function handler(req, res) {
 
       if (!roomCheck.rows[0].is_active) {
         return res.status(400).json({ error: 'Sala não está ativa' });
+      }
+
+      // Verificar se a quantidade de pessoas não excede a capacidade da sala
+      const roomCapacity = roomCheck.rows[0].capacity;
+      if (people_count > roomCapacity) {
+        return res.status(400).json({ 
+          error: `A quantidade de pessoas (${people_count}) excede a capacidade da sala (${roomCapacity} pessoas)` 
+        });
       }
 
       // Verificar se o usuário é aluno e tem projeto associado
@@ -323,19 +339,24 @@ async function handler(req, res) {
         initialStatus = 'approved';
         approved_by = user_id;
         approved_at = new Date().toISOString();
+      } else if (user_role === 'aluno') {
+        // Alunos vão direto para o admin (não passam pelo professor)
+        initialStatus = 'pending';
+        approved_by = null;
+        approved_at = null;
       }
 
       // Inserir nova reserva
       const result = await query(`
         INSERT INTO reservations (
           user_id, room_id, project_id, title, description, start_time, end_time,
-          status, is_recurring, recurrence_type, recurrence_end_date, recurrence_interval,
+          people_count, status, is_recurring, recurrence_type, recurrence_end_date, recurrence_interval,
           approved_by, approved_at, priority
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING *
       `, [
         user_id, room_id, project_id, title, description, start_time, end_time,
-        initialStatus, is_recurring, recurrence_type, recurrence_end_date, recurrence_interval,
+        people_count, initialStatus, is_recurring, recurrence_type, recurrence_end_date, recurrence_interval,
         approved_by, approved_at, priority
       ]);
 

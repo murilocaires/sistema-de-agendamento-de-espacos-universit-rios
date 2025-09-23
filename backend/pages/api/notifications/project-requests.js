@@ -53,5 +53,5 @@ async function handler(req, res) {
   }
 }
 
-// Apenas professores podem acessar
-export default requireRole(['professor'])(authMiddleware(handler));
+// Professores e admins podem acessar
+export default requireRole(['professor', 'admin'])(authMiddleware(handler));

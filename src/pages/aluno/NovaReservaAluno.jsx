@@ -60,6 +60,7 @@ const NovaReservaAluno = () => {
     room_id: "",
     start_time: "",
     end_time: "",
+    people_count: 1,
     recurrence_type: "none",
     recurrence_end_date: "",
     recurrence_interval: 1
@@ -217,6 +218,15 @@ const NovaReservaAluno = () => {
       newErrors.end_time = "Data/hora de fim é obrigatória";
     }
 
+    if (!formData.people_count || formData.people_count < 1) {
+      newErrors.people_count = "Quantidade de pessoas deve ser pelo menos 1";
+    }
+
+    // Verificar se a quantidade de pessoas não excede a capacidade da sala
+    if (formData.people_count && selectedRoom && formData.people_count > selectedRoom.capacity) {
+      newErrors.people_count = `A quantidade de pessoas (${formData.people_count}) excede a capacidade da sala (${selectedRoom.capacity} pessoas)`;
+    }
+
     if (formData.start_time && formData.end_time) {
       const startDate = new Date(formData.start_time);
       const endDate = new Date(formData.end_time);
@@ -310,6 +320,7 @@ const NovaReservaAluno = () => {
         room_id: parseInt(formData.room_id),
         start_time: formData.start_time,
         end_time: formData.end_time,
+        people_count: parseInt(formData.people_count),
         recurrence_type: formData.recurrence_type,
         recurrence_end_date: formData.recurrence_type !== "none" ? formData.recurrence_end_date : null,
         recurrence_interval: formData.recurrence_type !== "none" ? parseInt(formData.recurrence_interval) : null
@@ -400,6 +411,7 @@ const NovaReservaAluno = () => {
       room_id: "",
       start_time: "",
       end_time: "",
+      people_count: 1,
       date: "",
       recurrence_type: "none",
       recurrence_end_date: "",
@@ -582,6 +594,31 @@ const NovaReservaAluno = () => {
                   {myProjects.length === 0 && (
                     <p className="mt-1 text-sm text-yellow-600">
                       Você não está participando de nenhum projeto. Acesse a página de Projetos para solicitar participação.
+                    </p>
+                  )}
+                </div>
+
+                {/* Quantidade de Pessoas */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quantidade de Pessoas *
+                  </label>
+                  <input
+                    type="number"
+                    name="people_count"
+                    value={formData.people_count}
+                    onChange={handleInputChange}
+                    min="1"
+                    max={selectedRoom ? selectedRoom.capacity : 100}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors.people_count ? "border-red-500" : "border-gray-300"
+                    }`}
+                    placeholder="Digite a quantidade de pessoas"
+                  />
+                  {errors.people_count && <p className="mt-1 text-sm text-red-600">{errors.people_count}</p>}
+                  {selectedRoom && (
+                    <p className="mt-1 text-sm text-gray-600">
+                      Capacidade da sala: {selectedRoom.capacity} pessoas
                     </p>
                   )}
                 </div>

@@ -56,15 +56,15 @@ async function handler(req, res) {
       const reservation = reservationResult.rows[0];
       const oldValues = reservation;
 
-      // Se for professor, verificar se a reserva é de um dos seus projetos
-      if (req.user.role === 'professor' && reservation.project_professor_id !== req.user.id) {
-        return res.status(403).json({ error: 'Você só pode aprovar reservas dos seus projetos' });
+      // Apenas admins podem aprovar/rejeitar reservas
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Apenas administradores podem aprovar reservas' });
       }
 
       // Verificar se a reserva pode ser processada
-      if (reservation.status !== 'pending' && reservation.status !== 'professor_approved') {
-        // Apenas admins podem rejeitar reservas já aprovadas
-        if (action === 'reject' && reservation.status === 'approved' && req.user.role === 'admin') {
+      if (reservation.status !== 'pending') {
+        // Permitir que admin revogue aprovação de reservas aprovadas
+        if (action === 'reject' && reservation.status === 'approved') {
           // Permitir que admin revogue aprovação
         } 
         // Permitir aprovação de reservas rejeitadas
@@ -76,20 +76,6 @@ async function handler(req, res) {
             error: `Reserva já foi ${reservation.status === 'approved' ? 'aprovada' : 'rejeitada'}` 
           });
         }
-      }
-
-      // Verificar se professor está tentando aprovar reserva já aprovada por ele
-      if (req.user.role === 'professor' && reservation.status === 'professor_approved') {
-        return res.status(400).json({ 
-          error: 'Esta reserva já foi aprovada por você e está aguardando aprovação do administrador' 
-        });
-      }
-
-      // Verificar se admin está tentando aprovar reserva que não foi aprovada pelo professor
-      if (req.user.role === 'admin' && action === 'approve' && reservation.status === 'pending') {
-        return res.status(400).json({ 
-          error: 'Esta reserva precisa ser aprovada pelo professor responsável pelo projeto primeiro' 
-        });
       }
 
       // Verificar conflitos de horário se aprovando
@@ -120,23 +106,18 @@ async function handler(req, res) {
       let updateParams;
 
       if (action === 'approve') {
-        // Se for professor, aprovação vai para admin
-        // Se for admin, aprovação é final
-        const newStatus = req.user.role === 'professor' ? 'professor_approved' : 'approved';
-        const approvedByField = req.user.role === 'professor' ? 'professor_approved_by' : 'approved_by';
-        const approvedAtField = req.user.role === 'professor' ? 'professor_approved_at' : 'approved_at';
-        
+        // Admin aprova diretamente
         updateQuery = `
           UPDATE reservations 
-          SET status = $1, 
-              ${approvedByField} = $2, 
-              ${approvedAtField} = CURRENT_TIMESTAMP,
+          SET status = 'approved', 
+              approved_by = $1, 
+              approved_at = CURRENT_TIMESTAMP,
               rejection_reason = NULL,
               updated_at = CURRENT_TIMESTAMP
-          WHERE id = $3 
+          WHERE id = $2 
           RETURNING *
         `;
-        updateParams = [newStatus, user_id, reservation_id];
+        updateParams = [user_id, reservation_id];
       } else {
         updateQuery = `
           UPDATE reservations 

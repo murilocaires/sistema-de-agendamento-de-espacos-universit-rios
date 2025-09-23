@@ -1031,6 +1031,18 @@ return (
                     </p>
                 </div>
 
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Quantidade de Pessoas</label>
+                    <p className="text-sm text-gray-900">
+                        {detailsReservation.people_count} pessoa{detailsReservation.people_count !== 1 ? 's' : ''}
+                    </p>
+                    {detailsReservation.room_capacity && (
+                        <p className="text-xs text-gray-600">
+                            Capacidade da sala: {detailsReservation.room_capacity} pessoas
+                        </p>
+                    )}
+                </div>
+
                 {/* Status Atual */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Status Atual</label>

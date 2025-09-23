@@ -30,12 +30,15 @@ const NotificationIcon = () => {
         setAdminReservationNotifications([]);
         setUnreadCount((projectData || []).length + (reservationData || []).length);
       } else if (user.role === 'admin') {
-        const adminReservationData = await getAdminReservationNotifications();
+        const [projectData, adminReservationData] = await Promise.all([
+          getProjectRequestNotifications('pending'),
+          getAdminReservationNotifications()
+        ]);
         
-        setProjectNotifications([]);
+        setProjectNotifications(projectData || []);
         setReservationNotifications([]);
         setAdminReservationNotifications(adminReservationData || []);
-        setUnreadCount((adminReservationData || []).length);
+        setUnreadCount((projectData || []).length + (adminReservationData || []).length);
       }
     } catch (error) {
       console.error('Erro ao carregar notificações:', error);
@@ -317,12 +320,12 @@ const NotificationIcon = () => {
                     </div>
                   )}
 
-                  {/* Notificações de Admin - Reservas Aprovadas pelo Professor */}
+                  {/* Notificações de Admin - Reservas Pendentes */}
                   {adminReservationNotifications.length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                        <CheckCircle className="text-purple-600" size={20} />
-                        Reservas Aprovadas pelo Professor ({adminReservationNotifications.length})
+                        <Clock className="text-orange-600" size={20} />
+                        Reservas Pendentes ({adminReservationNotifications.length})
                       </h3>
                       <div className="space-y-4">
                         {adminReservationNotifications.map((reservation) => (
@@ -333,32 +336,29 @@ const NotificationIcon = () => {
                             <div className="space-y-3">
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
-                                  <h4 className="font-semibold text-purple-900 mb-1">
-                                    Reserva aprovada pelo professor
+                                  <h4 className="font-semibold text-orange-900 mb-1">
+                                    Nova reserva pendente
                                   </h4>
-                                  <p className="text-purple-800 mb-2">
+                                  <p className="text-orange-800 mb-2">
                                     <strong>{reservation.student_name}</strong> - <strong>{reservation.room_name}</strong>
                                   </p>
-                                  <p className="text-purple-700 text-sm mb-2">
+                                  <p className="text-orange-700 text-sm mb-2">
                                     <strong>Projeto:</strong> {reservation.project_name} - {reservation.project_type}
                                   </p>
-                                  <p className="text-purple-700 text-sm mb-2">
-                                    <strong>Professor:</strong> {reservation.professor_name}
-                                  </p>
-                                  <p className="text-purple-700 text-sm mb-2">
+                                  <p className="text-orange-700 text-sm mb-2">
                                     <strong>Evento:</strong> {reservation.title}
                                   </p>
+                                  <p className="text-orange-700 text-sm mb-2">
+                                    <strong>Pessoas:</strong> {reservation.people_count} (Capacidade: {reservation.room_capacity})
+                                  </p>
                                   {reservation.description && (
-                                    <p className="text-purple-700 text-sm mb-2 italic">
+                                    <p className="text-orange-700 text-sm mb-2 italic">
                                       "{reservation.description}"
                                     </p>
                                   )}
-                                  <div className="flex items-center gap-4 text-sm text-purple-600">
+                                  <div className="flex items-center gap-4 text-sm text-orange-600">
                                     <span>Data: {new Date(reservation.start_time).toLocaleDateString('pt-BR')}</span>
                                     <span>Hora: {new Date(reservation.start_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} - {new Date(reservation.end_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</span>
-                                  </div>
-                                  <div className="text-xs text-purple-500 mt-2">
-                                    Aprovado pelo professor em: {new Date(reservation.professor_approved_at).toLocaleString('pt-BR')}
                                   </div>
                                 </div>
                                 <div className="text-right">
@@ -373,10 +373,10 @@ const NotificationIcon = () => {
                                 <button
                                   onClick={() => handleApproveReservation(reservation.id)}
                                   className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                                  title="Aprovar reserva (aprovação final)"
+                                  title="Aprovar reserva"
                                 >
                                   <CheckCircle size={16} />
-                                  Aprovar Final
+                                  Aprovar
                                 </button>
                                 <button
                                   onClick={() => handleRejectReservation(reservation.id)}

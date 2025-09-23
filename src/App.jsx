@@ -19,6 +19,8 @@ import NewReservationCoordenador from "./pages/coordenador/NewReservation";
 import ApproveReservations from "./pages/admin/ApproveReservations";
 import AprovarContas from "./pages/admin/AprovarContas";
 import Logs from "./pages/admin/Logs";
+import ProjetosAdmin from "./pages/admin/Projetos";
+import CadastrarAlunosAdmin from "./pages/admin/CadastrarAlunos";
 import ReservasPortaria from "./pages/portaria/ReservasPortaria";
 import DashboardProfessor from "./pages/professor/DashboardProfessor";
 import ReservasSistema from "./pages/professor/ReservasSistema";
@@ -128,6 +130,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <Logs />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rota protegida para projetos do admin */}
+          <Route
+            path="/admin/projetos"
+            element={
+              <ProtectedRoute>
+                <ProjetosAdmin />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rota protegida para cadastrar alunos (admin) */}
+          <Route
+            path="/admin/cadastrar-alunos"
+            element={
+              <ProtectedRoute>
+                <CadastrarAlunosAdmin />
               </ProtectedRoute>
             }
           />
