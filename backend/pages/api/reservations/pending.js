@@ -31,6 +31,8 @@ async function handler(req, res) {
           p.name as project_name,
           p.type as project_type,
           p.description as project_description,
+          up.name as project_professor_name,
+          up.email as project_professor_email,
           prof.name as professor_name,
           prof.email as professor_email,
           approver.name as approved_by_name,
@@ -39,6 +41,7 @@ async function handler(req, res) {
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN rooms rm ON r.room_id = rm.id
         LEFT JOIN projects p ON r.project_id = p.id
+        LEFT JOIN users up ON p.professor_id = up.id
         LEFT JOIN users prof ON r.professor_approved_by = prof.id
         LEFT JOIN users approver ON r.approved_by = approver.id
         WHERE r.status IN ('pending', 'professor_approved')

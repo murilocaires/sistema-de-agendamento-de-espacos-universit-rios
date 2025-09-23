@@ -17,6 +17,7 @@ const Projetos = () => {
   const [availableStudents, setAvailableStudents] = useState([]);
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [ownerFilter, setOwnerFilter] = useState('all'); // all | admin | professor
   
   // Estados para solicitações
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -38,7 +39,8 @@ const Projetos = () => {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const data = await getProjects({ professor_id: user?.id });
+      // Admin deve ver todos os projetos; não filtrar por professor
+      const data = await getProjects();
       setProjects(data);
     } catch (error) {
       console.error('Erro ao carregar projetos:', error);
@@ -64,8 +66,7 @@ const Projetos = () => {
     try {
       await createProject({
         name: newProject.name,
-        type: newProject.type,
-        professor_id: user.id
+        type: newProject.type
       });
       setNewProject({ name: '', type: '' });
       setShowCreateModal(false);
@@ -90,11 +91,11 @@ const Projetos = () => {
     setSelectedProject(project);
     try {
       const [availableData, studentsData] = await Promise.all([
-        getAvailableStudents(),
+        getAvailableStudents(project.id),
         getProjectStudents(project.id)
       ]);
-      setAvailableStudents(availableData);
-      setStudents(studentsData);
+      setAvailableStudents(availableData || []);
+      setStudents(studentsData || []);
       setShowStudentsModal(true);
     } catch (error) {
       console.error('Erro ao carregar dados dos alunos:', error);
@@ -105,11 +106,15 @@ const Projetos = () => {
     try {
       await addStudentToProject(selectedProject.id, studentId);
       const [availableData, studentsData] = await Promise.all([
-        getAvailableStudents(),
+        getAvailableStudents(selectedProject.id),
         getProjectStudents(selectedProject.id)
       ]);
-      setAvailableStudents(availableData);
-      setStudents(studentsData);
+      setAvailableStudents(availableData || []);
+      setStudents(studentsData || []);
+      // Atualizar contador no card do projeto
+      setProjects(prev => prev.map(p => 
+        p.id === selectedProject.id ? { ...p, student_count: (studentsData || []).length } : p
+      ));
     } catch (error) {
       console.error('Erro ao adicionar aluno:', error);
     }
@@ -119,11 +124,15 @@ const Projetos = () => {
     try {
       await removeStudentFromProject(selectedProject.id, studentId);
       const [availableData, studentsData] = await Promise.all([
-        getAvailableStudents(),
+        getAvailableStudents(selectedProject.id),
         getProjectStudents(selectedProject.id)
       ]);
-      setAvailableStudents(availableData);
-      setStudents(studentsData);
+      setAvailableStudents(availableData || []);
+      setStudents(studentsData || []);
+      // Atualizar contador no card do projeto
+      setProjects(prev => prev.map(p => 
+        p.id === selectedProject.id ? { ...p, student_count: (studentsData || []).length } : p
+      ));
     } catch (error) {
       console.error('Erro ao remover aluno:', error);
     }
@@ -148,26 +157,51 @@ const Projetos = () => {
     }
   };
 
-  const filteredStudents = availableStudents.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = availableStudents
+    // remover da lista disponível quem já está no projeto
+    .filter(av => !students.some(ps => ps.student_id === av.id))
+    // aplicar busca
+    .filter(student =>
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+  // Separar projetos por proprietário (admin atual x professores)
+  const adminProjects = projects.filter(p => p.professor_id === user?.id);
+  const professorProjects = projects.filter(p => p.professor_id !== user?.id);
+
+  const visibleAdminProjects = ownerFilter === 'all' || ownerFilter === 'admin' ? adminProjects : [];
+  const visibleProfessorProjects = ownerFilter === 'all' || ownerFilter === 'professor' ? professorProjects : [];
 
   return (
     <AdminLayout>
       <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Meus Projetos</h1>
             <p className="text-gray-600">Gerencie seus projetos de extensão</p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Novo Projeto
-          </button>
+          <div className="flex items-center gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Filtrar por</label>
+              <select
+                value={ownerFilter}
+                onChange={(e) => setOwnerFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="all">Todos</option>
+                <option value="admin">Criados por Admin</option>
+                <option value="professor">De Professores</option>
+              </select>
+            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Novo Projeto
+            </button>
+          </div>
         </div>
 
         {/* Solicitações Pendentes */}
@@ -215,69 +249,139 @@ const Projetos = () => {
           </div>
         )}
 
-        {/* Lista de Projetos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? (
-            <div className="col-span-full flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : projects.length === 0 ? (
-            <div className="col-span-full text-center py-8">
-              <p className="text-gray-500">Nenhum projeto encontrado</p>
-            </div>
-          ) : (
-            projects.map((project) => (
-              <div
-                key={project.id}
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => openStudentsModal(project)}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">{project.name}</h3>
-                    <p className="text-sm text-gray-600">{project.type}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openStudentsModal(project);
-                      }}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="Gerenciar alunos"
-                    >
-                      <Users size={20} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteProject(project.id);
-                      }}
-                      className="text-red-600 hover:text-red-800"
-                      title="Excluir projeto"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  </div>
+        {/* Lista de Projetos com separação visual */}
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Grupo: Criados por Admin */}
+            {visibleAdminProjects.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-gray-800">Criados por Admin ({visibleAdminProjects.length})</h2>
                 </div>
-                
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <Users size={16} />
-                    {project.student_count || 0} aluno(s)
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-                
-                <div className="mt-3 text-xs text-gray-500 text-center">
-                  Clique para gerenciar alunos
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {visibleAdminProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => openStudentsModal(project)}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800">{project.name}</h3>
+                          <p className="text-sm text-gray-600">{project.type}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openStudentsModal(project);
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="Gerenciar alunos"
+                          >
+                            <Users size={20} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteProject(project.id);
+                            }}
+                            className="text-red-600 hover:text-red-800"
+                            title="Excluir projeto"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <Users size={16} />
+                          {project.student_count || 0} aluno(s)
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                      <div className="mt-3 text-xs text-gray-500 text-center">
+                        Clique para gerenciar alunos
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            )}
+
+            {/* Grupo: De Professores */}
+            {visibleProfessorProjects.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-gray-800">De Professores ({visibleProfessorProjects.length})</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {visibleProfessorProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => openStudentsModal(project)}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800">{project.name}</h3>
+                          <p className="text-sm text-gray-600">{project.type}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openStudentsModal(project);
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="Gerenciar alunos"
+                          >
+                            <Users size={20} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteProject(project.id);
+                            }}
+                            className="text-red-600 hover:text-red-800"
+                            title="Excluir projeto"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-2">Professor: {project.professor_name} ({project.professor_email})</p>
+                      <div className="flex items-center justify-between text-sm text-gray-600">
+                        <span className="flex items-center gap-1">
+                          <Users size={16} />
+                          {project.student_count || 0} aluno(s)
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Criado em {new Date(project.created_at).toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                      <div className="mt-3 text-xs text-gray-500 text-center">
+                        Clique para gerenciar alunos
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {visibleAdminProjects.length === 0 && visibleProfessorProjects.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Nenhum projeto encontrado</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Modal de Criar Projeto */}
         {showCreateModal && (
@@ -358,11 +462,11 @@ const Projetos = () => {
                     {students.map((student) => (
                       <div key={student.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
                         <div>
-                          <p className="font-medium">{student.name}</p>
-                          <p className="text-sm text-gray-600">{student.email}</p>
+                          <p className="font-medium">{student.student_name}</p>
+                          <p className="text-sm text-gray-600">{student.student_email}</p>
                         </div>
                         <button
-                          onClick={() => handleRemoveStudent(student.id)}
+                          onClick={() => handleRemoveStudent(student.student_id)}
                           className="text-red-600 hover:text-red-800"
                           title="Remover do projeto"
                         >

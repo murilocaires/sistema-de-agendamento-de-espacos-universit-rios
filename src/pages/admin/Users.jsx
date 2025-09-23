@@ -6,7 +6,8 @@ import {
   getUsers, 
   createUser, 
   updateUser, 
-  deleteUser 
+  deleteUser,
+  createStudent
 } from "../../services/authService";
 import { 
   Plus, 
@@ -40,6 +41,7 @@ const Users = () => {
     name: "",
     email: "",
     siape: "",
+    matricula_sigaa: "",
     password: "",
     role: "professor"
   });
@@ -95,6 +97,7 @@ const Users = () => {
         name: "",
         email: "",
         siape: "",
+        matricula_sigaa: "",
         password: "",
         role: "professor"
       });
@@ -103,6 +106,7 @@ const Users = () => {
         name: userData.name,
         email: userData.email,
         siape: userData.siape,
+        matricula_sigaa: userData.matricula_sigaa || "",
         password: "",
         role: userData.role
       });
@@ -144,10 +148,37 @@ const Users = () => {
 
     try {
       if (modalMode === "create") {
-        await createUser(formData);
+        if (formData.role === "aluno") {
+          // validação básica de matrícula
+          if (!/^\d{6}$/.test(formData.matricula_sigaa || "")) {
+            throw new Error("A matrícula do SIGAA deve conter exatamente 6 dígitos");
+          }
+          await createStudent({
+            name: formData.name.trim(),
+            email: formData.email.trim().toLowerCase(),
+            matricula_sigaa: formData.matricula_sigaa,
+            password: formData.password
+          });
+        } else {
+          await createUser({
+            name: formData.name,
+            email: formData.email,
+            siape: formData.siape,
+            password: formData.password,
+            role: formData.role
+          });
+        }
         setSuccessMessage("Usuário criado com sucesso!");
       } else if (modalMode === "edit") {
-        await updateUser(selectedUser.id, formData);
+        // Para edição, envia também matricula_sigaa se for aluno (se o backend aceitar)
+        await updateUser(selectedUser.id, {
+          name: formData.name,
+          email: formData.email,
+          siape: formData.role === 'aluno' ? '' : formData.siape,
+          matricula_sigaa: formData.role === 'aluno' ? formData.matricula_sigaa : undefined,
+          password: formData.password,
+          role: formData.role
+        });
         setSuccessMessage("Usuário atualizado com sucesso!");
       }
       
@@ -457,20 +488,40 @@ const Users = () => {
                   />
                 </div>
 
-                {/* SIAPE */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    SIAPE
-                  </label>
-                  <input
-                    type="text"
-                    name="siape"
-                    value={formData.siape}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              {/* Documento institucional: SIAPE (demais papéis) ou Matrícula SIGAA (aluno) */}
+                {formData.role === 'aluno' ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Matrícula SIGAA
+                    </label>
+                    <input
+                      type="text"
+                      name="matricula_sigaa"
+                      value={formData.matricula_sigaa}
+                      onChange={handleInputChange}
+                      required
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="123456"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Digite 6 dígitos</p>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      SIAPE
+                    </label>
+                    <input
+                      type="text"
+                      name="siape"
+                      value={formData.siape}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
 
                 {/* Senha */}
                 <div>

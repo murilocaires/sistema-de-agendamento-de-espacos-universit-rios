@@ -35,7 +35,7 @@ moment.locale('pt-br', {
 });
 const localizer = momentLocalizer(moment);
 
-const NewReservation = () => {
+const NewReservation = ({ embed = false }) => {
 const { user } = useAuth();
 const userType = user?.role || "admin";
 const menuItems = getUserMenu(userType);
@@ -240,33 +240,24 @@ const getRoomName = (roomId) => {
 };
 
 if (loading) {
-    return (
-    <DashboardLayout userType={userTypeDisplay} menuItems={menuItems}>
-        <div className="p-8">
+    const content = (
+      <div className="p-8">
         <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Carregando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando...</p>
         </div>
-        </div>
-    </DashboardLayout>
+      </div>
+    );
+    return embed ? content : (
+      <DashboardLayout userType={userTypeDisplay} menuItems={menuItems}>
+        {content}
+      </DashboardLayout>
     );
 }
 
-return (
-    <DashboardLayout userType={userTypeDisplay} menuItems={menuItems}>
+const content = (
     <div className="p-8">
         {/* Header */}
-        <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-            <CalendarPlus className="text-blue-600" size={32} />
-            <h1 className="text-2xl font-bold text-gray-800">
-            Nova Reserva
-            </h1>
-        </div>
-        <p className="text-gray-700">
-            Criar uma nova reserva de sala
-        </p>
-        </div>
 
         {/* Mensagens */}
         {error && (
@@ -683,7 +674,12 @@ return (
         
         </div>
     </div>
-    </DashboardLayout>
+);
+
+return embed ? content : (
+  <DashboardLayout userType={userTypeDisplay} menuItems={menuItems}>
+    {content}
+  </DashboardLayout>
 );
 };
 

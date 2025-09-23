@@ -54,9 +54,9 @@ async function handler(req, res) {
     }
 
   } else if (req.method === 'POST') {
-    // Apenas professores podem criar projetos
-    if (req.user.role !== 'professor') {
-      return res.status(403).json({ error: 'Apenas professores podem criar projetos' });
+    // Professores e admins podem criar projetos
+    if (!['professor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Apenas professores e administradores podem criar projetos' });
     }
 
     try {

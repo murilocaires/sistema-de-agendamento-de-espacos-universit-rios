@@ -40,9 +40,9 @@ async function handler(req, res) {
     }
 
   } else if (req.method === 'POST') {
-    // Apenas professores podem adicionar alunos
-    if (req.user.role !== 'professor') {
-      return res.status(403).json({ error: 'Apenas professores podem adicionar alunos' });
+    // Professores e admins podem adicionar alunos
+    if (!['professor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Apenas professores e administradores podem adicionar alunos' });
     }
 
     try {
@@ -52,14 +52,16 @@ async function handler(req, res) {
         return res.status(400).json({ error: 'ID do aluno é obrigatório' });
       }
 
-      // Verificar se o projeto pertence ao professor
-      const projectCheck = await query(
-        'SELECT id FROM projects WHERE id = $1 AND professor_id = $2',
-        [projectId, req.user.id]
-      );
+      // Verificar se o projeto pertence ao professor (somente quando o usuário é professor)
+      if (req.user.role === 'professor') {
+        const projectCheck = await query(
+          'SELECT id FROM projects WHERE id = $1 AND professor_id = $2',
+          [projectId, req.user.id]
+        );
 
-      if (projectCheck.rows.length === 0) {
-        return res.status(403).json({ error: 'Você não tem permissão para modificar este projeto' });
+        if (projectCheck.rows.length === 0) {
+          return res.status(403).json({ error: 'Você não tem permissão para modificar este projeto' });
+        }
       }
 
       // Verificar se o aluno existe e é realmente um aluno
@@ -111,9 +113,9 @@ async function handler(req, res) {
     }
 
   } else if (req.method === 'DELETE') {
-    // Apenas professores podem remover alunos
-    if (req.user.role !== 'professor') {
-      return res.status(403).json({ error: 'Apenas professores podem remover alunos' });
+    // Professores e admins podem remover alunos
+    if (!['professor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Apenas professores e administradores podem remover alunos' });
     }
 
     try {
@@ -123,14 +125,16 @@ async function handler(req, res) {
         return res.status(400).json({ error: 'ID do aluno é obrigatório' });
       }
 
-      // Verificar se o projeto pertence ao professor
-      const projectCheck = await query(
-        'SELECT id FROM projects WHERE id = $1 AND professor_id = $2',
-        [projectId, req.user.id]
-      );
+      // Verificar se o projeto pertence ao professor (somente quando o usuário é professor)
+      if (req.user.role === 'professor') {
+        const projectCheck = await query(
+          'SELECT id FROM projects WHERE id = $1 AND professor_id = $2',
+          [projectId, req.user.id]
+        );
 
-      if (projectCheck.rows.length === 0) {
-        return res.status(403).json({ error: 'Você não tem permissão para modificar este projeto' });
+        if (projectCheck.rows.length === 0) {
+          return res.status(403).json({ error: 'Você não tem permissão para modificar este projeto' });
+        }
       }
 
       // Buscar dados do aluno antes de remover
