@@ -228,24 +228,7 @@ div[class*="allday"] {
   scrollbar-color: #c1c1c1 #f1f1f1;
 }
 
-/* Scroll personalizado para layout principal */
-.main-content-scroll::-webkit-scrollbar {
-  width: 8px;
-}
-
-.main-content-scroll::-webkit-scrollbar-track {
-  background: #f8f9fa;
-  border-radius: 4px;
-}
-
-.main-content-scroll::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
-}
-
-.main-content-scroll::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
+/* Scroll personalizado para layout principal - removido para evitar barra branca */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -253,22 +236,22 @@ div[class*="allday"] {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .rbc-toolbar button {
     padding: 6px 10px;
     font-size: 13px;
   }
-  
+
   .rbc-toolbar-label {
     font-size: 16px;
     text-align: center;
   }
-  
+
   .rbc-header {
     font-size: 13px;
     padding: 6px 2px;
   }
-  
+
   .rbc-event {
     font-size: 11px;
     padding: 1px 3px;

@@ -259,7 +259,10 @@ const Historico = ({
   };
 
   return (
-    <div className="px-12 mt-12 pb-6" style={{ backgroundColor: "#FFFFFF" }}>
+    <div
+      className="px-6 md:px-12 mt-12 pb-6"
+      style={{ backgroundColor: "#FFFFFF" }}
+    >
       {/* Header */}
       <div className="mb-8">
         <h1
@@ -309,7 +312,7 @@ const Historico = ({
                 <thead>
                   <tr>
                     <th
-                      className="px-6 py-3 text-left tracking-wider"
+                      className="hidden md:table-cell px-6 py-3 text-left tracking-wider"
                       style={{
                         color: "#858B99",
                         fontSize: "14px",
@@ -317,10 +320,10 @@ const Historico = ({
                         fontWeight: "normal",
                       }}
                     >
-                      Atualizado em
+                      Criado em
                     </th>
                     <th
-                      className="px-6 py-3 text-left tracking-wider"
+                      className="pl-6 pr-1 md:px-6 py-3 text-left tracking-wider"
                       style={{
                         color: "#858B99",
                         fontSize: "14px",
@@ -331,7 +334,7 @@ const Historico = ({
                       Título
                     </th>
                     <th
-                      className="px-6 py-3 text-left tracking-wider"
+                      className="hidden md:table-cell px-6 py-3 text-left tracking-wider"
                       style={{
                         color: "#858B99",
                         fontSize: "14px",
@@ -342,7 +345,7 @@ const Historico = ({
                       Sala
                     </th>
                     <th
-                      className="px-6 py-3 text-left tracking-wider"
+                      className="hidden md:table-cell px-6 py-3 text-left tracking-wider"
                       style={{
                         color: "#858B99",
                         fontSize: "14px",
@@ -353,7 +356,7 @@ const Historico = ({
                       Responsável
                     </th>
                     <th
-                      className="px-6 py-3 text-left tracking-wider"
+                      className="pl-6 pr-1 md:px-6 py-3 text-left tracking-wider"
                       style={{
                         color: "#858B99",
                         fontSize: "14px",
@@ -364,7 +367,7 @@ const Historico = ({
                       Status
                     </th>
                     <th
-                      className="px-6 py-3 text-left tracking-wider"
+                      className="hidden md:table-cell px-6 py-3 text-left tracking-wider"
                       style={{
                         color: "#858B99",
                         fontSize: "14px",
@@ -387,7 +390,7 @@ const Historico = ({
                       }}
                       className="hover:opacity-80"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
                           {new Date(
                             reservation.updated_at || reservation.created_at
@@ -400,19 +403,15 @@ const Historico = ({
                           })}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="pl-6 pr-1 md:px-6 py-4">
                         <div
-                          className="text-sm font-bold text-gray-900"
-                          style={{
-                            width: "200px",
-                            wordWrap: "break-word",
-                            overflowWrap: "break-word",
-                          }}
+                          className="text-sm font-bold text-gray-900 md:w-auto"
+                          style={{ width: "98%" }}
                         >
                           {reservation.title}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
                           {reservation.room_name}
                         </div>
@@ -420,7 +419,7 @@ const Historico = ({
                           {reservation.room_location}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-8 w-8">
                             <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
@@ -438,30 +437,68 @@ const Historico = ({
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div
-                          className="inline-flex items-center px-3"
-                          style={{
-                            height: "28px",
-                            borderRadius: "999px",
-                            backgroundColor: getStatusBackground(
-                              reservation.status
-                            ),
-                          }}
-                        >
-                          {getStatusIcon(reservation.status)}
-                          <span
-                            className="ml-2 text-xs font-semibold"
+                      <td className="pl-6 pr-1 md:px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center justify-start gap-3 md:gap-2">
+                          {/* Mobile: Apenas Status */}
+                          <div className="flex items-center md:hidden">
+                            <div
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-full"
+                              style={{
+                                backgroundColor: getStatusBackground(
+                                  reservation.status
+                                ),
+                              }}
+                            >
+                              {getStatusIcon(reservation.status)}
+                            </div>
+                          </div>
+                          {/* Desktop: Status badge */}
+                          <div
+                            className="hidden md:inline-flex items-center px-3"
                             style={{
-                              color: getStatusTextColor(reservation.status),
+                              height: "28px",
+                              borderRadius: "999px",
+                              backgroundColor: getStatusBackground(
+                                reservation.status
+                              ),
                             }}
                           >
-                            {getStatusText(reservation.status)}
-                          </span>
+                            {getStatusIcon(reservation.status)}
+                            <span
+                              className="ml-2 text-xs font-semibold"
+                              style={{
+                                color: getStatusTextColor(reservation.status),
+                              }}
+                            >
+                              {getStatusText(reservation.status)}
+                            </span>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-left">
-                        {renderActions(reservation)}
+                      {/* Mobile: Coluna separada para o botão Ver */}
+                      <td className="pl-1 pr-6 md:hidden py-4 whitespace-nowrap">
+                        <div className="flex items-center justify-end">
+                          <button
+                            onClick={() => openModal(reservation)}
+                            className="flex items-center justify-center focus:outline-none"
+                            style={{
+                              width: "28px",
+                              height: "28px",
+                              backgroundColor: "#E3E5E8",
+                              borderRadius: "5px",
+                              padding: "7px",
+                            }}
+                            title="Ver detalhes"
+                          >
+                            <Eye size={14} style={{ color: "#1E2024" }} />
+                          </button>
+                        </div>
+                      </td>
+                      {/* Desktop: Coluna de Ações separada */}
+                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center justify-start">
+                          {renderActions(reservation)}
+                        </div>
                       </td>
                     </tr>
                   ))}

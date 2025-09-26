@@ -113,7 +113,10 @@ const DetalhesReserva = ({
   }
 
   const content = (
-    <div className="px-16 mt-12 pb-6" style={{ backgroundColor: "#FFFFFF" }}>
+    <div
+      className="px-6 md:px-16 mt-12 pb-6"
+      style={{ backgroundColor: "#FFFFFF" }}
+    >
       {/* Header */}
       <div className="mb-8">
         <button
