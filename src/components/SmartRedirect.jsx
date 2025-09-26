@@ -1,6 +1,6 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const SmartRedirect = () => {
   const { user } = useAuth();
@@ -8,20 +8,20 @@ const SmartRedirect = () => {
   // Função para obter o dashboard correto baseado no papel do usuário
   const getDashboardPath = (role) => {
     switch (role) {
-      case 'admin':
-        return '/admin/dashboard';
-      case 'professor':
-        return '/professor/dashboard';
-      case 'coordenador':
-        return '/coordenador/dashboard';
-      case 'portaria':
-        return '/portaria/dashboard';
-      case 'aluno':
-        return '/aluno/dashboard';
-      case 'servidor':
-        return '/servidor/dashboard';
+      case "admin":
+        return "/admin/dashboard";
+      case "professor":
+        return "/professor/dashboard";
+      case "coordenador":
+        return "/coordenador/dashboard";
+      case "portaria":
+        return "/portaria/dashboard";
+      case "aluno":
+        return "/aluno/reservas";
+      case "servidor":
+        return "/servidor/dashboard";
       default:
-        return '/dashboard';
+        return "/dashboard";
     }
   };
 

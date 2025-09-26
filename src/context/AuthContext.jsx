@@ -55,20 +55,20 @@ export const AuthProvider = ({ children }) => {
       // Redirecionar para o dashboard específico baseado no tipo de usuário
       const getDashboardPath = (role) => {
         switch (role) {
-          case 'admin':
-            return '/admin/dashboard';
-          case 'professor':
-            return '/professor/dashboard';
-          case 'coordenador':
-            return '/coordenador/dashboard';
-          case 'portaria':
-            return '/portaria/dashboard';
-          case 'aluno':
-            return '/aluno/dashboard';
-          case 'servidor':
-            return '/servidor/dashboard';
+          case "admin":
+            return "/admin/dashboard";
+          case "professor":
+            return "/professor/dashboard";
+          case "coordenador":
+            return "/coordenador/dashboard";
+          case "portaria":
+            return "/portaria/dashboard";
+          case "aluno":
+            return "/aluno/reservas";
+          case "servidor":
+            return "/servidor/dashboard";
           default:
-            return '/dashboard';
+            return "/dashboard";
         }
       };
 
@@ -97,9 +97,5 @@ export const AuthProvider = ({ children }) => {
     logout,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

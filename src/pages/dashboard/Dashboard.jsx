@@ -16,18 +16,18 @@ const Dashboard = () => {
   useEffect(() => {
     const getDashboardPath = (role) => {
       switch (role) {
-        case 'admin':
-          return '/admin/dashboard';
-        case 'professor':
-          return '/professor/dashboard';
-        case 'coordenador':
-          return '/coordenador/dashboard';
-        case 'portaria':
-          return '/portaria/dashboard';
-        case 'aluno':
-          return '/aluno/dashboard';
-        case 'servidor':
-          return '/servidor/dashboard';
+        case "admin":
+          return "/admin/dashboard";
+        case "professor":
+          return "/professor/dashboard";
+        case "coordenador":
+          return "/coordenador/dashboard";
+        case "portaria":
+          return "/portaria/dashboard";
+        case "aluno":
+          return "/aluno/reservas";
+        case "servidor":
+          return "/servidor/dashboard";
         default:
           return null; // Não redirecionar se não for um tipo específico
       }
@@ -40,7 +40,16 @@ const Dashboard = () => {
   }, [userType, navigate]);
 
   // Se for um tipo específico, não renderizar nada (será redirecionado)
-  if (['admin', 'professor', 'coordenador', 'portaria', 'aluno', 'servidor'].includes(userType)) {
+  if (
+    [
+      "admin",
+      "professor",
+      "coordenador",
+      "portaria",
+      "aluno",
+      "servidor",
+    ].includes(userType)
+  ) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>

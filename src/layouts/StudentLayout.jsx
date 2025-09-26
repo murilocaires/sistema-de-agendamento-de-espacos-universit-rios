@@ -6,14 +6,17 @@ import NotificationIcon from "../components/NotificationIcon";
 
 const StudentLayout = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
-  
+
   // Memoizar os valores do menu para evitar recriações desnecessárias
   const userType = useMemo(() => user?.role || "aluno", [user?.role]);
-  
+
   // Usar cache para estabilizar a referência do menu
   const menuItems = useMemo(() => getUserMenu(userType), [userType]);
-  
-  const userTypeDisplay = useMemo(() => getUserTypeDisplay(userType), [userType]);
+
+  const userTypeDisplay = useMemo(
+    () => getUserTypeDisplay(userType),
+    [userType]
+  );
 
   // Aguardar carregamento da autenticação
   if (authLoading) {
