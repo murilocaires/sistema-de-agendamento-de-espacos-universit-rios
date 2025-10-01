@@ -60,6 +60,7 @@ const MinhasReservas = ({
     try {
       setLoading(true);
       const data = await getReservations();
+      console.log("Reservas carregadas:", data); // Debug
       setReservations(data);
     } catch (error) {
       console.error("Erro ao carregar reservas:", error);
@@ -195,7 +196,7 @@ const MinhasReservas = ({
     setReservationToCancel(null);
   };
 
-  // Filtrar reservas ativas (aprovadas e não expiradas)
+  // Filtrar reservas (aprovadas, pendentes e não expiradas)
   const filteredReservations = reservations.filter((reservation) => {
     const matchesSearch = reservation.title
       .toLowerCase()
@@ -203,17 +204,39 @@ const MinhasReservas = ({
     const matchesStatus =
       statusFilter === "all" || reservation.status === statusFilter;
 
-    // Verificar se é uma reserva ativa (aprovada e não expirada)
-    const isActive = reservation.status === "approved";
-    const isNotExpired =
+    // Verificar se é uma reserva válida (aprovada ou pendente)
+    const isValidStatus = reservation.status === "approved" || reservation.status === "pending";
+    
+    // Para reservas pendentes, não verificar expiração (podem ser futuras)
+    // Para reservas aprovadas, verificar se não expiraram
+    const isNotExpired = reservation.status === "pending" || 
       new Date(reservation.date + " " + reservation.end_time) > new Date();
 
     // Filtrar apenas reservas do usuário logado
     const matchesUser = user && reservation.user_email === user.email;
 
+    // Debug para reservas pendentes
+    if (reservation.status === "pending") {
+      console.log("Reserva pendente encontrada:", {
+        id: reservation.id,
+        title: reservation.title,
+        status: reservation.status,
+        user_email: reservation.user_email,
+        current_user: user?.email,
+        matchesUser,
+        isValidStatus,
+        isNotExpired
+      });
+    }
+
     return (
-      matchesSearch && matchesStatus && isActive && isNotExpired && matchesUser
+      matchesSearch && matchesStatus && isValidStatus && isNotExpired && matchesUser
     );
+  }).sort((a, b) => {
+    // Ordenar do mais recente para o menos recente
+    const dateA = new Date(a.updated_at || a.created_at);
+    const dateB = new Date(b.updated_at || b.created_at);
+    return dateB - dateA;
   });
 
   // Paginação
