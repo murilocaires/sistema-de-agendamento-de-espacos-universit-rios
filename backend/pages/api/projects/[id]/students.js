@@ -22,9 +22,15 @@ async function handler(req, res) {
           ps.*,
           u.name as student_name,
           u.email as student_email,
-          u.siape as student_siape
+          u.siape as student_siape,
+          u.matricula_sigaa,
+          u.created_by,
+          u.created_at,
+          u.first_login,
+          creator.name as created_by_name
         FROM project_students ps
         LEFT JOIN users u ON ps.student_id = u.id
+        LEFT JOIN users creator ON u.created_by = creator.id
         WHERE ps.project_id = $1
         ORDER BY u.name
       `, [projectId]);

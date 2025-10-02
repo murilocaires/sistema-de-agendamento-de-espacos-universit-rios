@@ -14,6 +14,7 @@ import Users from "./pages/admin/Users";
 import Rooms from "./pages/admin/Rooms";
 import CalendarioGeral from "./pages/admin/CalendarioGeral";
 import CalendarioGeralCoordenador from "./pages/coordenador/CalendarioGeral";
+import DashboardCoordenador from "./pages/coordenador/DashboardCoordenador";
 import NewReservation from "./pages/admin/NewReservation";
 import NewReservationCoordenador from "./pages/coordenador/NewReservation";
 import ApproveReservations from "./pages/admin/ApproveReservations";
@@ -22,7 +23,6 @@ import Logs from "./pages/admin/Logs";
 import ProjetosAdmin from "./pages/admin/Projetos";
 import CadastrarAlunosAdmin from "./pages/admin/CadastrarAlunos";
 import ReservasPortaria from "./pages/portaria/ReservasPortaria";
-import DashboardProfessor from "./pages/professor/DashboardProfessor";
 import ReservasSistema from "./pages/professor/ReservasSistema";
 import MinhasReservas from "./pages/professor/MinhasReservas";
 import NovaReserva from "./pages/professor/NovaReserva";
@@ -154,6 +154,16 @@ function App() {
             }
           />
 
+          {/* Rota protegida para dashboard do coordenador */}
+          <Route
+            path="/coordenador/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardCoordenador />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Rota protegida para calendário geral (coordenador) */}
           <Route
             path="/coordenador/calendario-geral"
@@ -185,15 +195,6 @@ function App() {
           />
 
           {/* Rotas protegidas para professor */}
-          <Route
-            path="/professor/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardProfessor />
-              </ProtectedRoute>
-            }
-          />
-
           <Route
             path="/professor/reservas-sistema"
             element={

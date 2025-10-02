@@ -440,6 +440,24 @@ export const getAvailableStudents = async (projectId, search = '') => {
   }
 };
 
+// Buscar alunos cadastrados pelo professor
+export const getMyStudents = async (search = '', unassignedOnly = false) => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.append('search', search);
+    if (unassignedOnly) queryParams.append('unassigned_only', 'true');
+
+    const queryString = queryParams.toString();
+    const endpoint = `/students/my-students${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await apiRequest(endpoint);
+    return response.students;
+  } catch (error) {
+    console.error('Erro ao buscar meus alunos:', error);
+    throw error;
+  }
+};
+
 // Buscar alunos de um projeto
 export const getProjectStudents = async (projectId) => {
   try {

@@ -30,9 +30,8 @@ export const adminMenu = [
 
 // Menu do Docente
 export const docenteMenu = [
-  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/professor/dashboard" },
+  // Removido Dashboard para abrir direto em Projetos
   { id: "projetos", label: "Meus Projetos", icon: FolderOpen, path: "/professor/projetos" },
-  { id: "cadastrar-alunos", label: "Cadastrar Alunos", icon: Users, path: "/professor/cadastrar-alunos" },
   { id: "reservas-sistema", label: "Reservas do Sistema", icon: ClipboardList, path: "/professor/reservas-sistema" },
   { id: "minhas-reservas", label: "Minhas Reservas", icon: Calendar, path: "/professor/minhas-reservas" },
   { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/professor/nova-reserva" },
@@ -40,18 +39,10 @@ export const docenteMenu = [
   { id: "configuracoes", label: "Configurações", icon: Settings, path: "/professor/configuracoes" },
 ];
 
-// Menu do Servidor
-export const servidorMenu = [
-  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { id: "minhas-reservas", label: "Minhas Reservas", icon: ClipboardList, path: "/servidor/reservas" },
-  { id: "nova-reserva", label: "Nova Reserva", icon: Calendar, path: "/servidor/nova-reserva" },
-  { id: "historico", label: "Histórico", icon: Clock, path: "/servidor/historico" },
-  { id: "perfil", label: "Meu Perfil", icon: Users, path: "/servidor/perfil" },
-];
 
 // Menu do Coordenador
 export const coordenadorMenu = [
-  { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { id: "home", label: "Home", icon: LayoutDashboard, path: "/coordenador/dashboard" },
   { id: "calendario-geral", label: "Calendário Geral", icon: Calendar, path: "/coordenador/calendario-geral" },
   { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/coordenador/nova-reserva" },
   { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/coordenador/reservas" },
@@ -71,7 +62,6 @@ export const alunoMenu = [
 
 // Menu da Portaria
 export const portariaMenu = [
-  { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
   { id: "reservas", label: "Reservas", icon: ClipboardList, path: "/portaria/reservas" },
   { id: "relatorios", label: "Relatórios", icon: BarChart3, path: "/portaria/relatorios" },
 ];
@@ -96,9 +86,6 @@ export const getUserMenu = (userType) => {
     case "docente":
     case "professor":
       menu = docenteMenu;
-      break;
-    case "servidor":
-      menu = servidorMenu;
       break;
     case "coordenador":
       menu = coordenadorMenu;
@@ -125,8 +112,6 @@ export const getUserTypeDisplay = (userType) => {
       return "ADMIN";
     case "docente":
     case "professor":
-      return "PROFESSOR";
-    case "servidor":
       return "SERVIDOR";
     case "coordenador":
       return "COORDENADOR";

@@ -70,7 +70,7 @@ const ReservasSistema = () => {
             setError("");
             
             const [reservationsData, roomsData] = await Promise.all([
-                getReservations({ status: 'approved' }), // Professor vê apenas reservas aprovadas
+                getReservations({ status: 'approved' }), // Servidor vê apenas reservas aprovadas
                 getRooms()
             ]);
             

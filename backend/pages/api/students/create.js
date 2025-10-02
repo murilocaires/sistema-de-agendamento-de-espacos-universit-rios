@@ -74,10 +74,10 @@ async function handler(req, res) {
 
       // Inserir novo aluno
       const result = await query(`
-        INSERT INTO users (name, email, matricula_sigaa, password_hash, role, first_login) 
-        VALUES ($1, $2, $3, $4, $5, $6) 
-        RETURNING id, name, email, matricula_sigaa, role, first_login, created_at
-      `, [name, email, matricula_sigaa, hashedPassword, 'aluno', true]);
+        INSERT INTO users (name, email, matricula_sigaa, password_hash, role, first_login, created_by) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7) 
+        RETURNING id, name, email, matricula_sigaa, role, first_login, created_by, created_at
+      `, [name, email, matricula_sigaa, hashedPassword, 'aluno', true, req.user.id]);
 
       const newStudent = result.rows[0];
 
@@ -88,6 +88,7 @@ async function handler(req, res) {
         matricula_sigaa: newStudent.matricula_sigaa,
         role: newStudent.role,
         first_login: newStudent.first_login,
+        created_by: newStudent.created_by,
         created_at: newStudent.created_at
       });
 
@@ -100,7 +101,8 @@ async function handler(req, res) {
           email: newStudent.email,
           matricula_sigaa: newStudent.matricula_sigaa,
           role: newStudent.role,
-          first_login: newStudent.first_login
+          first_login: newStudent.first_login,
+          created_by: newStudent.created_by
         },
         password_info: password ? 
           'Senha personalizada definida pelo professor' : 

@@ -13,19 +13,18 @@ async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const { project_id, search } = req.query;
+      const { search, unassigned_only } = req.query;
       
-      let whereClause = "WHERE u.role = 'aluno'";
-      let queryParams = [];
-      let paramCount = 0;
+      let whereClause = "WHERE u.role = 'aluno' AND u.created_by = $1";
+      let queryParams = [req.user.id];
+      let paramCount = 1;
 
-      // Se project_id for fornecido, excluir alunos que já estão no projeto
-      if (project_id) {
+      // Se unassigned_only for true, filtrar apenas alunos sem projeto
+      if (unassigned_only === 'true') {
         paramCount++;
         whereClause += ` AND u.id NOT IN (
-          SELECT student_id FROM project_students WHERE project_id = $${paramCount}
+          SELECT student_id FROM project_students
         )`;
-        queryParams.push(project_id);
       }
 
       // Se search for fornecido, filtrar por nome ou email
@@ -35,18 +34,21 @@ async function handler(req, res) {
         queryParams.push(`%${search}%`);
       }
 
-      // Buscar alunos disponíveis
+      // Buscar alunos do professor
       const result = await query(`
         SELECT 
           u.id,
           u.name,
           u.email,
-          u.siape,
-          u.created_at
+          u.matricula_sigaa,
+          u.created_at,
+          u.created_by,
+          creator.name as created_by_name
         FROM users u
+        LEFT JOIN users creator ON u.created_by = creator.id
         ${whereClause}
         ORDER BY u.name
-        LIMIT 5
+        LIMIT 100
       `, queryParams);
 
       return res.status(200).json({
@@ -55,7 +57,7 @@ async function handler(req, res) {
       });
 
     } catch (error) {
-      console.error('Erro ao buscar alunos disponíveis:', error);
+      console.error('Erro ao buscar alunos do professor:', error);
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
 
@@ -64,5 +66,5 @@ async function handler(req, res) {
   }
 }
 
-// Professores podem acessar alunos disponíveis
+// Apenas professores podem acessar
 export default requireRole(['professor', 'admin'])(handler);
