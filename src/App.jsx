@@ -15,7 +15,9 @@ import Rooms from "./pages/admin/Rooms";
 import CalendarioGeral from "./pages/admin/CalendarioGeral";
 import CalendarioGeralCoordenador from "./pages/coordenador/CalendarioGeral";
 import NewReservation from "./pages/admin/NewReservation";
+import NovaReservaAdmin from "./pages/admin/NovaReservaAdmin";
 import NewReservationCoordenador from "./pages/coordenador/NewReservation";
+import NovaReservaServidor from "./pages/servidor/NovaReservaServidor";
 import ApproveReservations from "./pages/admin/ApproveReservations";
 import AprovarContas from "./pages/admin/AprovarContas";
 import Logs from "./pages/admin/Logs";
@@ -106,6 +108,16 @@ function App() {
             }
           />
 
+          {/* Rota protegida para nova reserva moderna (admin) */}
+          <Route
+            path="/admin/nova-reserva-v2"
+            element={
+              <ProtectedRoute>
+                <NovaReservaAdmin />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Rota protegida para aprovar reservas (admin) */}
           <Route
             path="/admin/aprovar-reservas"
@@ -181,6 +193,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <ReservasPortaria />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Rota protegida para nova reserva (servidor) */}
+          <Route
+            path="/servidor/nova-reserva"
+            element={
+              <ProtectedRoute>
+                <NovaReservaServidor />
               </ProtectedRoute>
             }
           />
