@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Users } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { getProjects, deleteProject } from '../../services/authService';
 import { getAvailableStudents, getProjectStudents, getMyStudents } from '../../services/authService';
 import { getProjectRequestNotifications, processProjectRequest } from '../../services/authService';
@@ -270,23 +271,47 @@ const Projetos = () => {
 
       {/* Alternador de visualização */}
       <div className="mb-6">
-        <div className="inline-flex rounded-md shadow-sm border border-gray-200" role="group">
-          <button
-            type="button"
-            onClick={() => setViewMode('projects')}
-            className={`px-4 py-2 text-sm font-medium ${viewMode === 'projects' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'} rounded-l-md`}
-          >
-            Projetos
-          </button>
-                  <button
-            type="button"
-            onClick={() => setViewMode('students')}
-            className={`px-4 py-2 text-sm font-medium ${viewMode === 'students' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'} rounded-r-md`}
-          >
-            Alunos
-                  </button>
-                </div>
-              </div>
+        <div className="relative">
+          <div className="flex space-x-8">
+            <motion.button
+              type="button"
+              onClick={() => setViewMode('projects')}
+              className="relative px-1 py-2 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+              whileTap={{ scale: 0.95 }}
+            >
+              Projetos
+              {viewMode === 'projects' && (
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"
+                  layoutId="activeTab"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+            </motion.button>
+            
+            <motion.button
+              type="button"
+              onClick={() => setViewMode('students')}
+              className="relative px-1 py-2 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+              whileTap={{ scale: 0.95 }}
+            >
+              Alunos
+              {viewMode === 'students' && (
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"
+                  layoutId="activeTab"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+            </motion.button>
+          </div>
+          
+          {/* Barra de separação */}
+          <div className="mt-4 border-b border-gray-200"></div>
+        </div>
+      </div>
               
         {/* Layout: se Projetos, mostra grid; se Alunos, mostra lista por projeto */}
         {viewMode === 'projects' ? (

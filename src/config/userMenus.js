@@ -32,7 +32,6 @@ export const adminMenu = [
 export const docenteMenu = [
   // Removido Dashboard para abrir direto em Projetos
   { id: "projetos", label: "Meus Projetos", icon: FolderOpen, path: "/professor/projetos" },
-  { id: "reservas-sistema", label: "Reservas do Sistema", icon: ClipboardList, path: "/professor/reservas-sistema" },
   { id: "minhas-reservas", label: "Minhas Reservas", icon: Calendar, path: "/professor/minhas-reservas" },
   { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/professor/nova-reserva" },
   { id: "historico", label: "Histórico", icon: Clock, path: "/professor/historico" },

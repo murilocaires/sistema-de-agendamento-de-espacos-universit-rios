@@ -14,7 +14,7 @@ async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const { status, user_id, room_id, start_date, end_date } = req.query;
+      const { status, user_id, room_id, project_id, start_date, end_date } = req.query;
       
       let whereConditions = [];
       let queryParams = [];
@@ -41,6 +41,12 @@ async function handler(req, res) {
         paramCount++;
         whereConditions.push(`r.room_id = $${paramCount}`);
         queryParams.push(room_id);
+      }
+
+      if (project_id) {
+        paramCount++;
+        whereConditions.push(`r.project_id = $${paramCount}`);
+        queryParams.push(project_id);
       }
 
       if (start_date) {

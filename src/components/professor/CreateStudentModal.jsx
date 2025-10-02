@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createStudent, addStudentToProject } from '../../services/authService';
 
 const CreateStudentModal = ({ 
@@ -18,7 +19,6 @@ const CreateStudentModal = ({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showPasswordInfo, setShowPasswordInfo] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState('');
 
   const handleInputChange = (e) => {
@@ -85,7 +85,6 @@ const CreateStudentModal = ({
     setError('');
     setSuccess('');
     setShowPassword(false);
-    setShowPasswordInfo(false);
     setSelectedProjectId('');
     onClose();
   };
@@ -93,78 +92,140 @@ const CreateStudentModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Cadastrar Aluno</h2>
-          <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">{error}</div>
-        )}
-        {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-800 text-sm">{success}</div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Projeto *</label>
-            <select
-              value={selectedProjectId}
-              onChange={(e) => setSelectedProjectId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="" disabled>Selecione um projeto</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Digite o nome completo do aluno"
-              required
-            />
+    <AnimatePresence>
+      <motion.div 
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        <motion.div 
+          className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden"
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.9, opacity: 0, y: 20 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {/* Header com gradiente */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white relative">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">Cadastrar Aluno</h2>
+              <button 
+                onClick={handleClose} 
+                className="text-white/80 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {/* Barra de progresso animada */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+              <motion.div 
+                className="h-full bg-white"
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 2, ease: "easeInOut" }}
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="aluno@universidade.edu"
-              required
-            />
-          </div>
+          {/* Conteúdo do formulário */}
+          <div className="p-6">
+            <AnimatePresence>
+              {error && (
+                <motion.div 
+                  className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  {error}
+                </motion.div>
+              )}
+              {success && (
+                <motion.div 
+                  className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  {success}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Matrícula do SIGAA *</label>
-            <input
-              type="text"
-              name="matricula_sigaa"
-              value={formData.matricula_sigaa}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="123456"
-              maxLength="6"
-              pattern="[0-9]{6}"
-              required
-            />
-            <p className="mt-1 text-xs text-gray-500">Digite exatamente 6 dígitos da matrícula do SIGAA</p>
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <label className="block text-sm font-medium text-gray-700 mb-2">Projeto *</label>
+                <select
+                  value={selectedProjectId}
+                  onChange={(e) => setSelectedProjectId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  required
+                >
+                  <option value="" disabled>Selecione um projeto</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo *</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Digite o nome completo do aluno"
+                  required
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="aluno@universidade.edu"
+                  required
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.35 }}
+              >
+                <label className="block text-sm font-medium text-gray-700 mb-2">Matrícula do SIGAA *</label>
+                <input
+                  type="text"
+                  name="matricula_sigaa"
+                  value={formData.matricula_sigaa}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="123456"
+                  maxLength="6"
+                  pattern="[0-9]{6}"
+                  required
+                />
+                <p className="mt-2 text-xs text-gray-500">Digite exatamente 6 dígitos da matrícula do SIGAA</p>
+              </motion.div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Senha (Opcional)</label>
@@ -185,50 +246,48 @@ const CreateStudentModal = ({
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            <div className="mt-2">
-              <button
-                type="button"
-                onClick={() => setShowPasswordInfo(!showPasswordInfo)}
-                className="text-sm text-blue-600 hover:text-blue-800"
-              >
-                ℹ️ Informações sobre a senha
-              </button>
-              {showPasswordInfo && (
-                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
-                  <p>
-                    <strong>Se você não definir uma senha:</strong><br />
-                    • O aluno usará a matrícula do SIGAA como senha<br />
-                    • Exemplo: matrícula "123456" = senha "123456"<br />
-                    • O aluno será obrigado a redefinir a senha no primeiro acesso
-                  </p>
-                </div>
-              )}
-            </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Cadastrando...' : 'Cadastrar Aluno'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({ name: '', email: '', matricula_sigaa: '', password: '' });
-                setError('');
-                setSuccess('');
-              }}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-            >
-              Limpar
-            </button>
+              {/* Botões com animação */}
+              <motion.div 
+                className="flex gap-3 pt-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+                >
+                  {submitting ? 'Cadastrando...' : 'Cadastrar Aluno'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({ name: '', email: '', matricula_sigaa: '', password: '' });
+                    setError('');
+                    setSuccess('');
+                  }}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium"
+                >
+                  Limpar
+                </button>
+              </motion.div>
+            </form>
           </div>
-        </form>
-      </div>
-    </div>
+
+          {/* Linha separadora na parte inferior */}
+          <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
+            <div className="flex items-center justify-center">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+              <span className="px-3 text-xs text-gray-500 bg-gray-50">Sistema de Agendamento</span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
