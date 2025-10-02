@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, CheckCircle, XCircle } from 'lucide-react';
+import { Bell, X, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getProjectRequestNotifications, getReservationNotifications, getAdminReservationNotifications, processProjectRequest, processReservation } from '../services/authService';
 
@@ -32,7 +32,7 @@ const NotificationIcon = () => {
       } else if (user.role === 'admin') {
         const [projectData, adminReservationData] = await Promise.all([
           getProjectRequestNotifications('pending'),
-          getAdminReservationNotifications()
+          getReservationNotifications()
         ]);
         
         setProjectNotifications(projectData || []);

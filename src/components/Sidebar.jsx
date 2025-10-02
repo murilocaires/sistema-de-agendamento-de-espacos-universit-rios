@@ -134,7 +134,7 @@ const Sidebar = ({ menuItems = [], userType = "ADMIN" }) => {
 
           {/* Dropdown Menu */}
           {showUserMenu && (
-            <div className="absolute -top-10 left-full ml-6 bg-gray-100 rounded-[5px] shadow-lg border border-gray-300 w-48">
+            <div className="absolute z-40 -top-16 left-full ml-6 bg-gray-100 rounded-[5px] shadow-lg border border-gray-300 w-48">
               <div className="p-3">
                 <p className="text-gray-400 text-xs font-lato font-medium uppercase mb-2">
                   OPÇÕES

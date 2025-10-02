@@ -329,13 +329,18 @@ const NovaReservaAluno = () => {
       const result = await createReservation(reservationData);
       
       setCreatedReservation(result);
+      // Não limpar imediatamente os campos que precisamos no modal
+      const reservedRoomId = result.room_id || reservationData.room_id;
+      const reservedProjectId = result.project_id || reservationData.project_id;
+      const reservedRoomName = getRoomNameById(reservedRoomId);
+      const reservedProjectName = getProjectNameById(reservedProjectId);
       setShowModal(true);
       setSuccessMessage("Reserva criada com sucesso!");
       
       // Recarregar dados para atualizar o calendário
       await loadData();
       
-      // Limpar formulário
+      // Limpar formulário (após abrir modal)
       setFormData({
         title: "",
         description: "",
@@ -399,7 +404,7 @@ const NovaReservaAluno = () => {
   const closeModal = () => {
     setShowModal(false);
     setCreatedReservation(null);
-    setSuccess(false);
+    setSuccessMessage("");
   };
 
   // Resetar formulário
@@ -433,6 +438,20 @@ const NovaReservaAluno = () => {
   // Obter nome do projeto selecionado
   const getSelectedProjectName = () => {
     const project = myProjects.find(p => p.id === parseInt(formData.project_id));
+    return project ? project.name : "";
+  };
+
+  // Obter nome da sala por ID (para uso no modal após limpar formulário)
+  const getRoomNameById = (id) => {
+    if (!id) return "";
+    const room = rooms.find(r => r.id === parseInt(id));
+    return room ? room.name : "";
+  };
+
+  // Obter nome do projeto por ID (para uso no modal após limpar formulário)
+  const getProjectNameById = (id) => {
+    if (!id) return "";
+    const project = myProjects.find(p => p.id === parseInt(id));
     return project ? project.name : "";
   };
 
@@ -879,8 +898,8 @@ const NovaReservaAluno = () => {
                 <div className="bg-gray-50 p-4 rounded-lg text-left">
                   <h3 className="font-semibold text-gray-800 mb-2">Detalhes da Reserva:</h3>
                   <p><strong>Título:</strong> {createdReservation.title}</p>
-                  <p><strong>Projeto:</strong> {getSelectedProjectName()}</p>
-                  <p><strong>Sala:</strong> {getSelectedRoomName()}</p>
+                  <p><strong>Projeto:</strong> {getProjectNameById(createdReservation.project_id)}</p>
+                  <p><strong>Sala:</strong> {getRoomNameById(createdReservation.room_id)}</p>
                   <p><strong>Início:</strong> {new Date(createdReservation.start_time).toLocaleString('pt-BR')}</p>
                   <p><strong>Fim:</strong> {new Date(createdReservation.end_time).toLocaleString('pt-BR')}</p>
                   <p><strong>Status:</strong> <span className="text-yellow-600 font-semibold">Pendente</span></p>

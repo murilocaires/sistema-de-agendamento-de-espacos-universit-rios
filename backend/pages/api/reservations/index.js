@@ -121,22 +121,27 @@ async function handler(req, res) {
       const user_id = requested_user_id || req.user.id;
       const user_role = req.user.role;
 
+      // Normalizar e validar IDs numéricos
+      const roomId = parseInt(room_id);
+      const projectId = (project_id === 0 || project_id) ? parseInt(project_id) : null;
+      const peopleCount = parseInt(people_count);
+
       // Validar dados obrigatórios
-      if (!user_id || !room_id || !title || !start_time || !end_time) {
+      if (!user_id || !roomId || !title || !start_time || !end_time) {
         return res.status(400).json({ 
           error: 'Usuário, sala, título, data/hora de início e fim são obrigatórios' 
         });
       }
 
       // Validar quantidade de pessoas
-      if (!people_count || people_count < 1) {
+      if (!peopleCount || peopleCount < 1) {
         return res.status(400).json({ 
           error: 'Quantidade de pessoas deve ser pelo menos 1' 
         });
       }
 
       // Para alunos, projeto é obrigatório
-      if (user_role === 'aluno' && !project_id) {
+      if (user_role === 'aluno' && !projectId) {
         return res.status(400).json({ 
           error: 'Projeto é obrigatório para alunos' 
         });
@@ -243,7 +248,7 @@ async function handler(req, res) {
       // Verificar se a sala existe e está ativa
       const roomCheck = await query(
         'SELECT id, name, is_active, capacity FROM rooms WHERE id = $1',
-        [room_id]
+        [roomId]
       );
 
       if (roomCheck.rows.length === 0) {
@@ -256,9 +261,9 @@ async function handler(req, res) {
 
       // Verificar se a quantidade de pessoas não excede a capacidade da sala
       const roomCapacity = roomCheck.rows[0].capacity;
-      if (people_count > roomCapacity) {
+      if (peopleCount > roomCapacity) {
         return res.status(400).json({ 
-          error: `A quantidade de pessoas (${people_count}) excede a capacidade da sala (${roomCapacity} pessoas)` 
+          error: `A quantidade de pessoas (${peopleCount}) excede a capacidade da sala (${roomCapacity} pessoas)` 
         });
       }
 
@@ -269,7 +274,7 @@ async function handler(req, res) {
           FROM project_students ps
           LEFT JOIN projects p ON ps.project_id = p.id
           WHERE ps.student_id = $1 AND ps.project_id = $2
-        `, [user_id, project_id]);
+        `, [user_id, projectId]);
 
         if (projectCheck.rows.length === 0) {
           return res.status(400).json({ 
@@ -288,7 +293,7 @@ async function handler(req, res) {
           (is_recurring = false AND start_time < $3 AND end_time > $2) OR
           (is_recurring = true AND recurrence_end_date >= $2 AND start_time <= $3)
         )
-      `, [room_id, start_time, end_time]);
+      `, [roomId, start_time, end_time]);
 
       // Preparar dados da nova reserva para verificação de conflitos
       const newReservationData = {
@@ -340,8 +345,20 @@ async function handler(req, res) {
         approved_by = user_id;
         approved_at = new Date().toISOString();
       } else if (user_role === 'aluno') {
-        // Alunos vão direto para o admin (não passam pelo professor)
-        initialStatus = 'pending';
+        // Para alunos: se o projeto tem professor responsável, vai para o professor; se não, vai direto para admin
+        if (projectId) {
+          const proj = await query('SELECT professor_id FROM projects WHERE id = $1', [projectId]);
+          const hasProfessor = proj.rows.length > 0 && proj.rows[0].professor_id;
+          if (hasProfessor) {
+            // Fica pendente para aprovação do professor
+            initialStatus = 'pending';
+          } else {
+            // Sem professor responsável → admin trata diretamente após notificação
+            initialStatus = 'pending';
+          }
+        } else {
+          initialStatus = 'pending';
+        }
         approved_by = null;
         approved_at = null;
       }
@@ -355,8 +372,8 @@ async function handler(req, res) {
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING *
       `, [
-        user_id, room_id, project_id, title, description, start_time, end_time,
-        people_count, initialStatus, is_recurring, recurrence_type, recurrence_end_date, recurrence_interval,
+        user_id, roomId, projectId, title, description, start_time, end_time,
+        peopleCount, initialStatus, is_recurring, recurrence_type, recurrence_end_date, recurrence_interval,
         approved_by, approved_at, priority
       ]);
 

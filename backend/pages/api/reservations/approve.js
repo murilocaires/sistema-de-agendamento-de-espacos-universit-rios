@@ -56,25 +56,46 @@ async function handler(req, res) {
       const reservation = reservationResult.rows[0];
       const oldValues = reservation;
 
-      // Apenas admins podem aprovar/rejeitar reservas
-      if (req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'Apenas administradores podem aprovar reservas' });
+      // Fluxo de aprovação por papel
+      const isAdmin = req.user.role === 'admin';
+      const isProfessor = req.user.role === 'professor';
+
+      // Professor: só pode aprovar/rejeitar reservas PENDENTES de projetos que coordena
+      if (isProfessor) {
+        // Precisa ter projeto associado
+        if (!reservation.project_professor_id) {
+          return res.status(400).json({ error: 'Reserva não está associada a um projeto' });
+        }
+        // Verificar se é o professor responsável
+        if (reservation.project_professor_id !== req.user.id) {
+          return res.status(403).json({ error: 'Você não é responsável por este projeto' });
+        }
+        // Somente status pending pode ser tratado pelo professor
+        if (reservation.status !== 'pending') {
+          return res.status(400).json({ error: 'Somente reservas pendentes podem ser processadas pelo professor' });
+        }
       }
 
-      // Verificar se a reserva pode ser processada
-      if (reservation.status !== 'pending') {
-        // Permitir que admin revogue aprovação de reservas aprovadas
-        if (action === 'reject' && reservation.status === 'approved') {
-          // Permitir que admin revogue aprovação
-        } 
-        // Permitir aprovação de reservas rejeitadas
-        else if (action === 'approve' && reservation.status === 'rejected') {
-          // Permitir que reservas rejeitadas sejam aprovadas novamente
+      // Admin: pode aprovar final reservas professor_approved (ou reprocessar approved/rejected conforme regras abaixo)
+      if (isAdmin) {
+        if (!['pending', 'professor_approved', 'approved', 'rejected'].includes(reservation.status)) {
+          return res.status(400).json({ error: 'Status de reserva inválido para processamento' });
         }
-        else {
-          return res.status(400).json({ 
-            error: `Reserva já foi ${reservation.status === 'approved' ? 'aprovada' : 'rejeitada'}` 
-          });
+      }
+
+      // Verificar se a reserva pode ser processada (regras específicas por papel)
+      if (isAdmin) {
+        if (reservation.status !== 'pending' && reservation.status !== 'professor_approved') {
+          // Admin pode revogar approved ou reaprovar rejected
+          if (action === 'reject' && reservation.status === 'approved') {
+            // ok revogar
+          } else if (action === 'approve' && reservation.status === 'rejected') {
+            // ok aprovar novamente
+          } else {
+            return res.status(400).json({ 
+              error: `Reserva já foi ${reservation.status === 'approved' ? 'aprovada' : 'rejeitada'}` 
+            });
+          }
         }
       }
 
@@ -106,19 +127,35 @@ async function handler(req, res) {
       let updateParams;
 
       if (action === 'approve') {
-        // Admin aprova diretamente
-        updateQuery = `
-          UPDATE reservations 
-          SET status = 'approved', 
-              approved_by = $1, 
-              approved_at = CURRENT_TIMESTAMP,
-              rejection_reason = NULL,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE id = $2 
-          RETURNING *
-        `;
-        updateParams = [user_id, reservation_id];
+        if (isProfessor) {
+          // Aprovação do professor: marca como professor_approved
+          updateQuery = `
+            UPDATE reservations 
+            SET status = 'professor_approved', 
+                professor_approved_by = $1, 
+                professor_approved_at = CURRENT_TIMESTAMP,
+                rejection_reason = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $2 
+            RETURNING *
+          `;
+          updateParams = [user_id, reservation_id];
+        } else {
+          // Aprovação final do admin
+          updateQuery = `
+            UPDATE reservations 
+            SET status = 'approved', 
+                approved_by = $1, 
+                approved_at = CURRENT_TIMESTAMP,
+                rejection_reason = NULL,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $2 
+            RETURNING *
+          `;
+          updateParams = [user_id, reservation_id];
+        }
       } else {
+        // Rejeição (professor ou admin)
         updateQuery = `
           UPDATE reservations 
           SET status = 'rejected', 
@@ -160,7 +197,11 @@ async function handler(req, res) {
       // Determinar mensagem baseada na ação e status anterior
       let message;
       if (action === 'approve') {
-        message = reservation.status === 'rejected' ? 'Reserva rejeitada foi aprovada com sucesso' : 'Reserva aprovada com sucesso';
+        if (isProfessor) {
+          message = 'Reserva aprovada pelo professor e enviada ao admin';
+        } else {
+          message = reservation.status === 'rejected' ? 'Reserva rejeitada foi aprovada com sucesso' : 'Reserva aprovada com sucesso';
+        }
       } else if (action === 'reject') {
         message = reservation.status === 'approved' ? 'Aprovação revogada com sucesso' : 'Reserva rejeitada';
       }

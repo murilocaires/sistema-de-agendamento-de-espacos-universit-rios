@@ -81,7 +81,7 @@ Local: http://localhost:5173
 |------|-------|-------|----------------|
 | **Admin** | admin@siru.com | admin123 | Acesso total |
 | **Professor** | joao.silva@universidade.edu | professor123 | Reservas, histórico | cria ALUNO E PROJETO
-| **Coordenador** | maria.santos@universidade.edu | coordenador123 | Gerenciar reservas |
+| **Coordenador** | maria.santos@universidade.edu | coordenador123 | Gerenciar reservas | Coordenador de programas acadêmicos 
 | **Aluno** | pedro.costa@aluno.universidade.edu | aluno123 | Fazer reservas | PRECISA DE UM PROJETO VINCULADO
 | **Portaria** | ana.oliveira@universidade.edu | portaria123 | Confirmações |
 

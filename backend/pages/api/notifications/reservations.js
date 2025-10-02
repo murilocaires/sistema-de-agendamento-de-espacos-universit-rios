@@ -13,36 +13,76 @@ async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const { status = 'pending' } = req.query;
+      const userRole = req.user.role;
+      let result;
 
-      // Buscar reservas pendentes para admin
-      const result = await query(`
-        SELECT 
-          r.id,
-          r.title,
-          r.description,
-          r.start_time,
-          r.end_time,
-          r.status,
-          r.created_at,
-          r.room_id,
-          r.project_id,
-          r.people_count,
-          u.name as student_name,
-          u.email as student_email,
-          u.matricula_sigaa as student_matricula,
-          rm.name as room_name,
-          rm.location as room_location,
-          rm.capacity as room_capacity,
-          p.name as project_name,
-          p.type as project_type
-        FROM reservations r
-        JOIN users u ON r.user_id = u.id
-        JOIN rooms rm ON r.room_id = rm.id
-        LEFT JOIN projects p ON r.project_id = p.id
-        WHERE r.status = $1 
-        ORDER BY r.created_at DESC
-      `, [status]);
+      if (userRole === 'admin') {
+        // Admin recebe: reservas aprovadas pelo professor OU pendentes de projetos sem professor responsável
+        result = await query(`
+          SELECT 
+            r.id,
+            r.title,
+            r.description,
+            r.start_time,
+            r.end_time,
+            r.status,
+            r.created_at,
+            r.room_id,
+            r.project_id,
+            r.people_count,
+            u.name as student_name,
+            u.email as student_email,
+            u.matricula_sigaa as student_matricula,
+            rm.name as room_name,
+            rm.location as room_location,
+            rm.capacity as room_capacity,
+            p.name as project_name,
+            p.type as project_type
+          FROM reservations r
+          JOIN users u ON r.user_id = u.id
+          JOIN rooms rm ON r.room_id = rm.id
+          LEFT JOIN projects p ON r.project_id = p.id
+          LEFT JOIN users up ON p.professor_id = up.id
+          WHERE r.status = 'professor_approved'
+             OR (
+               r.status = 'pending' AND (
+                 p.professor_id IS NULL OR (up.role = 'admin')
+               )
+             )
+          ORDER BY r.created_at DESC
+        `);
+      } else {
+        // Professor recebe reservas pendentes dos projetos que coordena
+        result = await query(`
+          SELECT 
+            r.id,
+            r.title,
+            r.description,
+            r.start_time,
+            r.end_time,
+            r.status,
+            r.created_at,
+            r.room_id,
+            r.project_id,
+            r.people_count,
+            u.name as student_name,
+            u.email as student_email,
+            u.matricula_sigaa as student_matricula,
+            rm.name as room_name,
+            rm.location as room_location,
+            rm.capacity as room_capacity,
+            p.name as project_name,
+            p.type as project_type
+          FROM reservations r
+          JOIN users u ON r.user_id = u.id
+          JOIN rooms rm ON r.room_id = rm.id
+          LEFT JOIN projects p ON r.project_id = p.id
+          WHERE r.status = 'pending' AND r.project_id IN (
+            SELECT id FROM projects WHERE professor_id = $1
+          )
+          ORDER BY r.created_at DESC
+        `, [req.user.id]);
+      }
 
       return res.status(200).json({
         success: true,
@@ -61,4 +101,4 @@ async function handler(req, res) {
 }
 
 // Apenas admins podem acessar
-export default requireRole(['admin'])(authMiddleware(handler));
+export default requireRole(['admin', 'professor'])(authMiddleware(handler));

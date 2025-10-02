@@ -375,28 +375,56 @@ const ReservasAluno = () => {
                 <X size={24} />
               </button>
               <h2 className="text-2xl font-bold mb-4 text-gray-800">Detalhes da Reserva</h2>
-              <div className="space-y-3 text-gray-700">
+              <div className="text-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <p><strong>Título:</strong> {selectedReservation.title}</p>
-                <p><strong>Descrição:</strong> {selectedReservation.description || 'N/A'}</p>
+                <p><strong>ID:</strong> #{selectedReservation.id}</p>
+
+                <p className="sm:col-span-2"><strong>Descrição:</strong> {selectedReservation.description || 'N/A'}</p>
+
+                <p><strong>Projeto:</strong> {selectedReservation.project_name || 'N/A'}</p>
+                <p><strong>Tipo do Projeto:</strong> {selectedReservation.project_type || 'N/A'}</p>
+
                 <p className="flex items-center gap-2">
                   <DoorClosed size={16} /> <strong>Sala:</strong> {selectedReservation.room_name}
                 </p>
+                <p><strong>Local:</strong> {selectedReservation.room_location || 'N/A'}</p>
+
+                <p><strong>Capacidade da Sala:</strong> {selectedReservation.room_capacity ? `${selectedReservation.room_capacity} pessoas` : 'N/A'}</p>
+                <p><strong>Quantidade de Pessoas:</strong> {selectedReservation.people_count ? `${selectedReservation.people_count} ${selectedReservation.people_count === 1 ? 'pessoa' : 'pessoas'}` : 'N/A'}</p>
+
                 <p className="flex items-center gap-2">
                   <Clock size={16} /> <strong>Início:</strong> {formatDate(selectedReservation.start_time)}
                 </p>
                 <p className="flex items-center gap-2">
                   <Clock size={16} /> <strong>Fim:</strong> {formatDate(selectedReservation.end_time)}
                 </p>
-                <p className="flex items-center gap-2">
-                  <UsersIcon size={16} /> <strong>Reservado por:</strong> {selectedReservation.user_name} ({selectedReservation.user_email})
+
+                <p><strong>Recorrência:</strong> {selectedReservation.is_recurring ? (selectedReservation.recurrence_type || 'Sim') : 'Não'}</p>
+                {selectedReservation.is_recurring && (
+                  <>
+                    <p><strong>Fim da Recorrência:</strong> {selectedReservation.recurrence_end_date ? formatDate(selectedReservation.recurrence_end_date) : 'N/A'}</p>
+                    <p><strong>Intervalo:</strong> {selectedReservation.recurrence_interval || 'N/A'}</p>
+                  </>
+                )}
+
+                <p><strong>Solicitado em:</strong> {selectedReservation.created_at ? formatDate(selectedReservation.created_at) : 'N/A'}</p>
+                <p><strong>Atualizado em:</strong> {selectedReservation.updated_at ? formatDate(selectedReservation.updated_at) : 'N/A'}</p>
+
+                <p className="flex items-center gap-2 sm:col-span-2">
+                  <UsersIcon size={16} /> <strong>Solicitante:</strong> {selectedReservation.user_name} ({selectedReservation.user_email})
                 </p>
-                <p className="flex items-center gap-2">
+                {selectedReservation.approved_by_name && (
+                  <p className="sm:col-span-2"><strong>Aprovado por:</strong> {selectedReservation.approved_by_name}</p>
+                )}
+
+                <p className="flex items-center gap-2 sm:col-span-2">
                   <CheckCircle size={16} /> <strong>Status:</strong> <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedReservation.status)}`}>
                     {getStatusText(selectedReservation.status)}
                   </span>
                 </p>
+
                 {selectedReservation.rejection_reason && (
-                  <p className="text-red-600"><strong>Motivo da Rejeição:</strong> {selectedReservation.rejection_reason}</p>
+                  <p className="text-red-600 sm:col-span-2"><strong>Motivo da Rejeição:</strong> {selectedReservation.rejection_reason}</p>
                 )}
               </div>
             </div>
