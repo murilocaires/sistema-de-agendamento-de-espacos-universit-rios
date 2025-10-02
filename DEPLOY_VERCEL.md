@@ -39,16 +39,25 @@ A Vercel detectará automaticamente que é um monorepo. Configure:
 Na seção "Environment Variables" da Vercel, adicione:
 
 ```
+# Banco de Dados (OBRIGATÓRIO)
 DATABASE_URL=postgresql://usuario:senha@host:porta/database?sslmode=require
+
+# JWT Secret (OBRIGATÓRIO - use um valor seguro)
 JWT_SECRET=seu-jwt-secret-super-seguro-para-producao
+
+# URLs da API (serão preenchidas automaticamente pela Vercel)
+VITE_API_URL=https://seu-projeto.vercel.app/api
 NEXT_PUBLIC_API_URL=https://seu-projeto.vercel.app/api
+
+# Ambiente
 NODE_ENV=production
 ```
 
 **⚠️ IMPORTANTE**: 
-- Use um JWT_SECRET diferente e seguro para produção
-- Configure a URL do seu banco PostgreSQL (recomendado: Neon)
-- A URL da API será gerada automaticamente pela Vercel
+- **DATABASE_URL**: Configure uma string de conexão PostgreSQL válida (recomendado: Neon)
+- **JWT_SECRET**: Use um valor único e seguro para produção (não use o mesmo do desenvolvimento)
+- **VITE_API_URL e NEXT_PUBLIC_API_URL**: Serão preenchidas automaticamente pela Vercel após o primeiro deploy
+- **NODE_ENV**: Deixe como "production"
 
 ### 5. Deploy
 

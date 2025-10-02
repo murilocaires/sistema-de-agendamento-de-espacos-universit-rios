@@ -82,7 +82,8 @@ const loadLogs = async (page = 1, currentFilters = filters) => {
         )
     });
 
-    const response = await fetch(`http://localhost:3001/api/audit/logs?${params}`, {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    const response = await fetch(`${API_BASE_URL}/audit/logs?${params}`, {
         headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         'Content-Type': 'application/json'
