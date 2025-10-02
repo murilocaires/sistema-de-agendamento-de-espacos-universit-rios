@@ -23,11 +23,9 @@ import Logs from "./pages/admin/Logs";
 import ProjetosAdmin from "./pages/admin/Projetos";
 import CadastrarAlunosAdmin from "./pages/admin/CadastrarAlunos";
 import ReservasPortaria from "./pages/portaria/ReservasPortaria";
-import ReservasSistema from "./pages/professor/ReservasSistema";
 import MinhasReservas from "./pages/professor/MinhasReservas";
 import NovaReserva from "./pages/professor/NovaReserva";
 import Projetos from "./pages/professor/Projetos";
-import CadastrarAlunos from "./pages/professor/CadastrarAlunos";
 import Configuracoes from "./pages/professor/Configuracoes";
 import DashboardAluno from "./pages/aluno/DashboardAluno";
 import ProjetosAluno from "./pages/aluno/ProjetosAluno";
@@ -195,14 +193,6 @@ function App() {
           />
 
           {/* Rotas protegidas para professor */}
-          <Route
-            path="/professor/reservas-sistema"
-            element={
-              <ProtectedRoute>
-                <ReservasSistema />
-              </ProtectedRoute>
-            }
-          />
 
           <Route
             path="/professor/minhas-reservas"
@@ -231,14 +221,6 @@ function App() {
             }
           />
 
-          <Route
-            path="/professor/cadastrar-alunos"
-            element={
-              <ProtectedRoute>
-                <CadastrarAlunos />
-              </ProtectedRoute>
-            }
-          />
 
           <Route
             path="/professor/configuracoes"
