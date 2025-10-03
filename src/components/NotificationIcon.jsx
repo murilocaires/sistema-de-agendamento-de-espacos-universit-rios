@@ -9,7 +9,6 @@ const NotificationIcon = () => {
   const [reservationNotifications, setReservationNotifications] = useState([]);
   const [adminReservationNotifications, setAdminReservationNotifications] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Carregar notificações
@@ -17,8 +16,6 @@ const NotificationIcon = () => {
     if (!user || !['professor', 'admin'].includes(user.role)) return;
     
     try {
-      setLoading(true);
-      
       if (user.role === 'professor') {
         const [projectData, reservationData] = await Promise.all([
           getProjectRequestNotifications('pending'),
@@ -46,8 +43,6 @@ const NotificationIcon = () => {
       setReservationNotifications([]);
       setAdminReservationNotifications([]);
       setUnreadCount(0);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -166,11 +161,7 @@ const NotificationIcon = () => {
 
             {/* Conteúdo */}
             <div className="p-6 overflow-y-auto max-h-[60vh]">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-              ) : (projectNotifications.length === 0 && reservationNotifications.length === 0 && adminReservationNotifications.length === 0) ? (
+              {(projectNotifications.length === 0 && reservationNotifications.length === 0 && adminReservationNotifications.length === 0) ? (
                 <div className="text-center py-8">
                   <Bell className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">

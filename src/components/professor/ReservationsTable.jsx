@@ -1,5 +1,5 @@
-import React from 'react';
-import { Calendar, Clock, DoorClosed, CheckCircle, X, Eye } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Calendar, Clock, DoorClosed, CheckCircle, X, Eye, ChevronUp, ChevronDown } from 'lucide-react';
 
 const ReservationsTable = ({ 
   reservations, 
@@ -9,6 +9,50 @@ const ReservationsTable = ({
   viewMode, 
   onReservationClick 
 }) => {
+  const [sortField, setSortField] = useState('start_time');
+  const [sortDirection, setSortDirection] = useState('desc');
+
+  // Função para ordenar as reservas
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Reservas ordenadas
+  const sortedReservations = useMemo(() => {
+    return [...reservations].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortField) {
+        case 'title':
+          aValue = a.title?.toLowerCase() || '';
+          bValue = b.title?.toLowerCase() || '';
+          break;
+        case 'room_name':
+          aValue = a.room_name?.toLowerCase() || '';
+          bValue = b.room_name?.toLowerCase() || '';
+          break;
+        case 'status':
+          aValue = a.status?.toLowerCase() || '';
+          bValue = b.status?.toLowerCase() || '';
+          break;
+        case 'start_time':
+        default:
+          aValue = new Date(a.start_time);
+          bValue = new Date(b.start_time);
+          break;
+      }
+      
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [reservations, sortField, sortDirection]);
+
   // Obter cor do status
   const getStatusColor = (status) => {
     const colors = {
@@ -41,6 +85,16 @@ const ReservationsTable = ({
       default:
         return <Clock className="text-gray-600" size={16} />;
     }
+  };
+
+  // Obter ícone de ordenação
+  const getSortIcon = (field) => {
+    if (sortField !== field) {
+      return <ChevronUp className="text-gray-300" size={16} />;
+    }
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="text-blue-600" size={16} /> : 
+      <ChevronDown className="text-blue-600" size={16} />;
   };
 
   if (loading) {
@@ -77,17 +131,41 @@ const ReservationsTable = ({
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Reserva
+              <th 
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/10 select-none"
+                onClick={() => handleSort('title')}
+              >
+                <div className="flex items-center gap-1">
+                  Reserva
+                  {getSortIcon('title')}
+                </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Sala
+              <th 
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/10 select-none"
+                onClick={() => handleSort('room_name')}
+              >
+                <div className="flex items-center gap-1">
+                  Sala
+                  {getSortIcon('room_name')}
+                </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Data/Hora
+              <th 
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/10 select-none"
+                onClick={() => handleSort('start_time')}
+              >
+                <div className="flex items-center gap-1">
+                  Data/Hora
+                  {getSortIcon('start_time')}
+                </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
+              <th 
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100/10 select-none"
+                onClick={() => handleSort('status')}
+              >
+                <div className="flex items-center gap-1">
+                  Status
+                  {getSortIcon('status')}
+                </div>
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Ações
@@ -95,7 +173,7 @@ const ReservationsTable = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {reservations.map((reservation) => (
+            {sortedReservations.map((reservation) => (
               <tr key={reservation.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
