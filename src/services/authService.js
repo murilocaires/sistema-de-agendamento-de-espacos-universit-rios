@@ -125,6 +125,54 @@ export const authenticateUser = async (email, password) => {
   }
 };
 
+// Fluxo: Esqueci a senha - enviar código
+export const sendForgotPasswordCode = async (email) => {
+  try {
+    const response = await apiRequestNoAuth('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao enviar código de recuperação:', error);
+    throw error;
+  }
+};
+
+// Fluxo: Verificar código
+export const verifyResetCode = async (email, code) => {
+  try {
+    const response = await apiRequestNoAuth('/auth/verify-reset-code', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+    return response;
+  } catch (error) {
+    console.error('Erro ao verificar código:', error);
+    throw error;
+  }
+};
+
+// Fluxo: Confirmar redefinição (altera senha e já loga)
+export const confirmResetPassword = async (email, code, newPassword) => {
+  try {
+    const response = await apiRequestNoAuth('/auth/confirm-reset', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, new_password: newPassword }),
+    });
+
+    if (response.token) {
+      localStorage.setItem('authToken', response.token);
+      localStorage.setItem('userData', JSON.stringify(response.user));
+    }
+
+    return response.user;
+  } catch (error) {
+    console.error('Erro ao confirmar redefinição de senha:', error);
+    throw error;
+  }
+};
+
 // Verificar token de autenticação
 export const verifyToken = async () => {
   try {

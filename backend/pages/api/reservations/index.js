@@ -1,6 +1,7 @@
 import { authMiddleware, requireRole } from '../../../lib/auth.js';
 import { query } from '../../../lib/database.js';
 import { withAuditLog, logCreate } from '../../../lib/auditLog.js';
+import { sendNewReservationNotification, sendNewReservationForAdminNotification } from '../../../lib/emailService.js';
 
 async function handler(req, res) {
   // Configurar CORS
@@ -406,20 +407,60 @@ async function handler(req, res) {
           rm.name as room_name,
           rm.location as room_location,
           p.name as project_name,
-          p.type as project_type
+          p.type as project_type,
+          prof.name as professor_name,
+          prof.email as professor_email
         FROM reservations r
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN rooms rm ON r.room_id = rm.id
         LEFT JOIN projects p ON r.project_id = p.id
+        LEFT JOIN users prof ON p.professor_id = prof.id
         WHERE r.id = $1
       `, [newReservation.id]);
+
+      const reservationData = fullReservation.rows[0];
+
+      // Enviar notificações por email
+      try {
+        if (initialStatus === 'pending' && reservationData.professor_email) {
+          // Notificar professor se a reserva precisa de aprovação
+          await sendNewReservationNotification({
+            title: reservationData.title,
+            student_name: reservationData.user_name,
+            room_name: reservationData.room_name,
+            start_time: reservationData.start_time,
+            end_time: reservationData.end_time,
+            project_name: reservationData.project_name,
+            description: reservationData.description,
+            professor_name: reservationData.professor_name
+          }, reservationData.professor_email);
+        } else if (initialStatus === 'pending' && !reservationData.professor_email) {
+          // Notificar admin se não há professor responsável
+          const adminResult = await query('SELECT email FROM users WHERE role = $1 LIMIT 1', ['admin']);
+          if (adminResult.rows.length > 0) {
+            await sendNewReservationForAdminNotification({
+              title: reservationData.title,
+              student_name: reservationData.user_name,
+              room_name: reservationData.room_name,
+              start_time: reservationData.start_time,
+              end_time: reservationData.end_time,
+              project_name: reservationData.project_name,
+              description: reservationData.description,
+              professor_name: 'Sistema'
+            }, adminResult.rows[0].email);
+          }
+        }
+      } catch (emailError) {
+        console.error('Erro ao enviar email de notificação:', emailError);
+        // Não falhar a criação da reserva por erro de email
+      }
 
       return res.status(201).json({
         success: true,
         message: initialStatus === 'approved' 
           ? 'Reserva criada e aprovada automaticamente'
           : 'Reserva criada e enviada para aprovação',
-        reservation: fullReservation.rows[0]
+        reservation: reservationData
       });
 
     } catch (error) {

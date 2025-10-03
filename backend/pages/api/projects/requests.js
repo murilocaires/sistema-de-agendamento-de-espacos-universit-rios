@@ -1,6 +1,7 @@
 import { authMiddleware, requireRole } from '../../../lib/auth.js';
 import { query } from '../../../lib/database.js';
 import { withAuditLog } from '../../../lib/auditLog.js';
+import { sendNewProjectRequestNotification, sendProjectRequestStatusUpdate } from '../../../lib/emailService.js';
 
 async function handler(req, res) {
   // Configurar CORS
@@ -132,6 +133,42 @@ async function handler(req, res) {
 
       const newRequest = result.rows[0];
 
+      // Buscar dados completos para notificação
+      const fullRequestData = await query(`
+        SELECT 
+          pr.*,
+          p.name as project_name,
+          p.type as project_type,
+          s.name as student_name,
+          s.email as student_email,
+          s.matricula_sigaa as student_matricula,
+          prof.name as professor_name,
+          prof.email as professor_email
+        FROM project_requests pr
+        JOIN projects p ON pr.project_id = p.id
+        JOIN users s ON pr.student_id = s.id
+        JOIN users prof ON pr.professor_id = prof.id
+        WHERE pr.id = $1
+      `, [newRequest.id]);
+
+      const requestData = fullRequestData.rows[0];
+
+      // Enviar notificação por email para o professor
+      try {
+        await sendNewProjectRequestNotification({
+          project_name: requestData.project_name,
+          project_type: requestData.project_type,
+          student_name: requestData.student_name,
+          student_email: requestData.student_email,
+          student_matricula: requestData.student_matricula,
+          message: requestData.message,
+          professor_name: requestData.professor_name
+        }, requestData.professor_email);
+      } catch (emailError) {
+        console.error('Erro ao enviar email de notificação:', emailError);
+        // Não falhar a criação da solicitação por erro de email
+      }
+
       return res.status(201).json({
         success: true,
         message: 'Solicitação enviada com sucesso!',
@@ -186,6 +223,38 @@ async function handler(req, res) {
           'INSERT INTO project_students (project_id, student_id) VALUES ($1, $2)',
           [request.project_id, request.student_id]
         );
+      }
+
+      // Buscar dados completos para notificação
+      const fullRequestData = await query(`
+        SELECT 
+          pr.*,
+          p.name as project_name,
+          p.type as project_type,
+          s.name as student_name,
+          s.email as student_email,
+          prof.name as professor_name
+        FROM project_requests pr
+        JOIN projects p ON pr.project_id = p.id
+        JOIN users s ON pr.student_id = s.id
+        JOIN users prof ON pr.professor_id = prof.id
+        WHERE pr.id = $1
+      `, [request_id]);
+
+      const requestData = fullRequestData.rows[0];
+
+      // Enviar notificação por email para o aluno
+      try {
+        await sendProjectRequestStatusUpdate({
+          project_name: requestData.project_name,
+          project_type: requestData.project_type,
+          student_name: requestData.student_name,
+          professor_name: requestData.professor_name,
+          status: action
+        }, requestData.student_email);
+      } catch (emailError) {
+        console.error('Erro ao enviar email de notificação:', emailError);
+        // Não falhar o processamento por erro de email
       }
 
       return res.status(200).json({

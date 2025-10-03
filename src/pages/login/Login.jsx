@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { sendForgotPasswordCode, verifyResetCode, confirmResetPassword } from "../../services/authService";
 
 const Login = ({ onShowRegister }) => {
   const { login } = useAuth();
@@ -9,6 +10,10 @@ const Login = ({ onShowRegister }) => {
     email: "",
     password: "",
   });
+  const [showReset, setShowReset] = useState(false);
+  const [resetStep, setResetStep] = useState('email');
+  const [resetData, setResetData] = useState({ email: "", code: "", newPassword: "" });
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -49,6 +54,7 @@ const Login = ({ onShowRegister }) => {
 
         {/* Caixa do formulário */}
         <div className="w-full max-w-md rounded-[10px] border border-gray-400 p-6 mx-auto">
+          {!showReset ? (
           <form onSubmit={handleSubmit} className="flex flex-col">
             {/* Título do formulário */}
             <h2 className="text-gray-200 font-bold text-xl mb-2">
@@ -116,6 +122,64 @@ const Login = ({ onShowRegister }) => {
               {loading ? "Entrando..." : "Entrar"}
             </button>
           </form>
+          ) : (
+            <div className="flex flex-col">
+              <h2 className="text-gray-200 font-bold text-xl mb-2">Redefinir senha</h2>
+              <p className="text-gray-300 text-xs mb-6">Informe seu email para receber um código de 6 dígitos. O código expira em 5 minutos.</p>
+              {error && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">{error}</div>
+              )}
+              {resetStep === 'email' && (
+                <>
+                  <div className="mb-4">
+                    <label htmlFor="reset_email" className="block text-gray-300 text-xs font-medium mb-2">E-MAIL</label>
+                    <input id="reset_email" type="email" value={resetData.email}
+                      onChange={(e)=> setResetData(prev=>({...prev, email: e.target.value}))}
+                      placeholder="exemplo@mail.com"
+                      className="w-full py-2 border-b border-gray-400 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-dark transition-colors" required />
+                  </div>
+                  <button disabled={resetLoading}
+                    onClick={async ()=>{ try { setResetLoading(true); setError(""); await sendForgotPasswordCode(resetData.email); setResetStep('code'); } catch(err){ setError(err.message);} finally { setResetLoading(false);} }}
+                    className="w-full bg-gray-200 text-white py-3 rounded-lg font-medium hover:bg-blue-dark transition-colors duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {resetLoading ? 'Enviando...' : 'Enviar código'}
+                  </button>
+                </>
+              )}
+              {resetStep === 'code' && (
+                <>
+                  <div className="mb-4">
+                    <label htmlFor="reset_code" className="block text-gray-300 text-xs font-medium mb-2">CÓDIGO (6 dígitos)</label>
+                    <input id="reset_code" type="text" value={resetData.code}
+                      onChange={(e)=> setResetData(prev=>({...prev, code: e.target.value.replace(/\D/g,'').slice(0,6)}))}
+                      placeholder="000000"
+                      className="w-full py-2 border-b border-gray-400 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-dark transition-colors" required />
+                  </div>
+                  <button disabled={resetLoading}
+                    onClick={async ()=>{ try { setResetLoading(true); setError(""); await verifyResetCode(resetData.email, resetData.code); setResetStep('password'); } catch(err){ setError(err.message);} finally { setResetLoading(false);} }}
+                    className="w-full bg-gray-200 text-white py-3 rounded-lg font-medium hover:bg-blue-dark transition-colors duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {resetLoading ? 'Verificando...' : 'Validar código'}
+                  </button>
+                </>
+              )}
+              {resetStep === 'password' && (
+                <>
+                  <div className="mb-4">
+                    <label htmlFor="reset_password" className="block text-gray-300 text-xs font-medium mb-2">NOVA SENHA</label>
+                    <input id="reset_password" type="password" value={resetData.newPassword}
+                      onChange={(e)=> setResetData(prev=>({...prev, newPassword: e.target.value}))}
+                      placeholder="Digite a nova senha"
+                      className="w-full py-2 border-b border-gray-400 text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-dark transition-colors" required />
+                  </div>
+                  <button disabled={resetLoading}
+                    onClick={async ()=>{ try { setResetLoading(true); setError(""); await confirmResetPassword(resetData.email, resetData.code, resetData.newPassword); window.location.href = '/'; } catch(err){ setError(err.message);} finally { setResetLoading(false);} }}
+                    className="w-full bg-gray-200 text-white py-3 rounded-lg font-medium hover:bg-blue-dark transition-colors duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed">
+                    {resetLoading ? 'Concluindo...' : 'Concluir e entrar'}
+                  </button>
+                </>
+              )}
+              <button onClick={()=>{ setShowReset(false); setResetStep('email'); setError(""); }} className="w-full text-gray-300 text-xs mt-4 hover:text-blue-dark transition-colors">Voltar para login</button>
+            </div>
+          )}
         </div>
 
         {/* Links Esqueceu a senha e Criar conta */}
@@ -125,7 +189,10 @@ const Login = ({ onShowRegister }) => {
             className="text-gray-300 text-xs md:text-sm hover:text-blue-dark transition-colors"
             onClick={(e) => {
               e.preventDefault();
-              console.log("Esqueceu a senha clicado");
+              setShowReset(true);
+              setResetStep('email');
+              setError("");
+              setResetData({ email: formData.email || "", code: "", newPassword: "" });
             }}
           >
             Esqueceu a senha?

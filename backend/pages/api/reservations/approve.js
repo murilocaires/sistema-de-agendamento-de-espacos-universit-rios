@@ -1,5 +1,6 @@
 import { authMiddleware, requireRole } from '../../../lib/auth.js';
 import { query } from '../../../lib/database.js';
+import { sendReservationStatusUpdate, sendNewReservationForAdminNotification } from '../../../lib/emailService.js';
 import { withAuditLog, logUpdate } from '../../../lib/auditLog.js';
 
 async function handler(req, res) {
@@ -186,13 +187,77 @@ async function handler(req, res) {
           u.role as user_role,
           rm.name as room_name,
           rm.location as room_location,
+          p.name as project_name,
+          p.type as project_type,
+          prof.name as professor_name,
+          prof.email as professor_email,
           approver.name as approved_by_name
         FROM reservations r
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN rooms rm ON r.room_id = rm.id
+        LEFT JOIN projects p ON r.project_id = p.id
+        LEFT JOIN users prof ON p.professor_id = prof.id
         LEFT JOIN users approver ON r.approved_by = approver.id
         WHERE r.id = $1
       `, [reservation_id]);
+
+      const reservationData = fullReservation.rows[0];
+
+      // Enviar notificações por email
+      try {
+        if (action === 'approve') {
+          if (isProfessor) {
+            // Professor aprovou - notificar aluno e admin
+            await sendReservationStatusUpdate({
+              title: reservationData.title,
+              student_name: reservationData.user_name,
+              room_name: reservationData.room_name,
+              start_time: reservationData.start_time,
+              end_time: reservationData.end_time,
+              status: 'professor_approved'
+            }, reservationData.user_email);
+
+            // Notificar admin
+            const adminResult = await query('SELECT email FROM users WHERE role = $1 LIMIT 1', ['admin']);
+            if (adminResult.rows.length > 0) {
+              await sendNewReservationForAdminNotification({
+                title: reservationData.title,
+                student_name: reservationData.user_name,
+                room_name: reservationData.room_name,
+                start_time: reservationData.start_time,
+                end_time: reservationData.end_time,
+                project_name: reservationData.project_name,
+                description: reservationData.description,
+                professor_name: reservationData.professor_name
+              }, adminResult.rows[0].email);
+            }
+          } else {
+            // Admin aprovou - notificar aluno
+            await sendReservationStatusUpdate({
+              title: reservationData.title,
+              student_name: reservationData.user_name,
+              room_name: reservationData.room_name,
+              start_time: reservationData.start_time,
+              end_time: reservationData.end_time,
+              status: 'approved'
+            }, reservationData.user_email);
+          }
+        } else if (action === 'reject') {
+          // Rejeição - notificar aluno
+          await sendReservationStatusUpdate({
+            title: reservationData.title,
+            student_name: reservationData.user_name,
+            room_name: reservationData.room_name,
+            start_time: reservationData.start_time,
+            end_time: reservationData.end_time,
+            status: 'rejected',
+            rejection_reason: rejection_reason
+          }, reservationData.user_email);
+        }
+      } catch (emailError) {
+        console.error('Erro ao enviar email de notificação:', emailError);
+        // Não falhar a aprovação por erro de email
+      }
 
       // Determinar mensagem baseada na ação e status anterior
       let message;
@@ -209,7 +274,7 @@ async function handler(req, res) {
       return res.status(200).json({
         success: true,
         message: message,
-        reservation: fullReservation.rows[0]
+        reservation: reservationData
       });
 
     } catch (error) {
