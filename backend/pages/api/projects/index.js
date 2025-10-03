@@ -103,4 +103,4 @@ async function handler(req, res) {
 }
 
 // Professores podem acessar projetos
-export default requireRole(['professor', 'admin'])(withAuditLog('projects')(handler));
+export default requireRole(['professor', 'servidor', 'admin'])(withAuditLog('projects')(handler));

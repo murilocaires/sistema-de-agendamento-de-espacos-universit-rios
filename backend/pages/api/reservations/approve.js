@@ -317,4 +317,4 @@ async function handler(req, res) {
 }
 
 // Apenas administradores podem aprovar reservas, mas professores podem ver pendentes
-export default requireRole(['admin', 'professor'])(withAuditLog('reservations')(handler));
+export default requireRole(['admin', 'professor', 'servidor'])(withAuditLog('reservations')(handler));

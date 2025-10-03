@@ -11,6 +11,7 @@ const SmartRedirect = () => {
       case 'admin':
         return '/admin/dashboard';
       case 'professor':
+      case 'servidor':
         return '/professor/projetos';
       case 'coordenador':
         return '/coordenador/dashboard';

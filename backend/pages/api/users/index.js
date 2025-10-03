@@ -108,4 +108,4 @@ async function handler(req, res) {
 }
 
 // Admins, coordenadores, professores e alunos podem acessar usuários (alunos, professores e coordenadores só podem ver)
-export default requireRole(['admin', 'coordenador', 'professor', 'aluno'])(withAuditLog('users')(handler));
+export default requireRole(['admin', 'coordenador', 'professor', 'servidor', 'aluno'])(withAuditLog('users')(handler));

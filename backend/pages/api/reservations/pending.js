@@ -69,4 +69,4 @@ async function handler(req, res) {
 }
 
 // Professores podem ver reservas pendentes (para visualização)
-export default requireRole(['admin', 'professor'])(handler);
+export default requireRole(['admin', 'professor', 'servidor'])(handler);

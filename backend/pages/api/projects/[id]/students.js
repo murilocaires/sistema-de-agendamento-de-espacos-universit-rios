@@ -184,4 +184,4 @@ async function handler(req, res) {
 }
 
 // Professores, admins e alunos podem acessar alunos dos projetos (alunos só podem ver)
-export default requireRole(['professor', 'admin', 'aluno'])(withAuditLog('project_students')(handler));
+export default requireRole(['professor', 'servidor', 'admin', 'aluno'])(withAuditLog('project_students')(handler));

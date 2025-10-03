@@ -126,4 +126,4 @@ async function handler(req, res) {
 }
 
 // Admins, coordenadores, portaria, professores e alunos podem acessar salas (alunos, professores e portaria só podem ver)
-export default requireRole(['admin', 'coordenador', 'portaria', 'professor', 'aluno'])(withAuditLog('rooms')(handler));
+export default requireRole(['admin', 'coordenador', 'portaria', 'professor', 'servidor', 'aluno'])(withAuditLog('rooms')(handler));

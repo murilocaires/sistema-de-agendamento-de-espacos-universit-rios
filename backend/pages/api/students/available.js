@@ -65,4 +65,4 @@ async function handler(req, res) {
 }
 
 // Professores podem acessar alunos disponíveis
-export default requireRole(['professor', 'admin'])(handler);
+export default requireRole(['professor', 'servidor', 'admin'])(handler);

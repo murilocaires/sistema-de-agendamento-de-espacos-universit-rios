@@ -120,4 +120,4 @@ async function handler(req, res) {
 }
 
 // Apenas professores podem acessar
-export default requireRole(['professor'])(withAuditLog('users')(handler));
+export default requireRole(['professor', 'servidor'])(withAuditLog('users')(handler));

@@ -84,6 +84,7 @@ export const getUserMenu = (userType) => {
       break;
     case "docente":
     case "professor":
+    case "servidor":
       menu = docenteMenu;
       break;
     case "coordenador":
@@ -111,6 +112,7 @@ export const getUserTypeDisplay = (userType) => {
       return "ADMIN";
     case "docente":
     case "professor":
+    case "servidor":
       return "SERVIDOR";
     case "coordenador":
       return "COORDENADOR";

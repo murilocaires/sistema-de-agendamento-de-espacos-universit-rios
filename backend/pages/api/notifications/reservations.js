@@ -101,4 +101,4 @@ async function handler(req, res) {
 }
 
 // Apenas admins podem acessar
-export default requireRole(['admin', 'professor'])(authMiddleware(handler));
+export default requireRole(['admin', 'professor', 'servidor'])(authMiddleware(handler));
