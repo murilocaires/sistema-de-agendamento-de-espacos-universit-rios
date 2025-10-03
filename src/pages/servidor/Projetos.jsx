@@ -4,7 +4,7 @@ import { getProjects, createProject, deleteProject } from '../../services/authSe
 import { getAvailableStudents, addStudentToProject, removeStudentFromProject, getProjectStudents } from '../../services/authService';
 import { getProjectRequestNotifications, processProjectRequest } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
-import ProfessorLayout from '../../layouts/ProfessorLayout';
+import ServidorLayout from '../../layouts/ServidorLayout';
 
 const Projetos = () => {
   const { user } = useAuth();
@@ -171,16 +171,16 @@ const Projetos = () => {
 
   if (loading) {
     return (
-      <ProfessorLayout>
+      <ServidorLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-      </ProfessorLayout>
+      </ServidorLayout>
     );
   }
 
   return (
-    <ProfessorLayout>
+    <ServidorLayout>
       <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Meus Projetos de Extensão</h1>
@@ -454,7 +454,7 @@ const Projetos = () => {
         </div>
       )}
       </div>
-    </ProfessorLayout>
+    </ServidorLayout>
   );
 };
 

@@ -28,8 +28,8 @@ async function handler(req, res) {
       }
 
       if (user_id) {
-        // Professores só podem ver suas próprias reservas
-        if (req.user.role === 'professor' && parseInt(user_id) !== req.user.id) {
+        // Professores/Servidores só podem ver suas próprias reservas
+        if ((req.user.role === 'professor' || req.user.role === 'servidor') && parseInt(user_id) !== req.user.id) {
           return res.status(403).json({ error: 'Você só pode visualizar suas próprias reservas' });
         }
         paramCount++;
@@ -55,12 +55,14 @@ async function handler(req, res) {
         queryParams.push(end_date);
       }
 
-      // Professores veem apenas reservas aprovadas por padrão, exceto suas próprias
-      if (req.user.role === 'professor' && !status && !user_id) {
+      // Professores/Servidores veem apenas reservas aprovadas por padrão, exceto quando filtram suas próprias reservas
+      if ((req.user.role === 'professor' || req.user.role === 'servidor') && !status && !user_id) {
         paramCount++;
         whereConditions.push(`r.status = $${paramCount}`);
         queryParams.push('approved');
       }
+      // Quando um professor/servidor filtra por user_id (suas próprias reservas), 
+      // ele pode ver todas as reservas (pending, approved, rejected)
 
       const whereClause = whereConditions.length > 0 
         ? `WHERE ${whereConditions.join(' AND ')}`

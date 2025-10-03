@@ -17,20 +17,20 @@ import CalendarioGeralCoordenador from "./pages/coordenador/CalendarioGeral";
 import NewReservation from "./pages/admin/NewReservation";
 import NovaReservaAdmin from "./pages/admin/NovaReservaAdmin";
 import NewReservationCoordenador from "./pages/coordenador/NewReservation";
-import NovaReservaServidor from "./pages/servidor/NovaReservaServidor";
 import ApproveReservations from "./pages/admin/ApproveReservations";
 import AprovarContas from "./pages/admin/AprovarContas";
 import Logs from "./pages/admin/Logs";
 import ProjetosAdmin from "./pages/admin/Projetos";
 import CadastrarAlunosAdmin from "./pages/admin/CadastrarAlunos";
+import HistoricoAdmin from "./pages/admin/HistoricoAdmin";
 import ReservasPortaria from "./pages/portaria/ReservasPortaria";
-import DashboardProfessor from "./pages/professor/DashboardProfessor";
-import ReservasSistema from "./pages/professor/ReservasSistema";
-import MinhasReservas from "./pages/professor/MinhasReservas";
-import NovaReserva from "./pages/professor/NovaReserva";
-import Projetos from "./pages/professor/Projetos";
-import CadastrarAlunos from "./pages/professor/CadastrarAlunos";
-import Configuracoes from "./pages/professor/Configuracoes";
+import MinhasReservasServidor from "./pages/servidor/MinhasReservas";
+import NovaReservaServidor from "./pages/servidor/NovaReserva";
+import ProjetosServidor from "./pages/servidor/Projetos";
+import ConfiguracoesServidor from "./pages/servidor/Configuracoes";
+import HistoricoServidor from "./pages/servidor/HistoricoServidor";
+import DetalhesReservaServidor from "./pages/servidor/DetalhesReserva";
+import DetalhesHistoricoServidor from "./pages/servidor/DetalhesHistorico";
 import ProjetosAluno from "./pages/aluno/ProjetosAluno";
 import ReservasAluno from "./pages/aluno/ReservasAluno";
 import NovaReservaAluno from "./pages/aluno/NovaReservaAluno";
@@ -167,6 +167,16 @@ function App() {
             }
           />
 
+          {/* Rota protegida para histórico (admin) */}
+          <Route
+            path="/admin/historico"
+            element={
+              <ProtectedRoute>
+                <HistoricoAdmin />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Rota protegida para calendário geral (coordenador) */}
           <Route
             path="/coordenador/calendario-geral"
@@ -197,7 +207,17 @@ function App() {
             }
           />
 
-          {/* Rota protegida para nova reserva (servidor) */}
+          {/* Rotas protegidas para servidor */}
+
+          <Route
+            path="/servidor/minhas-reservas"
+            element={
+              <ProtectedRoute>
+                <MinhasReservasServidor />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/servidor/nova-reserva"
             element={
@@ -207,66 +227,51 @@ function App() {
             }
           />
 
-          {/* Rotas protegidas para professor */}
           <Route
-            path="/professor/dashboard"
+            path="/servidor/projetos"
             element={
               <ProtectedRoute>
-                <DashboardProfessor />
+                <ProjetosServidor />
               </ProtectedRoute>
             }
           />
 
+
           <Route
-            path="/professor/reservas-sistema"
+            path="/servidor/configuracoes"
             element={
               <ProtectedRoute>
-                <ReservasSistema />
+                <ConfiguracoesServidor />
               </ProtectedRoute>
             }
           />
 
+          {/* Rota protegida para histórico (servidor) */}
           <Route
-            path="/professor/minhas-reservas"
+            path="/servidor/historico"
             element={
               <ProtectedRoute>
-                <MinhasReservas />
+                <HistoricoServidor />
               </ProtectedRoute>
             }
           />
 
+          {/* Rota protegida para detalhes da reserva (servidor) */}
           <Route
-            path="/professor/nova-reserva"
+            path="/servidor/reservas/:id"
             element={
               <ProtectedRoute>
-                <NovaReserva />
+                <DetalhesReservaServidor />
               </ProtectedRoute>
             }
           />
 
+          {/* Rota protegida para detalhes do histórico (servidor) */}
           <Route
-            path="/professor/projetos"
+            path="/servidor/historico/:id"
             element={
               <ProtectedRoute>
-                <Projetos />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/professor/cadastrar-alunos"
-            element={
-              <ProtectedRoute>
-                <CadastrarAlunos />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/professor/configuracoes"
-            element={
-              <ProtectedRoute>
-                <Configuracoes />
+                <DetalhesHistoricoServidor />
               </ProtectedRoute>
             }
           />

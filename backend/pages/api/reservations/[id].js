@@ -81,9 +81,17 @@ async function handler(req, res) {
       const canApprove = user_role === 'admin';
       const canEdit = user_role === 'admin' || reservation.user_id === user_id;
 
-      if (status && !canApprove) {
+      // Permitir que usuários cancelem suas próprias reservas
+      if (status && status !== 'cancelled' && !canApprove) {
         return res.status(403).json({ 
           error: 'Apenas administradores podem aprovar/rejeitar reservas' 
+        });
+      }
+      
+      // Verificar se o usuário pode cancelar esta reserva
+      if (status === 'cancelled' && !canEdit) {
+        return res.status(403).json({ 
+          error: 'Você só pode cancelar suas próprias reservas' 
         });
       }
 

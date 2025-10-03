@@ -1,18 +1,18 @@
 import React from "react";
 import MinhasReservas from "../../components/MinhasReservas";
-import ProfessorLayout from "../../layouts/ProfessorLayout";
+import ServidorLayout from "../../layouts/ServidorLayout";
 
-const MinhasReservasProfessor = () => {
+const MinhasReservasServidor = () => {
   return (
-    <ProfessorLayout>
+    <ServidorLayout>
       <MinhasReservas
         title="Minhas Reservas"
-        userType="professor"
+        userType="servidor"
         showCancelButton={true}
         showDeleteButton={true}
       />
-    </ProfessorLayout>
+    </ServidorLayout>
   );
 };
 
-export default MinhasReservasProfessor;
+export default MinhasReservasServidor;

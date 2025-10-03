@@ -19,7 +19,8 @@ const Dashboard = () => {
         case "admin":
           return "/admin/dashboard";
         case "professor":
-          return "/professor/dashboard";
+        case "servidor":
+          return "/servidor/minhas-reservas";
         case "coordenador":
           return "/coordenador/dashboard";
         case "portaria":
@@ -27,7 +28,7 @@ const Dashboard = () => {
         case "aluno":
           return "/aluno/reservas";
         case "servidor":
-          return "/servidor/dashboard";
+          return "/servidor/minhas-reservas";
         default:
           return null; // Não redirecionar se não for um tipo específico
       }

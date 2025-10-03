@@ -6,6 +6,7 @@ import {
   getRooms,
   deleteReservation,
 } from "../services/authService";
+import { formatBrazilDateTime } from "../utils/dateUtils";
 import {
   Calendar,
   Clock,
@@ -59,11 +60,18 @@ const Historico = ({
   const loadReservations = async () => {
     try {
       setLoading(true);
-      const data = await getReservations();
-      setReservations(data);
+      // Para "Histórico", filtrar apenas as reservas do usuário logado
+      const filters = user?.id ? { user_id: user.id } : {};
+      const data = await getReservations(filters);
+      setReservations(data || []);
     } catch (error) {
       console.error("Erro ao carregar reservas:", error);
-      setError("Erro ao carregar reservas");
+      if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        setError("Acesso negado. Verifique suas permissões ou faça login novamente.");
+      } else {
+        setError("Erro ao carregar reservas. Tente novamente.");
+      }
+      setReservations([]);
     } finally {
       setLoading(false);
     }
@@ -93,9 +101,10 @@ const Historico = ({
   // Obter cor de fundo do status (20% da cor do texto)
   const getStatusBackground = (status) => {
     const backgrounds = {
-      pending: "#6BB6FF", // 20% de #355EC5
+      pending: "#E0F2FE", // Azul mais claro para melhor contraste
       approved: "#D1FAE5", // 20% de #059669
       rejected: "#FFE4E1", // 20% de #D03E3E (mesma cor do botão cancelar)
+      cancelled: "#FFE4E1", // 20% de #D03E3E (mesma cor do rejeitado)
       changed: "#FFB366", // 20% de laranja
     };
     return backgrounds[status] || "#F3F4F6";
@@ -107,6 +116,7 @@ const Historico = ({
       pending: "#355EC5",
       approved: "#059669",
       rejected: "#D03E3E",
+      cancelled: "#D03E3E", // mesma cor do rejeitado
       changed: "#FF8C00", // laranja
     };
     return textColors[status] || "#6B7280";
@@ -118,6 +128,7 @@ const Historico = ({
       pending: "Pendente",
       approved: "Reservado",
       rejected: "Recusado",
+      cancelled: "Cancelada",
       changed: "Alterado",
     };
     return texts[status] || status;
@@ -131,6 +142,8 @@ const Historico = ({
       case "pending":
         return <Clock size={14} style={{ color: "#355EC5" }} />;
       case "rejected":
+        return <X size={14} style={{ color: "#D03E3E" }} />;
+      case "cancelled":
         return <X size={14} style={{ color: "#D03E3E" }} />;
       case "changed":
         return <Edit size={14} style={{ color: "#FF8C00" }} />;
@@ -148,8 +161,8 @@ const Historico = ({
     const basePath =
       userType === "student"
         ? "/aluno"
-        : userType === "professor"
-        ? "/professor"
+        : userType === "professor" || userType === "servidor"
+        ? "/servidor"
         : userType === "admin"
         ? "/admin"
         : "/coordenador";
@@ -195,16 +208,26 @@ const Historico = ({
     setReservationToCancel(null);
   };
 
-  // Filtrar reservas
+  // Filtrar reservas (incluindo reservas expiradas)
   const filteredReservations = reservations.filter((reservation) => {
     const matchesSearch = reservation.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "all" || reservation.status === statusFilter;
+    
+    // O histórico deve mostrar todas as reservas (aprovadas, pendentes, rejeitadas, canceladas)
+    const shouldIncludeInHistory = true;
+    
     // Filtrar apenas reservas do usuário logado
     const matchesUser = user && reservation.user_email === user.email;
-    return matchesSearch && matchesStatus && matchesUser;
+    
+    return matchesSearch && matchesStatus && shouldIncludeInHistory && matchesUser;
+  }).sort((a, b) => {
+    // Ordenar do mais recente para o menos recente
+    const dateA = new Date(a.updated_at || a.created_at);
+    const dateB = new Date(b.updated_at || b.created_at);
+    return dateB - dateA;
   });
 
   // Paginação
@@ -392,15 +415,7 @@ const Historico = ({
                     >
                       <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {new Date(
-                            reservation.updated_at || reservation.created_at
-                          ).toLocaleDateString("pt-BR", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {formatBrazilDateTime(reservation.updated_at || reservation.created_at)}
                         </div>
                       </td>
                       <td className="pl-6 pr-1 md:px-6 py-4">

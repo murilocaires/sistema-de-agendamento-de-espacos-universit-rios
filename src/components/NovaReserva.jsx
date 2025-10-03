@@ -17,6 +17,14 @@ import {
   Wifi,
   AirVent
 } from "lucide-react";
+import { 
+  isSameDate, 
+  createBrazilDateTime, 
+  isDateInPast, 
+  getBrazilNow,
+  formatBrazilDate,
+  formatBrazilTime 
+} from "../utils/dateUtils";
 
 const NovaReserva = ({ 
   title = "Nova Reserva",
@@ -33,7 +41,6 @@ const NovaReserva = ({
   const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [createdReservation, setCreatedReservation] = useState(null);
 
@@ -44,7 +51,7 @@ const NovaReserva = ({
     date: "",
     start_time: "",
     end_time: "",
-    people_count: 1,
+    people_count: "",
     is_recurring: false,
     recurrence_frequency: "daily",
     recurrence_end_date: "",
@@ -97,41 +104,30 @@ const NovaReserva = ({
 
   // Filtrar salas disponíveis baseado nos critérios selecionados
   useEffect(() => {
-    if (formData.date) {
-      filterAvailableRooms();
-    }
-  }, [formData.date, formData.start_time, formData.end_time, formData.room_resources, formData.is_recurring, formData.recurrence_end_date, formData.recurrence_frequency, rooms, reservations, activeTab]);
+    filterAvailableRooms();
+  }, [formData.project_id, formData.description, formData.date, formData.start_time, formData.end_time, formData.people_count, formData.room_resources, formData.is_recurring, formData.recurrence_end_date, formData.recurrence_frequency, rooms, reservations, activeTab, showProjectSelection]);
 
   // Função para verificar se uma sala está disponível no horário selecionado
   const isRoomAvailable = (room) => {
     if (!formData.date || !formData.start_time || !formData.end_time) return false;
     
-    const selectedDate = new Date(formData.date);
     const hasConflict = reservations.some(reservation => {
       // Só verificar reservas aprovadas (não pendentes)
       if (reservation.status !== 'approved') return false;
       if (reservation.room_id !== room.id) return false;
       
-      const reservationDate = new Date(reservation.date);
-      const isSameDate = reservationDate.toDateString() === selectedDate.toDateString();
-      
-      if (!isSameDate) return false;
+      // Comparar datas usando timezone de Brasília
+      if (!isSameDate(formData.date, reservation.date)) return false;
       
       // Verificar se há sobreposição de horários
       const reservationStart = reservation.start_time;
       const reservationEnd = reservation.end_time;
       
-      // Conflito se:
-      // 1. O início da nova reserva está dentro da reserva existente
-      // 2. O fim da nova reserva está dentro da reserva existente  
-      // 3. A nova reserva engloba completamente a reserva existente
-      // 4. A nova reserva é exatamente igual à reserva existente
-      return (
-        (formData.start_time >= reservationStart && formData.start_time < reservationEnd) ||
-        (formData.end_time > reservationStart && formData.end_time <= reservationEnd) ||
-        (formData.start_time <= reservationStart && formData.end_time >= reservationEnd) ||
-        (formData.start_time === reservationStart && formData.end_time === reservationEnd)
-      );
+      // Conflito se há qualquer sobreposição de horários
+      // Nova reserva: [start_time, end_time]
+      // Reserva existente: [reservationStart, reservationEnd]
+      // Há conflito se: start_time < reservationEnd && end_time > reservationStart
+      return (formData.start_time < reservationEnd && formData.end_time > reservationStart);
     });
     
     return !hasConflict;
@@ -147,6 +143,7 @@ const NovaReserva = ({
     if (!formData.is_recurring || !formData.date || !formData.recurrence_end_date) {
       return [];
     }
+    
 
     const startDate = new Date(formData.date);
     const endDate = new Date(formData.recurrence_end_date);
@@ -181,8 +178,20 @@ const NovaReserva = ({
   };
 
   const filterAvailableRooms = () => {
+    // Verificar se todos os campos obrigatórios estão preenchidos
+    const hasProject = !showProjectSelection || formData.project_id;
+    const hasDescription = formData.description.trim();
+    const hasDate = formData.date;
+    const hasStartTime = formData.start_time;
+    const hasEndTime = formData.end_time;
+    const hasParticipants = formData.people_count && formData.people_count > 0;
+    
+    // Se for recorrente, verificar campos adicionais
+    const hasRecurrenceFields = !formData.is_recurring || 
+      (formData.recurrence_frequency && formData.recurrence_end_date);
+    
     // Não mostrar salas se campos obrigatórios não estão preenchidos
-    if (!formData.date || !formData.start_time || !formData.end_time) {
+    if (!hasProject || !hasDescription || !hasDate || !hasStartTime || !hasEndTime || !hasParticipants || !hasRecurrenceFields) {
       setAvailableRooms([]);
       return;
     }
@@ -191,14 +200,26 @@ const NovaReserva = ({
       .filter(([key, value]) => value)
       .map(([key]) => key);
 
-    // Filtrar por bloco (simulando com base no ID da sala)
-    const roomsInBlock = rooms.filter(room => {
+    // Filtrar por bloco
+    let roomsInBlock = rooms.filter(room => {
+      // Se a sala tem uma propriedade 'block', usar ela
+      if (room.block) {
+        return room.block === activeTab;
+      }
+      
+      // Caso contrário, usar lógica baseada no ID (fallback)
       if (activeTab === 'bloco1') {
         return room.id <= 5; // Salas 1-5 são do Bloco 1
       } else {
         return room.id > 5; // Salas 6+ são do Bloco 2
       }
     });
+
+    // Se não há salas no bloco selecionado, mostrar todas as salas
+    if (roomsInBlock.length === 0) {
+      roomsInBlock = rooms;
+    }
+
 
     const roomsWithResources = roomsInBlock.filter(room => {
       if (requiredResources.length === 0) return true;
@@ -228,8 +249,9 @@ const NovaReserva = ({
     const prevMonth = new Date(year, month - 1, 0);
     const prevMonthDays = prevMonth.getDate();
     for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+      const dayNumber = prevMonthDays - i;
       days.push({
-        date: new Date(year, month - 1, prevMonthDays - i),
+        date: new Date(year, month - 1, dayNumber),
         isCurrentMonth: false
       });
     }
@@ -263,18 +285,84 @@ const NovaReserva = ({
   };
 
   const goToToday = () => {
-    setCurrentDate(new Date());
+    setCurrentDate(getBrazilNow());
+  };
+
+  // Handler específico para o campo de data
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    
+    
+    // Sempre atualizar o valor do campo, mesmo se houver erro de validação
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Permitir campo vazio
+    if (value === '') {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+      return;
+    }
+    
+    // Validar formato da data - só validar se estiver completo
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(value)) {
+      // Limpar erro se ainda está digitando
+      setErrors(prev => ({ ...prev, [name]: '' }));
+      return;
+    }
+    
+    const year = value.split('-')[0];
+    const month = value.split('-')[1];
+    const day = value.split('-')[2];
+    
+    // Validar ano (4 dígitos) - só se a data estiver completa
+    const yearNum = parseInt(year);
+    if (year.length !== 4 || isNaN(yearNum)) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: "Ano deve ter 4 dígitos"
+      }));
+      return;
+    }
+    
+    // Validar se a data é anterior à data atual (apenas para data principal)
+    if (name === 'date') {
+      // Usar timezone de Brasília para validação
+      if (isDateInPast(value)) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: "A data não pode ser anterior à data atual"
+        }));
+        return;
+      }
+    }
+    
+    // Validar se a data final é anterior à data inicial (apenas para data final)
+    if (name === 'recurrence_end_date' && formData.date) {
+      // Usar timezone de Brasília para comparação
+      const selectedDate = new Date(value);
+      const startDate = new Date(formData.date);
+      
+      if (selectedDate < startDate) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: "A data final deve ser posterior à data inicial"
+        }));
+        return;
+      }
+    }
+    
+    // Se chegou até aqui, a data é válida - limpar erro
+    setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   // Manipular mudanças no formulário
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     
-    if (name === 'date' && value) {
-      const year = value.split('-')[0];
-      if (year && year.length > 4) {
-        return; // Prevent update if year has more than 4 digits
-      }
+    // Usar handler específico para campos de data
+    if (name === 'date' || name === 'recurrence_end_date') {
+      handleDateChange(e);
+      return;
     }
     
     if (type === 'checkbox') {
@@ -331,7 +419,6 @@ const NovaReserva = ({
     try {
       setFormLoading(true);
       setError("");
-      setSuccessMessage("");
 
       const reservationData = {
         title: showProjectSelection ? `Reserva - ${getSelectedProjectName()}` : "Reserva",
@@ -340,7 +427,7 @@ const NovaReserva = ({
         room_id: selectedRoom.id,
         start_time: `${formData.date}T${formData.start_time}`,
         end_time: `${formData.date}T${formData.end_time}`,
-        people_count: 1,
+        people_count: formData.people_count,
         recurrence_type: formData.is_recurring ? formData.recurrence_frequency : "none",
         recurrence_end_date: formData.is_recurring ? formData.recurrence_end_date : null,
         recurrence_interval: 1,
@@ -350,13 +437,7 @@ const NovaReserva = ({
       const result = await createReservation(reservationData);
       
       setCreatedReservation(result);
-      setSuccessMessage("✅ Reserva criada com sucesso! Aguardando aprovação.");
       setShowModal(true);
-      
-      // Limpar mensagem de sucesso após 5 segundos
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 5000);
       
       await loadData();
       resetForm();
@@ -381,7 +462,7 @@ const NovaReserva = ({
       date: "",
       start_time: "",
       end_time: "",
-      people_count: 1,
+      people_count: "",
       is_recurring: false,
       recurrence_frequency: "daily",
       recurrence_end_date: "",
@@ -409,6 +490,17 @@ const NovaReserva = ({
 
     if (!formData.date) {
       newErrors.date = "Data é obrigatória";
+    } else {
+      // Validar se a data é anterior à data atual usando timezone de Brasília
+      if (isDateInPast(formData.date)) {
+        newErrors.date = "A data não pode ser anterior à data atual";
+      }
+      
+      // Validar se o ano tem exatamente 4 dígitos
+      const year = formData.date.split('-')[0];
+      if (year && (year.length !== 4 || isNaN(parseInt(year)))) {
+        newErrors.date = "Ano deve ter 4 dígitos";
+      }
     }
 
     if (!formData.start_time) {
@@ -423,12 +515,20 @@ const NovaReserva = ({
       newErrors.end_time = "Horário de fim deve ser posterior ao início";
     }
 
+    if (!formData.people_count || formData.people_count === "" || formData.people_count <= 0) {
+      newErrors.people_count = "Quantidade de participantes deve ser maior que 0";
+    }
+
     if (!selectedRoom) {
       newErrors.room = "Selecione uma sala";
     }
 
     if (formData.is_recurring && !formData.recurrence_end_date) {
       newErrors.recurrence_end_date = "Data de fim da recorrência é obrigatória";
+    }
+
+    if (formData.is_recurring && !formData.recurrence_frequency) {
+      newErrors.recurrence_frequency = "Frequência é obrigatória para reservas recorrentes";
     }
 
     if (formData.is_recurring && formData.recurrence_end_date && formData.recurrence_end_date <= formData.date) {
@@ -480,15 +580,6 @@ const NovaReserva = ({
           </div>
         )}
 
-        {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border-2 border-green-300 rounded-lg flex items-center gap-3 shadow-sm">
-            <CheckCircle className="text-green-600" size={24} />
-            <div>
-              <p className="text-green-800 font-semibold text-lg">{successMessage}</p>
-              <p className="text-green-600 text-sm mt-1">Você receberá uma notificação quando a reserva for aprovada.</p>
-            </div>
-          </div>
-        )}
         
         {/* Layout Principal - Formulário e Calendário */}
         <div className="flex gap-8">
@@ -657,11 +748,12 @@ const NovaReserva = ({
                   <input
                     type="number"
                     name="people_count"
-                    value={formData.people_count || 1}
+                    value={formData.people_count}
                     onChange={handleInputChange}
                     min="1"
                     max="999"
                     maxLength="3"
+                    placeholder="0"
                     className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
                       errors.people_count ? "border-red-500" : ""
                     }`}
@@ -777,6 +869,7 @@ const NovaReserva = ({
                         value={formData.recurrence_end_date}
                         onChange={handleInputChange}
                         min={formData.date}
+                        max="2099-12-31"
                         className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
                           errors.recurrence_end_date ? "border-red-500" : ""
                         }`}
@@ -798,18 +891,22 @@ const NovaReserva = ({
             <div className="bg-white rounded-lg shadow-sm border p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-medium text-gray-900">
-                  {currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                  {currentDate.toLocaleDateString('pt-BR', { 
+                    month: 'long', 
+                    year: 'numeric',
+                    timeZone: 'America/Sao_Paulo'
+                  })}
                 </h3>
                 <div className="flex gap-1">
                   <button
                     onClick={() => navigateCalendar(-1)}
-                    className="p-1 hover:bg-gray-100 rounded focus:outline-none"
+                    className="p-1 rounded focus:outline-none transition-transform hover:scale-130"
                   >
                     <ChevronLeft size={16} />
                   </button>
                   <button
                     onClick={() => navigateCalendar(1)}
-                    className="p-1 hover:bg-gray-100 rounded focus:outline-none"
+                    className="p-1 rounded focus:outline-none transition-transform hover:scale-130"
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -824,11 +921,16 @@ const NovaReserva = ({
                 ))}
                 
                 {getDaysInMonth(currentDate).map((day, index) => {
-                  const isToday = day.date.toDateString() === new Date().toDateString();
+                  const isToday = isSameDate(day.date, getBrazilNow());
                   const dayString = day.date.toISOString().split('T')[0];
                   const isSelected = formData.date && dayString === formData.date;
                   const recurringDays = getRecurringDays();
                   const isRecurring = recurringDays.includes(dayString);
+                  
+                  // Verificar se é sábado (6) ou domingo (0)
+                  // getDay() retorna: 0=Domingo, 1=Segunda, 2=Terça, 3=Quarta, 4=Quinta, 5=Sexta, 6=Sábado
+                  const dayOfWeek = day.date.getDay();
+                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
                   
                   // Para recorrência diária, verificar se é primeiro, último ou intermediário
                   let recurringStyle = '';
@@ -846,13 +948,22 @@ const NovaReserva = ({
                     recurringStyle = 'bg-blue-600 text-white hover:bg-blue-600'; // Azul escuro para outras frequências
                   }
                   
+                  // Estilo para fins de semana - removido o bloqueio
+                  const weekendStyle = '';
+                  
+                  
                   return (
                     <button
                       key={index}
-                      onClick={() => setFormData(prev => ({ ...prev, date: dayString }))}
+                      onClick={() => {
+                        // Permitir seleção de todos os dias
+                        setFormData(prev => ({ ...prev, date: dayString }));
+                      }}
+                      disabled={false}
+                      style={{}}
                       className={`text-center p-1 rounded text-xs font-medium focus:outline-none ${
                         !day.isCurrentMonth ? 'text-gray-400' : 'text-gray-900'
-                      } ${isToday ? 'border-2 border-blue-600' : ''} ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-600' : ''} ${recurringStyle} ${!isSelected && !isRecurring ? 'hover:bg-blue-100' : ''}`}
+                      } ${isToday ? 'border-2 border-blue-600' : ''} ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-600' : ''} ${recurringStyle} ${!isSelected && !isRecurring && day.isCurrentMonth ? 'hover:bg-blue-100' : ''}`}
                     >
                       {day.date.getDate()}
                     </button>
@@ -862,7 +973,7 @@ const NovaReserva = ({
             </div>
 
             {/* Salas Disponíveis */}
-            {availableRooms.length > 0 && (
+            {availableRooms.length > 0 ? (
               <div className="bg-white rounded-lg shadow-sm border p-4">
                 <h3 className="font-medium text-gray-900 mb-4">Salas Disponíveis</h3>
                 
@@ -933,25 +1044,21 @@ const NovaReserva = ({
                   </p>
                 )}
 
-                {/* Informações da Sala Selecionada */}
-                {selectedRoom && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-2">{selectedRoom.name}</h4>
-                    <div className="text-sm text-blue-700">
-                      <p>Capacidade: {selectedRoom.capacity} pessoas</p>
-                      {selectedRoom.resources && (
-                        <div className="mt-2">
-                          <p className="font-medium">Recursos disponíveis:</p>
-                          <ul className="list-disc list-inside mt-1">
-                            {selectedRoom.resources.projector && <li>Projetor</li>}
-                            {selectedRoom.resources.internet && <li>Internet</li>}
-                            {selectedRoom.resources.air_conditioning && <li>Ar Condicionado</li>}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border p-4">
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-2">
+                    <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
                   </div>
-                )}
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Preencha todos os campos obrigatórios</h3>
+                  <p className="text-sm text-gray-500">
+                    Para ver as salas disponíveis, preencha: {showProjectSelection && "projeto, "}descrição, data, horários e quantidade de participantes.
+                    {formData.is_recurring && " Se for recorrente, também selecione a frequência e data final."}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -960,8 +1067,8 @@ const NovaReserva = ({
               <button
                 type="submit"
                 form="reservation-form"
-                disabled={formLoading || availableRooms.length === 0}
-                className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                disabled={formLoading || !selectedRoom}
+                className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 focus:outline-none"
               >
                 {formLoading ? "Solicitando..." : "Solicitar"}
               </button>

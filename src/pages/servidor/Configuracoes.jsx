@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Settings, Lock, Eye, EyeOff, AlertCircle, CheckCircle, User, Mail, GraduationCap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import ProfessorLayout from '../../layouts/ProfessorLayout';
+import ServidorLayout from '../../layouts/ServidorLayout';
 import { resetPassword } from '../../services/authService';
 
 const Configuracoes = () => {
@@ -79,7 +79,7 @@ const Configuracoes = () => {
   };
 
   return (
-    <ProfessorLayout>
+    <ServidorLayout>
       <div className="p-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
@@ -296,7 +296,7 @@ const Configuracoes = () => {
           </div>
         </div>
       </div>
-    </ProfessorLayout>
+    </ServidorLayout>
   );
 };
 

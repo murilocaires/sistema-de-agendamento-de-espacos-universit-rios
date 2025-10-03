@@ -18,7 +18,7 @@ import {
   UserPlus,
   UserMinus
 } from "lucide-react";
-import ProfessorLayout from "../../layouts/ProfessorLayout";
+import ServidorLayout from "../../layouts/ServidorLayout";
 
 const NotificacoesProjetos = () => {
   const { user } = useAuth();
@@ -94,16 +94,16 @@ const NotificacoesProjetos = () => {
 
   if (loading) {
     return (
-      <ProfessorLayout>
+      <ServidorLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-      </ProfessorLayout>
+      </ServidorLayout>
     );
   }
 
   return (
-    <ProfessorLayout>
+    <ServidorLayout>
       <div className="p-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -328,7 +328,7 @@ const NotificacoesProjetos = () => {
           </div>
         )}
       </div>
-    </ProfessorLayout>
+    </ServidorLayout>
   );
 };
 

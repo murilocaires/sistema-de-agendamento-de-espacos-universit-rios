@@ -5,11 +5,8 @@ import {
 } from "../../services/authService";
 import {
   FolderOpen,
-  Users,
   User,
-  Calendar,
   CheckCircle,
-  AlertCircle,
 } from "lucide-react";
 import StudentLayout from "../../layouts/StudentLayout";
 
@@ -47,15 +44,6 @@ const ProjetosAluno = () => {
 
   // Usar todos os projetos (já filtrados para mostrar apenas os do aluno)
   const filteredProjects = projects;
-
-  // Formatar data
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
 
 
   if (loading) {
@@ -105,29 +93,23 @@ const ProjetosAluno = () => {
                 key={project.id}
                 className="bg-white rounded-lg shadow border p-6 hover:shadow-lg transition-shadow"
               >
-                {/* Header do Projeto */}
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                      {project.name}
-                    </h3>
-                    <p className="text-sm text-gray-600">{project.type}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 flex items-center gap-1">
-                      <CheckCircle size={12} />
-                      Participando
-                    </span>
-                  </div>
+                {/* Nome do Projeto */}
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {project.name}
+                  </h3>
                 </div>
 
-                {/* Descrição */}
-                <p className="text-sm text-gray-700 mb-4 line-clamp-3">
-                  {project.description || "Sem descrição disponível"}
-                </p>
+                {/* Status */}
+                <div className="mb-4">
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 flex items-center gap-1 w-fit">
+                    <CheckCircle size={12} />
+                    Participando
+                  </span>
+                </div>
 
-                {/* Informações do Professor */}
-                <div className="flex items-center gap-2 mb-4">
+                {/* Responsável */}
+                <div className="flex items-center gap-2">
                   <User className="text-blue-600" size={16} />
                   <div>
                     <p className="text-sm font-medium text-gray-800">
@@ -136,18 +118,6 @@ const ProjetosAluno = () => {
                     <p className="text-xs text-gray-600">
                       {project.professor_email}
                     </p>
-                  </div>
-                </div>
-
-                {/* Estatísticas */}
-                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                  <div className="flex items-center gap-1">
-                    <Users size={14} />
-                    <span>{project.current_students} aluno(s)</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar size={14} />
-                    <span>{formatDate(project.created_at)}</span>
                   </div>
                 </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getReservations } from "../services/authService";
+import { formatBrazilDate, formatBrazilTime, formatBrazilDateTime } from "../utils/dateUtils";
 import {
   Calendar,
   Clock,
@@ -35,7 +36,9 @@ const DetalhesReserva = ({
   const loadReservation = async () => {
     try {
       setLoading(true);
-      const data = await getReservations();
+      // Para usuários que precisam de filtro por user_id (servidor/professor)
+      const filters = user?.id ? { user_id: user.id } : {};
+      const data = await getReservations(filters);
       const foundReservation = data.find((r) => r.id === parseInt(id));
 
       if (foundReservation) {
@@ -45,7 +48,11 @@ const DetalhesReserva = ({
       }
     } catch (error) {
       console.error("Erro ao carregar reserva:", error);
-      setError("Erro ao carregar detalhes da reserva");
+      if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        setError("Acesso negado. Você não tem permissão para ver esta reserva.");
+      } else {
+        setError("Erro ao carregar detalhes da reserva");
+      }
     } finally {
       setLoading(false);
     }
@@ -213,8 +220,10 @@ const DetalhesReserva = ({
               <div className="flex items-center">
                 <Calendar size={16} className="text-gray-400 mr-2" />
                 <span className="text-gray-900">
-                  {reservation.date
-                    ? new Date(reservation.date).toLocaleDateString("pt-BR")
+                  {reservation.start_time
+                    ? formatBrazilDate(reservation.start_time)
+                    : reservation.date
+                    ? formatBrazilDate(reservation.date)
                     : "Data não informada"}
                 </span>
               </div>
@@ -222,7 +231,7 @@ const DetalhesReserva = ({
                 <Clock size={16} className="text-gray-400 mr-2" />
                 <span className="text-gray-900">
                   {reservation.start_time && reservation.end_time
-                    ? `${reservation.start_time} - ${reservation.end_time}`
+                    ? `${formatBrazilTime(reservation.start_time)} - ${formatBrazilTime(reservation.end_time)}`
                     : "Horário não informado"}
                 </span>
               </div>
@@ -249,20 +258,27 @@ const DetalhesReserva = ({
             </div>
             <div>
               <span className="text-sm font-bold text-gray-500">Criado em</span>
-              <p className="text-gray-900 mt-1">
-                {reservation.created_at
-                  ? new Date(reservation.created_at).toLocaleDateString(
-                      "pt-BR",
-                      {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )
-                  : "Data não disponível"}
-              </p>
+              <div className="mt-1 space-y-1">
+                <div className="flex items-center">
+                  <Calendar size={16} className="text-gray-400 mr-2" />
+                  <span className="text-gray-900">
+                    {reservation.created_at
+                      ? formatBrazilDate(reservation.created_at)
+                      : "Data não disponível"}
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <Clock size={16} className="text-gray-400 mr-2" />
+                  <span className="text-gray-900">
+                    {reservation.created_at
+                      ? new Date(reservation.created_at).toLocaleTimeString("pt-BR", {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : "Horário não disponível"}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -320,6 +336,29 @@ const DetalhesReserva = ({
               </div>
             </div>
           </div>
+
+          {/* Informações de Aprovação */}
+          {reservation.status === "approved" && reservation.approved_by_name && (
+            <div className="mb-4">
+              <span className="text-sm font-bold text-gray-500">Aprovado por</span>
+              <div className="mt-1 space-y-1">
+                <div className="flex items-center">
+                  <CheckCircle size={16} className="text-green-500 mr-2" />
+                  <span className="text-gray-900">
+                    {reservation.approved_by_name}
+                  </span>
+                </div>
+                {reservation.approved_at && (
+                  <div className="flex items-center">
+                    <Calendar size={16} className="text-gray-400 mr-2" />
+                    <span className="text-gray-900">
+                      {formatBrazilDateTime(reservation.approved_at)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {reservation.rejection_reason && (
             <div className="mb-4">

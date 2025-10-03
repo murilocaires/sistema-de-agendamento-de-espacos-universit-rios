@@ -5,7 +5,9 @@ import {
   getReservations,
   getRooms,
   deleteReservation,
+  updateReservation,
 } from "../services/authService";
+import { formatBrazilDate, formatBrazilTime, formatBrazilDateTime } from "../utils/dateUtils";
 import {
   Calendar,
   Clock,
@@ -59,12 +61,18 @@ const MinhasReservas = ({
   const loadReservations = async () => {
     try {
       setLoading(true);
-      const data = await getReservations();
-      console.log("Reservas carregadas:", data); // Debug
-      setReservations(data);
+      // Para "Minhas Reservas", filtrar apenas as reservas do usuário logado
+      const filters = user?.id ? { user_id: user.id } : {};
+      const data = await getReservations(filters);
+      setReservations(data || []);
     } catch (error) {
       console.error("Erro ao carregar reservas:", error);
-      setError("Erro ao carregar reservas");
+      if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        setError("Acesso negado. Verifique suas permissões ou faça login novamente.");
+      } else {
+        setError("Erro ao carregar reservas. Tente novamente.");
+      }
+      setReservations([]);
     } finally {
       setLoading(false);
     }
@@ -94,9 +102,10 @@ const MinhasReservas = ({
   // Obter cor de fundo do status (20% da cor do texto)
   const getStatusBackground = (status) => {
     const backgrounds = {
-      pending: "#6BB6FF", // 20% de #355EC5
+      pending: "#E0F2FE", // Azul mais claro para melhor contraste
       approved: "#D1FAE5", // 20% de #059669
       rejected: "#FFE4E1", // 20% de #D03E3E (mesma cor do botão cancelar)
+      cancelled: "#FFE4E1", // 20% de #D03E3E (mesma cor do rejeitado)
       changed: "#FFB366", // 20% de laranja
     };
     return backgrounds[status] || "#F3F4F6";
@@ -108,6 +117,7 @@ const MinhasReservas = ({
       pending: "#355EC5",
       approved: "#059669",
       rejected: "#D03E3E",
+      cancelled: "#D03E3E", // mesma cor do rejeitado
       changed: "#FF8C00", // laranja
     };
     return textColors[status] || "#6B7280";
@@ -119,6 +129,7 @@ const MinhasReservas = ({
       pending: "Pendente",
       approved: "Reservado",
       rejected: "Recusado",
+      cancelled: "Cancelada",
       changed: "Alterado",
     };
     return texts[status] || status;
@@ -132,6 +143,8 @@ const MinhasReservas = ({
       case "pending":
         return <Clock size={14} style={{ color: "#355EC5" }} />;
       case "rejected":
+        return <X size={14} style={{ color: "#D03E3E" }} />;
+      case "cancelled":
         return <X size={14} style={{ color: "#D03E3E" }} />;
       case "changed":
         return <Edit size={14} style={{ color: "#FF8C00" }} />;
@@ -149,8 +162,8 @@ const MinhasReservas = ({
     const basePath =
       userType === "student"
         ? "/aluno"
-        : userType === "professor"
-        ? "/professor"
+        : userType === "professor" || userType === "servidor"
+        ? "/servidor"
         : userType === "admin"
         ? "/admin"
         : "/coordenador";
@@ -166,13 +179,30 @@ const MinhasReservas = ({
   // Confirmar cancelamento
   const confirmCancelReservation = async () => {
     try {
-      // Aqui você pode implementar a chamada para a API de cancelamento
-      // Por enquanto, vamos apenas mostrar um toast de sucesso
+      if (!reservationToCancel) {
+        setToast({
+          show: true,
+          message: "ID da reserva não encontrado.",
+          type: "error",
+        });
+        return;
+      }
+
+      // Chamar a API para atualizar o status da reserva para "cancelled"
+      const result = await updateReservation(reservationToCancel, {
+        status: "cancelled"
+      });
+
       setToast({
         show: true,
         message: "Reserva cancelada com sucesso!",
         type: "success",
       });
+
+      // Auto-hide toast after 3 seconds
+      setTimeout(() => {
+        setToast({ show: false, message: "", type: "" });
+      }, 3000);
 
       // Recarregar as reservas
       loadReservations();
@@ -184,7 +214,7 @@ const MinhasReservas = ({
       console.error("Erro ao cancelar reserva:", error);
       setToast({
         show: true,
-        message: "Erro ao cancelar reserva. Tente novamente.",
+        message: error.message || "Erro ao cancelar reserva. Tente novamente.",
         type: "error",
       });
     }
@@ -207,27 +237,43 @@ const MinhasReservas = ({
     // Verificar se é uma reserva válida (aprovada ou pendente)
     const isValidStatus = reservation.status === "approved" || reservation.status === "pending";
     
-    // Para reservas pendentes, não verificar expiração (podem ser futuras)
-    // Para reservas aprovadas, verificar se não expiraram
-    const isNotExpired = reservation.status === "pending" || 
-      new Date(reservation.date + " " + reservation.end_time) > new Date();
+    // Verificar se a reserva não expirou
+    const isNotExpired = (() => {
+      const now = new Date();
+      
+      // Se for reserva recorrente, verificar se a data final da recorrência não passou
+      if (reservation.recurrence_type && reservation.recurrence_type !== "none" && reservation.recurrence_end_date) {
+        const recurrenceEndDate = new Date(reservation.recurrence_end_date + "T23:59:59");
+        return recurrenceEndDate > now;
+      }
+      
+      // Para reservas únicas, verificar se o horário final não passou
+      if (reservation.date && reservation.end_time) {
+        // Tentar diferentes formatos de data
+        let reservationEndDateTime;
+        
+        // Se a data já está no formato ISO
+        if (reservation.date.includes('T')) {
+          reservationEndDateTime = new Date(reservation.date);
+        } else {
+          // Construir a data no formato ISO
+          reservationEndDateTime = new Date(`${reservation.date}T${reservation.end_time}`);
+        }
+        
+        // Se a data é inválida, considerar como não expirada para não perder a reserva
+        if (isNaN(reservationEndDateTime.getTime())) {
+          return true;
+        }
+        
+        return reservationEndDateTime > now;
+      }
+      
+      // Se não há data ou horário, considerar como não expirada
+      return true;
+    })();
 
     // Filtrar apenas reservas do usuário logado
     const matchesUser = user && reservation.user_email === user.email;
-
-    // Debug para reservas pendentes
-    if (reservation.status === "pending") {
-      console.log("Reserva pendente encontrada:", {
-        id: reservation.id,
-        title: reservation.title,
-        status: reservation.status,
-        user_email: reservation.user_email,
-        current_user: user?.email,
-        matchesUser,
-        isValidStatus,
-        isNotExpired
-      });
-    }
 
     return (
       matchesSearch && matchesStatus && isValidStatus && isNotExpired && matchesUser
@@ -421,15 +467,7 @@ const MinhasReservas = ({
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {new Date(
-                            reservation.updated_at || reservation.created_at
-                          ).toLocaleDateString("pt-BR", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {formatBrazilDateTime(reservation.updated_at || reservation.created_at)}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -618,6 +656,32 @@ const MinhasReservas = ({
                 Sim, cancelar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast de notificação */}
+      {toast.show && (
+        <div className="fixed top-4 right-4 z-50">
+          <div
+            className={`px-6 py-3 rounded-lg shadow-lg flex items-center ${
+              toast.type === "success"
+                ? "bg-green-500 text-white"
+                : toast.type === "error"
+                ? "bg-red-500 text-white"
+                : "bg-blue-500 text-white"
+            }`}
+          >
+            <span className="mr-2">
+              {toast.type === "success" ? "✓" : toast.type === "error" ? "✗" : "ℹ"}
+            </span>
+            {toast.message}
+            <button
+              onClick={() => setToast({ show: false, message: "", type: "" })}
+              className="ml-4 text-white hover:text-gray-200"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}

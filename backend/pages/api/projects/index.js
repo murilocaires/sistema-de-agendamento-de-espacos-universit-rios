@@ -20,7 +20,7 @@ async function handler(req, res) {
       let queryParams = [];
       
       // Professores só podem ver seus próprios projetos
-      if (req.user.role === 'professor') {
+      if (req.user.role === 'professor' || req.user.role === 'servidor') {
         whereClause = 'WHERE p.professor_id = $1';
         queryParams = [req.user.id];
       } else if (professor_id) {

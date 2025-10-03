@@ -63,57 +63,40 @@ export const adminMenu = [
   { id: "usuarios", label: "Usuários", icon: Users, path: "/admin/usuarios" },
   { id: "salas", label: "Salas", icon: DoorClosed, path: "/admin/salas" },
   { id: "logs", label: "Logs", icon: FileText, path: "/admin/logs" },
+  { id: "historico", label: "Histórico", icon: Clock, path: "/admin/historico" },
 ];
 
 // Menu do Docente
 export const docenteMenu = [
   {
-    id: "home",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    path: "/professor/dashboard",
-  },
-  {
-    id: "projetos",
-    label: "Meus Projetos",
-    icon: FolderOpen,
-    path: "/professor/projetos",
-  },
-  {
-    id: "cadastrar-alunos",
-    label: "Cadastrar Alunos",
-    icon: Users,
-    path: "/professor/cadastrar-alunos",
-  },
-  {
-    id: "reservas-sistema",
-    label: "Reservas do Sistema",
-    icon: ClipboardList,
-    path: "/professor/reservas-sistema",
-  },
-  {
     id: "minhas-reservas",
     label: "Minhas Reservas",
     icon: Calendar,
-    path: "/professor/minhas-reservas",
+    path: "/servidor/minhas-reservas",
   },
   {
     id: "nova-reserva",
     label: "Nova Reserva",
     icon: CalendarPlus,
-    path: "/professor/nova-reserva",
+    path: "/servidor/nova-reserva",
+  },
+  {
+    id: "projetos",
+    label: "Meus Projetos",
+    icon: FolderOpen,
+    path: "/servidor/projetos",
   },
   {
     id: "historico",
     label: "Histórico",
     icon: Clock,
-    path: "/professor/historico",
+    path: "/servidor/historico",
   },
   {
     id: "configuracoes",
     label: "Configurações",
     icon: Settings,
-    path: "/professor/configuracoes",
+    path: "/servidor/configuracoes",
   },
 ];
 
@@ -240,10 +223,8 @@ export const getUserMenu = (userType) => {
       break;
     case "docente":
     case "professor":
-      menu = docenteMenu;
-      break;
     case "servidor":
-      menu = servidorMenu;
+      menu = docenteMenu;
       break;
     case "coordenador":
       menu = coordenadorMenu;
@@ -270,7 +251,6 @@ export const getUserTypeDisplay = (userType) => {
       return "ADMIN";
     case "docente":
     case "professor":
-      return "PROFESSOR";
     case "servidor":
       return "SERVIDOR";
     case "coordenador":

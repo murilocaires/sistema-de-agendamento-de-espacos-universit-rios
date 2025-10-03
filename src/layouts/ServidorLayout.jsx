@@ -5,12 +5,12 @@ import Sidebar from "../components/Sidebar";
 import NotificationIcon from "../components/NotificationIcon";
 import { Menu, X } from "lucide-react";
 
-const ProfessorLayout = ({ children }) => {
+const ServidorLayout = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Memoizar os valores do menu para evitar recriações desnecessárias
-  const userType = useMemo(() => user?.role || "professor", [user?.role]);
+  const userType = useMemo(() => user?.role || "servidor", [user?.role]);
   const menuItems = useMemo(() => getUserMenu(userType), [userType]);
   const userTypeDisplay = useMemo(
     () => getUserTypeDisplay(userType),
@@ -113,4 +113,4 @@ const ProfessorLayout = ({ children }) => {
   );
 };
 
-export default ProfessorLayout;
+export default ServidorLayout;

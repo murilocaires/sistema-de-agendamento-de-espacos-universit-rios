@@ -58,7 +58,8 @@ export const AuthProvider = ({ children }) => {
           case "admin":
             return "/admin/dashboard";
           case "professor":
-            return "/professor/dashboard";
+          case "servidor":
+            return "/servidor/minhas-reservas";
           case "coordenador":
             return "/coordenador/dashboard";
           case "portaria":
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }) => {
           case "aluno":
             return "/aluno/reservas";
           case "servidor":
-            return "/servidor/dashboard";
+            return "/servidor/minhas-reservas";
           default:
             return "/dashboard";
         }
