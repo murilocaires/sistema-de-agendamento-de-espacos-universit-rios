@@ -16,7 +16,9 @@ export const toBrazilTime = (date) => {
  * @returns {Date} Data atual em Brasília
  */
 export const getBrazilNow = () => {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: BRAZIL_TIMEZONE }));
+  const now = new Date();
+  const brazilTime = new Date(now.toLocaleString('en-US', { timeZone: BRAZIL_TIMEZONE }));
+  return brazilTime;
 };
 
 /**
@@ -102,8 +104,16 @@ export const createBrazilDateTime = (dateString, timeString) => {
  * @returns {boolean} True se a data é anterior à hoje
  */
 export const isDateInPast = (date) => {
+  // Se a data for uma string no formato YYYY-MM-DD, usar comparação simples
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const today = new Date();
+    const todayString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    return date < todayString;
+  }
+  
+  // Para objetos Date, usar a lógica anterior
   const dateObj = new Date(date);
-  const today = getBrazilNow();
+  const today = new Date();
   
   // Zerar as horas para comparar apenas a data
   const dateOnly = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
