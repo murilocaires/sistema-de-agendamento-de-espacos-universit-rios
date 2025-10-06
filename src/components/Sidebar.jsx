@@ -70,7 +70,7 @@ const Sidebar = ({ menuItems = [], userType = "ADMIN" }) => {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 px-4 mt-5">
+      <nav className="flex-1 px-4 mt-5 overflow-y-auto min-h-0 pr-1 sidebar-scroll">
         {finalMenuItems.map((item) => (
           <button
             key={item.id}
