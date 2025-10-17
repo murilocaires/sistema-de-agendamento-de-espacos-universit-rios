@@ -18,7 +18,7 @@ const SmartRedirect = () => {
       case 'portaria':
         return '/portaria/reservas';
       case 'aluno':
-        return '/aluno/dashboard';
+        return '/aluno/reservas';
       default:
         return '/dashboard';
     }

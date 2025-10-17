@@ -51,10 +51,9 @@ export const coordenadorMenu = [
 
 // Menu do Aluno
 export const alunoMenu = [
-  { id: "home", label: "Dashboard", icon: LayoutDashboard, path: "/aluno/dashboard" },
-  { id: "projetos", label: "Projetos", icon: FolderOpen, path: "/aluno/projetos" },
   { id: "reservas", label: "Minhas Reservas", icon: ClipboardList, path: "/aluno/reservas" },
   { id: "nova-reserva", label: "Nova Reserva", icon: Calendar, path: "/aluno/nova-reserva" },
+  { id: "projetos", label: "Projetos", icon: FolderOpen, path: "/aluno/projetos" },
   { id: "historico", label: "Histórico", icon: Clock, path: "/aluno/historico" },
   { id: "perfil", label: "Meu Perfil", icon: Users, path: "/aluno/perfil" },
 ];

@@ -27,12 +27,13 @@ import MinhasReservas from "./pages/professor/MinhasReservas";
 import NovaReserva from "./pages/professor/NovaReserva";
 import Projetos from "./pages/professor/Projetos";
 import Configuracoes from "./pages/professor/Configuracoes";
-import DashboardAluno from "./pages/aluno/DashboardAluno";
 import ProjetosAluno from "./pages/aluno/ProjetosAluno";
 import ReservasAluno from "./pages/aluno/ReservasAluno";
 import NovaReservaAluno from "./pages/aluno/NovaReservaAluno";
 import HistoricoAluno from "./pages/aluno/HistoricoAluno";
 import PerfilAluno from "./pages/aluno/PerfilAluno";
+import DetalhesReservaAluno from "./pages/aluno/DetalhesReserva";
+import DetalhesHistoricoAluno from "./pages/aluno/DetalhesHistorico";
 import SmartRedirect from "./components/SmartRedirect";
 
 function App() {
@@ -234,15 +235,6 @@ function App() {
 
           {/* Rotas do Aluno */}
           <Route
-            path="/aluno/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardAluno />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
             path="/aluno/projetos"
             element={
               <ProtectedRoute>
@@ -261,6 +253,15 @@ function App() {
           />
 
           <Route
+            path="/aluno/reservas/:id"
+            element={
+              <ProtectedRoute>
+                <DetalhesReservaAluno />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/aluno/nova-reserva"
             element={
               <ProtectedRoute>
@@ -274,6 +275,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <HistoricoAluno />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/aluno/historico/:id"
+            element={
+              <ProtectedRoute>
+                <DetalhesHistoricoAluno />
               </ProtectedRoute>
             }
           />
