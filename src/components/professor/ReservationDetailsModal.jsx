@@ -99,6 +99,7 @@ const getStatusColor = (status) => {
     const colors = {
     pending: "bg-yellow-100 text-yellow-800",
     approved: "bg-green-100 text-green-800",
+    professor_approved: "bg-blue-100 text-blue-800",
     rejected: "bg-red-100 text-red-800"
     };
     return colors[status] || "bg-gray-100 text-gray-800";
@@ -109,6 +110,7 @@ const getStatusText = (status) => {
     const texts = {
     pending: "Pendente",
     approved: "Aprovada",
+    professor_approved: "Aprovada pelo Professor",
     rejected: "Rejeitada"
     };
     return texts[status] || status;
@@ -119,6 +121,8 @@ const getStatusIcon = (status) => {
     switch (status) {
     case 'approved':
         return <CheckCircle className="text-green-600" size={16} />;
+    case 'professor_approved':
+        return <CheckCircle className="text-blue-600" size={16} />;
     case 'pending':
         return <Clock className="text-yellow-600" size={16} />;
     case 'rejected':

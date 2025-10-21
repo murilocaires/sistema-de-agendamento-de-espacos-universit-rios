@@ -63,6 +63,7 @@ const DetalhesReserva = ({
     const backgrounds = {
       pending: "#6BB6FF",
       approved: "#D1FAE5",
+      professor_approved: "#DBEAFE",
       rejected: "#FFE4E1",
       changed: "#FFB366",
     };
@@ -73,6 +74,7 @@ const DetalhesReserva = ({
     const textColors = {
       pending: "#355EC5",
       approved: "#059669",
+      professor_approved: "#1d4ed8",
       rejected: "#D03E3E",
       changed: "#FF8C00",
     };
@@ -83,6 +85,7 @@ const DetalhesReserva = ({
     const texts = {
       pending: "Pendente",
       approved: "Reservado",
+      professor_approved: "Aprovado pelo Professor",
       rejected: "Recusado",
       changed: "Alterado",
     };
@@ -93,6 +96,8 @@ const DetalhesReserva = ({
     switch (status) {
       case "approved":
         return <CheckCircle size={16} style={{ color: "#059669" }} />;
+      case "professor_approved":
+        return <CheckCircle size={16} style={{ color: "#2563eb" }} />;
       case "pending":
         return <Clock size={16} style={{ color: "#355EC5" }} />;
       case "rejected":
@@ -102,6 +107,55 @@ const DetalhesReserva = ({
       default:
         return <Clock size={16} style={{ color: "#6B7280" }} />;
     }
+  };
+
+  // Obter texto do tipo de recorrência
+  const getRecurrenceTypeText = (type) => {
+    const types = {
+      daily: 'Diária',
+      weekly: 'Semanal',
+      monthly: 'Mensal'
+    };
+    return types[type] || type;
+  };
+
+  // Calcular próximas datas de recorrência
+  const calculateRecurrenceDates = () => {
+    if (!reservation?.start_time || !reservation?.recurrence_type) {
+      return [];
+    }
+
+    const startDate = new Date(reservation.start_time);
+    const endDate = reservation.recurrence_end_date ? new Date(reservation.recurrence_end_date) : null;
+    const interval = reservation.recurrence_interval || 1;
+    const dates = [];
+
+    // Limitar a 10 ocorrências para não sobrecarregar a interface
+    const maxOccurrences = 10;
+    let currentDate = new Date(startDate);
+    let count = 0;
+
+    while (count < maxOccurrences && (!endDate || currentDate <= endDate)) {
+      dates.push(new Date(currentDate));
+      count++;
+
+      // Calcular próxima data baseado no tipo
+      switch (reservation.recurrence_type) {
+        case 'daily':
+          currentDate.setDate(currentDate.getDate() + interval);
+          break;
+        case 'weekly':
+          currentDate.setDate(currentDate.getDate() + (7 * interval));
+          break;
+        case 'monthly':
+          currentDate.setMonth(currentDate.getMonth() + interval);
+          break;
+        default:
+          return dates; // Se tipo não reconhecido, retorna o que tem
+      }
+    }
+
+    return dates;
   };
 
   // Verificar se reservation existe antes de renderizar o conteúdo
@@ -238,13 +292,72 @@ const DetalhesReserva = ({
             </div>
           </div>
 
-          {/* Tipo */}
+          {/* Informações de Recorrência */}
+          {(reservation.is_recurring || reservation.recurrence_type) ? (
+            <div className="mb-4">
+              <span className="text-sm font-bold text-gray-500">Recorrência</span>
+              <div className="mt-2 space-y-3">
+                <div className="bg-blue-50 p-3 rounded">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-xs font-medium text-gray-600">Tipo</span>
+                      <p className="text-sm text-blue-800 font-medium">
+                        {getRecurrenceTypeText(reservation.recurrence_type)}
+                      </p>
+                    </div>
+                    {reservation.recurrence_interval && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-600">Intervalo</span>
+                        <p className="text-sm text-blue-700">
+                          A cada {reservation.recurrence_interval} {reservation.recurrence_type === 'daily' ? 'dia(s)' : reservation.recurrence_type === 'weekly' ? 'semana(s)' : 'mês(es)'}
+                        </p>
+                      </div>
+                    )}
+                    {reservation.recurrence_end_date && (
+                      <div className="md:col-span-2">
+                        <span className="text-xs font-medium text-gray-600">Até</span>
+                        <p className="text-sm text-blue-700">
+                          {formatBrazilDate(reservation.recurrence_end_date)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Datas de Recorrência */}
+                {(() => {
+                  const recurrenceDates = calculateRecurrenceDates();
+                  if (recurrenceDates.length > 0) {
+                    return (
+                      <div>
+                        <span className="text-xs font-medium text-gray-600 block mb-2">
+                          Próximas {recurrenceDates.length} ocorrências:
+                        </span>
+                        <div className="bg-gray-50 p-3 rounded border border-gray-200 max-h-32 overflow-y-auto">
+                          <div className="flex flex-wrap gap-2">
+                            {recurrenceDates.map((date, index) => (
+                              <span 
+                                key={index}
+                                className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-medium"
+                              >
+                                {formatBrazilDate(date)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            </div>
+          ) : (
           <div className="mb-4">
             <span className="text-sm font-bold text-gray-500">Tipo</span>
-            <p className="text-gray-900 mt-1">
-              {reservation.is_recurring ? "Recorrente" : "Não Recorrente"}
-            </p>
+              <p className="text-gray-900 mt-1">Não Recorrente</p>
           </div>
+          )}
 
           {/* ID e Criado em */}
           <div className="mb-4 flex items-center justify-between">
@@ -337,10 +450,41 @@ const DetalhesReserva = ({
             </div>
           </div>
 
-          {/* Informações de Aprovação */}
+          {/* Informações de Aprovação do Professor */}
+          {reservation.status === "professor_approved" && reservation.professor_name && (
+            <div className="mb-4">
+              <span className="text-sm font-bold text-gray-500">Aprovado pelo Professor</span>
+              <div className="mt-2 bg-blue-50 p-3 rounded">
+                <div className="flex items-center mb-1">
+                  <CheckCircle size={16} className="text-blue-600 mr-2" />
+                  <span className="text-blue-900 font-medium">
+                    {reservation.professor_name}
+                  </span>
+                </div>
+                {reservation.professor_email && (
+                  <p className="text-xs text-blue-700 ml-6">
+                    {reservation.professor_email}
+                  </p>
+                )}
+                {reservation.professor_approved_at && (
+                  <div className="flex items-center mt-2 ml-6">
+                    <Calendar size={14} className="text-blue-500 mr-2" />
+                    <span className="text-xs text-blue-700">
+                      {formatBrazilDateTime(reservation.professor_approved_at)}
+                    </span>
+                  </div>
+                )}
+                <p className="text-xs text-blue-600 mt-2 ml-6 italic">
+                  Aguardando aprovação final do administrador
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Informações de Aprovação Final */}
           {reservation.status === "approved" && reservation.approved_by_name && (
             <div className="mb-4">
-              <span className="text-sm font-bold text-gray-500">Aprovado por</span>
+              <span className="text-sm font-bold text-gray-500">Aprovado por (Admin)</span>
               <div className="mt-1 space-y-1">
                 <div className="flex items-center">
                   <CheckCircle size={16} className="text-green-500 mr-2" />

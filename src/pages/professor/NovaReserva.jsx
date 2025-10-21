@@ -80,6 +80,54 @@ const NovaReserva = () => {
     }
   }, [user]);
 
+  // Função para expandir reservas recorrentes
+  const expandRecurringReservations = (reservation) => {
+    if (!reservation.is_recurring || !reservation.recurrence_end_date) {
+        return [reservation];
+    }
+
+    const occurrences = [];
+    const startDate = moment(reservation.start_time);
+    const endDate = moment(reservation.recurrence_end_date);
+    const startTime = moment(reservation.start_time).format('HH:mm');
+    const endTime = moment(reservation.end_time).format('HH:mm');
+
+    // Para reservas semanais, gerar uma ocorrência por semana
+    let currentDate = moment(startDate);
+    let weekCount = 0;
+    const maxWeeks = 52; // Limite de 1 ano
+
+    while (currentDate.isSameOrBefore(endDate) && weekCount < maxWeeks) {
+        const occurrenceStart = moment(currentDate).set({
+            hour: moment(startTime, 'HH:mm').hour(),
+            minute: moment(startTime, 'HH:mm').minute(),
+            second: 0,
+            millisecond: 0
+        });
+        
+        const occurrenceEnd = moment(currentDate).set({
+            hour: moment(endTime, 'HH:mm').hour(),
+            minute: moment(endTime, 'HH:mm').minute(),
+            second: 0,
+            millisecond: 0
+        });
+
+        occurrences.push({
+            ...reservation,
+            id: `${reservation.id}_${currentDate.format('YYYY-MM-DD')}`,
+            start_time: occurrenceStart.toISOString(),
+            end_time: occurrenceEnd.toISOString(),
+            is_recurrence_instance: true,
+            original_reservation_id: reservation.id
+        });
+
+        currentDate.add(1, 'week');
+        weekCount++;
+    }
+
+    return occurrences.length > 0 ? occurrences : [reservation];
+  };
+
   // Carregar reservas da sala selecionada
   const loadRoomReservations = async (roomId) => {
     if (!roomId) {
@@ -93,7 +141,15 @@ const NovaReserva = () => {
 
     try {
       const reservations = await getReservations({ room_id: roomId, status: 'approved' });
-      setRoomReservations(reservations.map(reservation => ({
+      
+      // Expandir reservas recorrentes
+      let expandedReservations = [];
+      reservations.forEach(reservation => {
+        const occurrences = expandRecurringReservations(reservation);
+        expandedReservations.push(...occurrences);
+      });
+      
+      setRoomReservations(expandedReservations.map(reservation => ({
         id: reservation.id,
         title: reservation.title,
         start: new Date(reservation.start_time),

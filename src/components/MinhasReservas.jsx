@@ -98,6 +98,7 @@ const MinhasReservas = ({
     const colors = {
       pending: "text-blue-600",
       approved: "text-green-600",
+      professor_approved: "text-blue-700",
       rejected: "text-red-600",
       changed: "text-orange-600",
     };
@@ -109,6 +110,7 @@ const MinhasReservas = ({
     const backgrounds = {
       pending: "#E0F2FE", // Azul mais claro para melhor contraste
       approved: "#D1FAE5", // 20% de #059669
+      professor_approved: "#DBEAFE", // Azul claro para professor_approved
       rejected: "#FFE4E1", // 20% de #D03E3E (mesma cor do botão cancelar)
       cancelled: "#FFE4E1", // 20% de #D03E3E (mesma cor do rejeitado)
       changed: "#FFB366", // 20% de laranja
@@ -121,6 +123,7 @@ const MinhasReservas = ({
     const textColors = {
       pending: "#355EC5",
       approved: "#059669",
+      professor_approved: "#1d4ed8",
       rejected: "#D03E3E",
       cancelled: "#D03E3E", // mesma cor do rejeitado
       changed: "#FF8C00", // laranja
@@ -133,6 +136,7 @@ const MinhasReservas = ({
     const texts = {
       pending: "Pendente",
       approved: "Reservado",
+      professor_approved: "Aprovado pelo Professor",
       rejected: "Recusado",
       cancelled: "Cancelada",
       changed: "Alterado",
@@ -145,6 +149,8 @@ const MinhasReservas = ({
     switch (status) {
       case "approved":
         return <CheckCircle size={14} style={{ color: "#059669" }} />;
+      case "professor_approved":
+        return <CheckCircle size={14} style={{ color: "#2563eb" }} />;
       case "pending":
         return <Clock size={14} style={{ color: "#355EC5" }} />;
       case "rejected":

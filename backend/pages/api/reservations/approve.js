@@ -14,9 +14,9 @@ async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    // Apenas admins e professores podem aprovar/rejeitar reservas
-    if (!['admin', 'professor'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Apenas administradores e professores podem aprovar ou rejeitar reservas' });
+    // Apenas admins, professores e servidores podem aprovar/rejeitar reservas
+    if (!['admin', 'professor', 'servidor'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Apenas administradores, professores e servidores podem aprovar ou rejeitar reservas' });
     }
 
     try {
@@ -59,7 +59,7 @@ async function handler(req, res) {
 
       // Fluxo de aprovação por papel
       const isAdmin = req.user.role === 'admin';
-      const isProfessor = req.user.role === 'professor';
+      const isProfessor = req.user.role === 'professor' || req.user.role === 'servidor';
 
       // Professor: só pode aprovar/rejeitar reservas PENDENTES de projetos que coordena
       if (isProfessor) {

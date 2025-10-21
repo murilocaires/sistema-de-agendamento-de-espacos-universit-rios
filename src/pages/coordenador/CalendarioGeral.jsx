@@ -99,37 +99,119 @@ useEffect(() => {
     if (reservations.length > 0) {
     processReservationData();
     }
-}, [reservations, selectedRoom, selectedDate]);
+}, [reservations, selectedRoom, selectedDate, currentMonth]);
+
+// Função para expandir reservas recorrentes simples
+const expandRecurringReservations = (reservation) => {
+    console.log('Verificando reserva:', {
+        title: reservation.title,
+        is_recurring: reservation.is_recurring,
+        recurrence_end_date: reservation.recurrence_end_date,
+        start_time: reservation.start_time
+    });
+
+    if (!reservation.is_recurring || !reservation.recurrence_end_date) {
+        console.log('Reserva não é recorrente, retornando original');
+        return [reservation];
+    }
+
+    const occurrences = [];
+    const startDate = moment(reservation.start_time);
+    const endDate = moment(reservation.recurrence_end_date);
+    const startTime = moment(reservation.start_time).format('HH:mm');
+    const endTime = moment(reservation.end_time).format('HH:mm');
+
+    console.log(`Expandindo reserva "${reservation.title}":`, {
+        startDate: startDate.format('YYYY-MM-DD'),
+        endDate: endDate.format('YYYY-MM-DD'),
+        startTime,
+        endTime
+    });
+
+    // Para reservas semanais simples, gerar uma ocorrência por semana
+    let currentDate = moment(startDate);
+    let weekCount = 0;
+    const maxWeeks = 52; // Limite de 1 ano
+
+    while (currentDate.isSameOrBefore(endDate) && weekCount < maxWeeks) {
+        const occurrenceStart = moment(currentDate).set({
+            hour: moment(startTime, 'HH:mm').hour(),
+            minute: moment(startTime, 'HH:mm').minute(),
+            second: 0,
+            millisecond: 0
+        });
+        
+        const occurrenceEnd = moment(currentDate).set({
+            hour: moment(endTime, 'HH:mm').hour(),
+            minute: moment(endTime, 'HH:mm').minute(),
+            second: 0,
+            millisecond: 0
+        });
+
+        occurrences.push({
+            ...reservation,
+            id: `${reservation.id}_${currentDate.format('YYYY-MM-DD')}`,
+            start_time: occurrenceStart.toISOString(),
+            end_time: occurrenceEnd.toISOString(),
+            is_recurrence_instance: true,
+            original_reservation_id: reservation.id
+        });
+
+        currentDate.add(1, 'week');
+        weekCount++;
+    }
+
+    console.log(`Reserva "${reservation.title}" expandida em ${occurrences.length} ocorrências`);
+    return occurrences.length > 0 ? occurrences : [reservation];
+};
 
 // Processar dados das reservas
 const processReservationData = () => {
-    let filteredReservations = reservations.filter(reservation => 
-    reservation.status === 'approved'
+    console.log('Processando dados das reservas...', reservations.length);
+    
+    let approvedReservations = reservations.filter(reservation => 
+        reservation.status === 'approved'
     );
+
+    console.log('Reservas aprovadas:', approvedReservations.length);
+
+    // Expandir reservas recorrentes
+    let expandedReservations = [];
+    approvedReservations.forEach(reservation => {
+        const occurrences = expandRecurringReservations(reservation);
+        expandedReservations.push(...occurrences);
+        
+        // Log para debug
+        if (reservation.is_recurring) {
+            console.log(`Reserva recorrente "${reservation.title}": ${occurrences.length} ocorrências geradas`);
+        }
+    });
+
+    console.log('Reservas expandidas:', expandedReservations.length);
 
     // Filtrar por sala se selecionada
     if (selectedRoom) {
-    filteredReservations = filteredReservations.filter(
-        reservation => reservation.room_id.toString() === selectedRoom
-    );
+        expandedReservations = expandedReservations.filter(
+            reservation => reservation.room_id.toString() === selectedRoom
+        );
     }
 
     // Converter para eventos do calendário
-    const events = filteredReservations.map(reservation => {
-    const room = rooms.find(r => r.id === reservation.room_id);
-    return {
-        id: reservation.id,
-        title: reservation.title,
-        start: new Date(reservation.start_time),
-        end: new Date(reservation.end_time),
-        resource: {
-        user: reservation.user_name || 'Usuário',
-        room: room?.name || 'Sala não encontrada',
-        room_id: reservation.room_id,
-        description: reservation.description,
-        reservation: reservation
-        }
-    };
+    const events = expandedReservations.map(reservation => {
+        const room = rooms.find(r => r.id === reservation.room_id);
+        return {
+            id: reservation.id,
+            title: reservation.title,
+            start: new Date(reservation.start_time),
+            end: new Date(reservation.end_time),
+            resource: {
+                user: reservation.user_name || 'Usuário',
+                room: room?.name || 'Sala não encontrada',
+                room_id: reservation.room_id,
+                description: reservation.description,
+                reservation: reservation
+            }
+        };
     });
 
     setCalendarEvents(events);
@@ -137,7 +219,7 @@ const processReservationData = () => {
     // Reservas de hoje
     const today = moment().format('YYYY-MM-DD');
     const todayEvents = events.filter(event => 
-    moment(event.start).format('YYYY-MM-DD') === today
+        moment(event.start).format('YYYY-MM-DD') === today
     );
     setTodayReservations(todayEvents);
 
@@ -146,19 +228,21 @@ const processReservationData = () => {
     const dayCountMap = new Map();
     
     events.forEach(event => {
-    const eventDate = moment(event.start).format('YYYY-MM-DD');
-    
-    if (moment(event.start).isSame(currentMonth, 'month')) {
-        daysSet.add(eventDate);
-    }
-    
-    // Contar reservas por dia (para todo o período, não só o mês atual)
-    const currentCount = dayCountMap.get(eventDate) || 0;
-    dayCountMap.set(eventDate, currentCount + 1);
+        const eventDate = moment(event.start).format('YYYY-MM-DD');
+        
+        if (moment(event.start).isSame(currentMonth, 'month')) {
+            daysSet.add(eventDate);
+        }
+        
+        // Contar reservas por dia (para todo o período, não só o mês atual)
+        const currentCount = dayCountMap.get(eventDate) || 0;
+        dayCountMap.set(eventDate, currentCount + 1);
     });
     
     setDaysWithReservations(daysSet);
     setReservationsPerDay(dayCountMap);
+    
+    console.log('Processamento concluído com sucesso');
 };
 
 // Filtrar salas por busca

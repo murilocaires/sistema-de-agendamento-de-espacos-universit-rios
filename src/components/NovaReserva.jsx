@@ -65,7 +65,6 @@ const NovaReserva = ({
   const [errors, setErrors] = useState({});
   const [availableRooms, setAvailableRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [activeTab, setActiveTab] = useState('bloco1');
 
   // Estados do calendário
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -77,6 +76,52 @@ const NovaReserva = ({
     { key: 'air_conditioning', label: 'Ar Condicionado', icon: AirVent }
   ];
 
+  // Função para expandir reservas recorrentes
+  const expandRecurringReservations = (reservation) => {
+    if (!reservation.is_recurring || !reservation.recurrence_end_date) {
+      return [reservation];
+    }
+
+    const occurrences = [];
+    const startDate = new Date(reservation.start_time);
+    const endDate = new Date(reservation.recurrence_end_date);
+    
+    // Extrair hora de início e fim
+    const startHour = new Date(reservation.start_time).getHours();
+    const startMinute = new Date(reservation.start_time).getMinutes();
+    const endHour = new Date(reservation.end_time).getHours();
+    const endMinute = new Date(reservation.end_time).getMinutes();
+
+    let currentDate = new Date(startDate);
+    let weekCount = 0;
+    const maxWeeks = 52; // Limite de 1 ano
+
+    while (currentDate <= endDate && weekCount < maxWeeks) {
+      const occurrenceStart = new Date(currentDate);
+      occurrenceStart.setHours(startHour, startMinute, 0, 0);
+      
+      const occurrenceEnd = new Date(currentDate);
+      occurrenceEnd.setHours(endHour, endMinute, 0, 0);
+
+      occurrences.push({
+        ...reservation,
+        id: `${reservation.id}_${currentDate.toISOString().split('T')[0]}`,
+        date: currentDate.toISOString().split('T')[0],
+        start_time: `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`,
+        end_time: `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`,
+        is_recurrence_instance: true,
+        original_reservation_id: reservation.id
+      });
+
+      // Avançar uma semana
+      currentDate = new Date(currentDate);
+      currentDate.setDate(currentDate.getDate() + 7);
+      weekCount++;
+    }
+
+    return occurrences.length > 0 ? occurrences : [reservation];
+  };
+
   // Carregar dados iniciais
   const loadData = async () => {
     try {
@@ -87,8 +132,16 @@ const NovaReserva = ({
         showProjectSelection ? getMyProjects() : Promise.resolve([])
       ]);
       
-      setRooms(roomsData.filter(room => room.is_active));
-      setReservations(reservationsData);
+      // Expandir reservas recorrentes
+      let expandedReservations = [];
+      (reservationsData || []).forEach(reservation => {
+        const occurrences = expandRecurringReservations(reservation);
+        expandedReservations.push(...occurrences);
+      });
+      
+      const activeRooms = roomsData.filter(room => room.is_active);
+      setRooms(activeRooms);
+      setReservations(expandedReservations);
       setMyProjects(projectsData);
       setError("");
     } catch (err) {
@@ -105,12 +158,55 @@ const NovaReserva = ({
   // Filtrar salas disponíveis baseado nos critérios selecionados
   useEffect(() => {
     filterAvailableRooms();
-  }, [formData.project_id, formData.description, formData.date, formData.start_time, formData.end_time, formData.people_count, formData.room_resources, formData.is_recurring, formData.recurrence_end_date, formData.recurrence_frequency, rooms, reservations, activeTab, showProjectSelection]);
+  }, [formData.project_id, formData.description, formData.date, formData.start_time, formData.end_time, formData.people_count, formData.room_resources, formData.is_recurring, formData.recurrence_end_date, formData.recurrence_frequency, rooms, reservations, showProjectSelection]);
 
   // Função para verificar se uma sala está disponível no horário selecionado
   const isRoomAvailable = (room) => {
     if (!formData.date || !formData.start_time || !formData.end_time) return false;
     
+    // Se for recorrente, verificar todas as datas da recorrência
+    if (formData.is_recurring && formData.recurrence_end_date) {
+      const recurringDays = getRecurringDays();
+      
+      console.log(`📅 Verificando disponibilidade recorrente para sala ${room.name}:`, {
+        totalDias: recurringDays.length,
+        frequencia: formData.recurrence_frequency,
+        datas: recurringDays
+      });
+      
+      // Verificar se a sala está disponível em TODAS as datas recorrentes
+      const allDaysAvailable = recurringDays.every(dateString => {
+        const hasConflict = reservations.some(reservation => {
+          // Só verificar reservas aprovadas (não pendentes)
+          if (reservation.status !== 'approved') return false;
+          if (reservation.room_id !== room.id) return false;
+          
+          // Comparar datas usando timezone de Brasília
+          if (!isSameDate(dateString, reservation.date)) return false;
+          
+          // Verificar se há sobreposição de horários
+          const reservationStart = reservation.start_time;
+          const reservationEnd = reservation.end_time;
+          
+          // Conflito se há qualquer sobreposição de horários
+          return (formData.start_time < reservationEnd && formData.end_time > reservationStart);
+        });
+        
+        if (hasConflict) {
+          console.log(`❌ Sala ${room.name} indisponível em ${dateString}`);
+        }
+        
+        return !hasConflict;
+      });
+      
+      if (allDaysAvailable) {
+        console.log(`✅ Sala ${room.name} disponível em todas as ${recurringDays.length} datas`);
+      }
+      
+      return allDaysAvailable;
+    }
+    
+    // Para reservas não recorrentes, verificar apenas a data selecionada
     const hasConflict = reservations.some(reservation => {
       // Só verificar reservas aprovadas (não pendentes)
       if (reservation.status !== 'approved') return false;
@@ -200,31 +296,42 @@ const NovaReserva = ({
       .filter(([key, value]) => value)
       .map(([key]) => key);
 
-    // Filtrar por bloco
-    let roomsInBlock = rooms.filter(room => {
-      // Se a sala tem uma propriedade 'block', usar ela
-      if (room.block) {
-        return room.block === activeTab;
-      }
-      
-      // Caso contrário, usar lógica baseada no ID (fallback)
-      if (activeTab === 'bloco1') {
-        return room.id <= 5; // Salas 1-5 são do Bloco 1
-      } else {
-        return room.id > 5; // Salas 6+ são do Bloco 2
-      }
-    });
-
-    // Se não há salas no bloco selecionado, mostrar todas as salas
-    if (roomsInBlock.length === 0) {
-      roomsInBlock = rooms;
+    // Filtrar salas baseado em reservas recorrentes
+    let roomsFiltered = rooms;
+    
+    // Se for recorrente, filtrar apenas salas que NÃO são de reserva fixa
+    if (formData.is_recurring) {
+      roomsFiltered = roomsFiltered.filter(room => {
+        // is_fixed_reservation = true significa que a sala é APENAS para reservas fixas
+        // Então, para reservas recorrentes avulsas, queremos salas onde is_fixed_reservation = false
+        const allowsRecurring = !room.is_fixed_reservation;
+        
+        if (!allowsRecurring) {
+          console.log(`⚠️ Sala ${room.name} não permite reservas recorrentes (is_fixed_reservation: ${room.is_fixed_reservation})`);
+        }
+        
+        return allowsRecurring;
+      });
     }
-
-
-    const roomsWithResources = roomsInBlock.filter(room => {
+    
+    const roomsWithResources = roomsFiltered.filter(room => {
       if (requiredResources.length === 0) return true;
       return requiredResources.every(resource => {
-        const roomHasResource = room.resources && room.resources[resource] === true;
+        // Mapear nomes dos recursos para os campos do banco de dados
+        const dbFieldMap = {
+          'projector': 'has_projector',
+          'internet': 'has_internet',
+          'air_conditioning': 'has_air_conditioning'
+        };
+        
+        const dbField = dbFieldMap[resource];
+        
+        // Verificar tanto em room.resources quanto diretamente na room
+        const roomHasResource = 
+          (room.resources && room.resources[resource] === true) || 
+          (room[dbField] === true) ||
+          (room[dbField] === 1);
+        
         return roomHasResource;
       });
     });
@@ -391,6 +498,24 @@ const NovaReserva = ({
         ...prev,
         [name]: value
       }));
+      
+      // Validar horário em tempo real se a data for hoje
+      if (name === 'start_time' && formData.date && value) {
+        const selectedDate = new Date(formData.date);
+        const now = getBrazilNow();
+        const isToday = isSameDate(selectedDate, now);
+        
+        if (isToday) {
+          const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          if (value <= currentTime) {
+            setErrors(prev => ({
+              ...prev,
+              start_time: "O horário deve ser posterior ao horário atual"
+            }));
+            return;
+          }
+        }
+      }
     }
 
     // Limpar erro do campo quando o usuário começar a digitar
@@ -505,6 +630,18 @@ const NovaReserva = ({
 
     if (!formData.start_time) {
       newErrors.start_time = "Horário de início é obrigatório";
+    } else if (formData.date) {
+      // Se a data for hoje, verificar se o horário é futuro
+      const selectedDate = new Date(formData.date);
+      const now = getBrazilNow();
+      const isToday = isSameDate(selectedDate, now);
+      
+      if (isToday) {
+        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        if (formData.start_time <= currentTime) {
+          newErrors.start_time = "O horário deve ser posterior ao horário atual";
+        }
+      }
     }
 
     if (!formData.end_time) {
@@ -977,72 +1114,23 @@ const NovaReserva = ({
               <div className="bg-white rounded-lg shadow-sm border p-4">
                 <h3 className="font-medium text-gray-900 mb-4">Salas Disponíveis</h3>
                 
-                {/* Abas dos Blocos */}
-                <div className="flex mb-4 border-b border-gray-200">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('bloco1')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none ${
-                      activeTab === 'bloco1' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Bloco 1
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('bloco2')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors focus:outline-none ${
-                      activeTab === 'bloco2' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Bloco 2
-                  </button>
-                </div>
-
                 {/* Grid de Salas */}
-                {availableRooms.length > 0 ? (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-3 gap-2">
-                      {availableRooms.slice(0, 3).map(room => (
-                        <div
-                          key={room.id}
-                          className={`px-1 py-2 rounded-lg text-center text-[10px] font-medium cursor-pointer transition-colors flex items-center justify-center min-h-[40px] max-h-[40px] overflow-hidden focus:outline-none ${
-                            selectedRoom?.id === room.id
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                          }`}
-                          onClick={() => selectRoom(room)}
-                          tabIndex={0}
-                        >
-                          <span className="break-words leading-tight text-center w-full">{room.name}</span>
-                        </div>
-                      ))}
+                <div className="grid grid-cols-3 gap-2">
+                  {availableRooms.map(room => (
+                    <div
+                      key={room.id}
+                      className={`px-1 py-2 rounded-lg text-center text-[10px] font-medium cursor-pointer transition-colors flex items-center justify-center min-h-[40px] max-h-[40px] overflow-hidden focus:outline-none ${
+                        selectedRoom?.id === room.id
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                      }`}
+                      onClick={() => selectRoom(room)}
+                      tabIndex={0}
+                    >
+                      <span className="break-words leading-tight text-center w-full">{room.name}</span>
                     </div>
-                    {availableRooms.length > 3 && (
-                      <div className="grid grid-cols-3 gap-2 mt-2">
-                        {availableRooms.slice(3, 5).map(room => (
-                          <div
-                            key={room.id}
-                            className={`px-1 py-2 rounded-lg text-center text-[10px] font-medium cursor-pointer transition-colors flex items-center justify-center min-h-[40px] max-h-[40px] overflow-hidden focus:outline-none ${
-                              selectedRoom?.id === room.id
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                            }`}
-                            onClick={() => selectRoom(room)}
-                            tabIndex={0}
-                          >
-                            <span className="break-words leading-tight text-center w-full">{room.name}</span>
-                          </div>
-                        ))}
-                        {availableRooms.length === 4 && <div></div>}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-sm text-center py-4">
-                    Nenhuma sala disponível neste bloco
-                  </p>
-                )}
+                  ))}
+                </div>
 
               </div>
             ) : (
@@ -1053,10 +1141,27 @@ const NovaReserva = ({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Preencha todos os campos obrigatórios</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {formData.is_recurring && formData.date && formData.start_time && formData.end_time && formData.people_count
+                      ? "Nenhuma sala disponível"
+                      : "Preencha todos os campos obrigatórios"
+                    }
+                  </h3>
                   <p className="text-sm text-gray-500">
-                    Para ver as salas disponíveis, preencha: {showProjectSelection && "projeto, "}descrição, data, horários e quantidade de participantes.
-                    {formData.is_recurring && " Se for recorrente, também selecione a frequência e data final."}
+                    {formData.is_recurring && formData.date && formData.start_time && formData.end_time && formData.people_count ? (
+                      <>
+                        Não há salas disponíveis para reserva recorrente neste horário.
+                        <br />
+                        <span className="text-xs mt-2 block text-gray-400">
+                          Algumas salas podem estar reservadas em uma ou mais datas da recorrência, ou não permitem reservas recorrentes.
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        Para ver as salas disponíveis, preencha: {showProjectSelection && "projeto, "}descrição, data, horários e quantidade de participantes.
+                        {formData.is_recurring && " Se for recorrente, também selecione a frequência e data final."}
+                      </>
+                    )}
                   </p>
                 </div>
               </div>

@@ -416,7 +416,7 @@ export const approveReservation = async (reservationId, action, rejectionReason 
         rejection_reason: rejectionReason
       }),
     });
-    return response.reservation;
+    return response; // Retornar resposta completa com message e reservation
   } catch (error) {
     console.error('Erro ao aprovar/rejeitar reserva:', error);
     throw error;

@@ -94,12 +94,13 @@ useEffect(() => {
     loadData();
 }, []);
 
-// Processar dados quando reservations ou selectedRoom mudam
+// Processar dados quando reservations, selectedRoom ou currentMonth mudam
 useEffect(() => {
+    console.log('🔄 useEffect disparado - Mês atual:', moment(currentMonth).format('MMMM YYYY'));
     if (reservations.length > 0) {
-    processReservationData();
+        processReservationData();
     }
-}, [reservations, selectedRoom, selectedDate]);
+}, [reservations, selectedRoom, selectedDate, currentMonth]);
 
 // Função para expandir reservas recorrentes simples
 const expandRecurringReservations = (reservation) => {
@@ -151,16 +152,28 @@ const expandRecurringReservations = (reservation) => {
 
 // Processar dados das reservas
 const processReservationData = () => {
+    console.log('📅 Processando dados das reservas para o mês:', moment(currentMonth).format('MMMM YYYY'));
+    console.log('Total de reservas:', reservations.length);
+    
     let approvedReservations = reservations.filter(reservation => 
         reservation.status === 'approved'
     );
+
+    console.log('Reservas aprovadas:', approvedReservations.length);
 
     // Expandir reservas recorrentes
     let expandedReservations = [];
     approvedReservations.forEach(reservation => {
         const occurrences = expandRecurringReservations(reservation);
         expandedReservations.push(...occurrences);
+        
+        // Log para debug
+        if (reservation.is_recurring) {
+            console.log(`Reserva recorrente "${reservation.title}": ${occurrences.length} ocorrências geradas`);
+        }
     });
+
+    console.log('Reservas expandidas:', expandedReservations.length);
 
     // Filtrar por sala se selecionada
     if (selectedRoom) {
@@ -192,7 +205,7 @@ const processReservationData = () => {
     // Reservas de hoje
     const today = moment().format('YYYY-MM-DD');
     const todayEvents = events.filter(event => 
-    moment(event.start).format('YYYY-MM-DD') === today
+        moment(event.start).format('YYYY-MM-DD') === today
     );
     setTodayReservations(todayEvents);
 
@@ -200,11 +213,14 @@ const processReservationData = () => {
     const daysSet = new Set();
     const dayCountMap = new Map();
     
+    console.log('🔍 Verificando eventos para o mês:', moment(currentMonth).format('MMMM YYYY'));
+    
     events.forEach(event => {
         const eventDate = moment(event.start).format('YYYY-MM-DD');
         
         if (moment(event.start).isSame(currentMonth, 'month')) {
             daysSet.add(eventDate);
+            console.log('✅ Dia com reserva no mês atual:', eventDate);
         }
         
         // Contar reservas por dia (para todo o período, não só o mês atual)
@@ -212,8 +228,13 @@ const processReservationData = () => {
         dayCountMap.set(eventDate, currentCount + 1);
     });
     
+    console.log('📊 Total de dias com reservas no mês:', daysSet.size);
+    console.log('📋 Dias:', Array.from(daysSet));
+    
     setDaysWithReservations(daysSet);
     setReservationsPerDay(dayCountMap);
+    
+    console.log('✔️ Processamento concluído com sucesso');
 };
 
 // Filtrar salas por busca
@@ -243,6 +264,7 @@ const generateCalendarDays = () => {
 // Navegar mês anterior/próximo
 const navigateMonth = (direction) => {
     const newMonth = moment(currentMonth).add(direction, 'month').toDate();
+    console.log('🗓️  Navegando para:', moment(newMonth).format('MMMM YYYY'));
     setCurrentMonth(newMonth);
 };
 
