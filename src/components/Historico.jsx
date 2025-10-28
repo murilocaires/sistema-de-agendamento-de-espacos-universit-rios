@@ -168,7 +168,7 @@ const Historico = ({
       userType === "student"
         ? "/aluno"
         : userType === "professor" || userType === "servidor"
-        ? "/servidor"
+        ? "/professor"
         : userType === "admin"
         ? "/admin"
         : "/coordenador";

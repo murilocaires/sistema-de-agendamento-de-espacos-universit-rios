@@ -27,6 +27,8 @@ import MinhasReservas from "./pages/professor/MinhasReservas";
 import NovaReserva from "./pages/professor/NovaReserva";
 import Projetos from "./pages/professor/Projetos";
 import AprovarReservas from "./pages/professor/AprovarReservas";
+import HistoricoProfessor from "./pages/professor/HistoricoProfessor";
+import DetalhesHistoricoProfessor from "./pages/professor/DetalhesHistorico";
 import Configuracoes from "./pages/professor/Configuracoes";
 import ProjetosAluno from "./pages/aluno/ProjetosAluno";
 import ReservasAluno from "./pages/aluno/ReservasAluno";
@@ -228,6 +230,24 @@ function App() {
             element={
               <ProtectedRoute>
                 <AprovarReservas />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/professor/historico"
+            element={
+              <ProtectedRoute>
+                <HistoricoProfessor />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/professor/historico/:id"
+            element={
+              <ProtectedRoute>
+                <DetalhesHistoricoProfessor />
               </ProtectedRoute>
             }
           />

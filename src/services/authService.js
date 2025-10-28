@@ -615,6 +615,17 @@ export const getAvailableProjects = async () => {
   }
 };
 
+// Buscar projetos onde o professor/servidor é dono
+export const getProfessorProjects = async () => {
+  try {
+    const response = await apiRequest('/projects');
+    return response.projects || [];
+  } catch (error) {
+    console.error('Erro ao buscar projetos do professor:', error);
+    throw error;
+  }
+};
+
 // Buscar projetos que o aluno está participando
 export const getMyProjects = async () => {
   try {

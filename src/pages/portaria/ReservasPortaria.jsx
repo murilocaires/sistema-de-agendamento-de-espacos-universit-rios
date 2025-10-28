@@ -133,7 +133,7 @@ const ReservasPortaria = () => {
         let weekCount = 0;
         const maxWeeks = 52; // Limite de 1 ano
 
-        while (currentDate.isSameOrBefore(endDate) && weekCount < maxWeeks) {
+        while (currentDate.isSameOrBefore(endDate, 'day') && weekCount < maxWeeks) {
             const occurrenceStart = moment(currentDate).set({
                 hour: moment(startTime, 'HH:mm').hour(),
                 minute: moment(startTime, 'HH:mm').minute(),

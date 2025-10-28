@@ -19,8 +19,8 @@ async function handler(req, res) {
       let whereClause = '';
       let queryParams = [];
       
-      // Professores só podem ver seus próprios projetos
-      if (req.user.role === 'professor') {
+      // Professores e servidores só podem ver seus próprios projetos
+      if (req.user.role === 'professor' || req.user.role === 'servidor') {
         whereClause = 'WHERE p.professor_id = $1';
         queryParams = [req.user.id];
       } else if (professor_id) {
@@ -54,9 +54,9 @@ async function handler(req, res) {
     }
 
   } else if (req.method === 'POST') {
-    // Professores e admins podem criar projetos
-    if (!['professor', 'admin'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Apenas professores e administradores podem criar projetos' });
+    // Professores, servidores e admins podem criar projetos
+    if (!['professor', 'servidor', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Apenas professores, servidores e administradores podem criar projetos' });
     }
 
     try {

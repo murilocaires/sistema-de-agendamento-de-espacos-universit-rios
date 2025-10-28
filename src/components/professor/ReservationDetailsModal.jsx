@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CheckCircle, Clock } from 'lucide-react';
+import { X, CheckCircle, Clock, Ban } from 'lucide-react';
 
 const ReservationDetailsModal = ({ 
 isOpen, 
@@ -54,6 +54,12 @@ const calculateRecurrenceDates = () => {
 
     const startDate = new Date(reservation.start_time);
     const endDate = reservation.recurrence_end_date ? new Date(reservation.recurrence_end_date) : null;
+    
+    // Normalizar endDate para fim do dia para comparação correta
+    if (endDate) {
+      endDate.setHours(23, 59, 59, 999);
+    }
+    
     const interval = reservation.recurrence_interval || 1;
     const dates = [];
 
@@ -100,7 +106,8 @@ const getStatusColor = (status) => {
     pending: "bg-yellow-100 text-yellow-800",
     approved: "bg-green-100 text-green-800",
     professor_approved: "bg-blue-100 text-blue-800",
-    rejected: "bg-red-100 text-red-800"
+    rejected: "bg-red-100 text-red-800",
+    cancelled: "bg-gray-100 text-gray-600"
     };
     return colors[status] || "bg-gray-100 text-gray-800";
 };
@@ -111,7 +118,8 @@ const getStatusText = (status) => {
     pending: "Pendente",
     approved: "Aprovada",
     professor_approved: "Aprovada pelo Professor",
-    rejected: "Rejeitada"
+    rejected: "Rejeitada",
+    cancelled: "Cancelada"
     };
     return texts[status] || status;
 };
@@ -127,6 +135,8 @@ const getStatusIcon = (status) => {
         return <Clock className="text-yellow-600" size={16} />;
     case 'rejected':
         return <X className="text-red-600" size={16} />;
+    case 'cancelled':
+        return <Ban className="text-gray-600" size={16} />;
     default:
         return <Clock className="text-gray-600" size={16} />;
     }

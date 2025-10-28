@@ -441,8 +441,6 @@ return (
           onApprove={handleApprove}
           onReject={(r) => openRejectModal(r)}
           formatDateTime={formatDateTime}
-          getPriorityColor={getPriorityColor}
-          getPriorityText={getPriorityText}
           user={user}
         />
     </div>

@@ -22,6 +22,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/pt-br';
 import '../../components/Calendar.css';
+import ReservationDetailsModal from "../../components/admin/ReservationDetailsModal";
 
 // Configurar moment para português
 moment.locale('pt-br', {
@@ -67,6 +68,10 @@ const [calendarEvents, setCalendarEvents] = useState([]);
 const [todayReservations, setTodayReservations] = useState([]);
 const [daysWithReservations, setDaysWithReservations] = useState(new Set());
 const [reservationsPerDay, setReservationsPerDay] = useState(new Map());
+
+// Estados do modal
+const [showDetailsModal, setShowDetailsModal] = useState(false);
+const [selectedReservation, setSelectedReservation] = useState(null);
 
 // Carregar dados iniciais
 const loadData = async () => {
@@ -133,7 +138,7 @@ const expandRecurringReservations = (reservation) => {
     let weekCount = 0;
     const maxWeeks = 52; // Limite de 1 ano
 
-    while (currentDate.isSameOrBefore(endDate) && weekCount < maxWeeks) {
+    while (currentDate.isSameOrBefore(endDate, 'day') && weekCount < maxWeeks) {
         const occurrenceStart = moment(currentDate).set({
             hour: moment(startTime, 'HH:mm').hour(),
             minute: moment(startTime, 'HH:mm').minute(),
@@ -317,6 +322,18 @@ const renderReservationDots = (dayStr) => {
     }
     
     return dots;
+};
+
+// Abrir modal de detalhes
+const openDetailsModal = (event) => {
+    setSelectedReservation(event.resource.reservation);
+    setShowDetailsModal(true);
+};
+
+// Formatar data e hora
+const formatDateTime = (dateTime) => {
+    if (!dateTime) return 'N/A';
+    return moment(dateTime).format('DD/MM/YYYY [às] HH:mm');
 };
 
 return (
@@ -577,7 +594,7 @@ return (
                         )
                     }}
                     onSelectEvent={(event) => {
-                    openRoomCalendar(event.resource.room_id);
+                    openDetailsModal(event);
                     }}
                 />
                 </div>
@@ -585,6 +602,17 @@ return (
             </div>
         </div>
         )}
+
+        {/* Modal de Detalhes da Reserva */}
+        <ReservationDetailsModal
+          open={showDetailsModal}
+          reservation={selectedReservation}
+          onClose={() => setShowDetailsModal(false)}
+          onApprove={() => {}} // Apenas visualização
+          onReject={() => {}} // Apenas visualização
+          formatDateTime={formatDateTime}
+          user={user}
+        />
     </div>
     </DashboardLayout>
 );

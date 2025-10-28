@@ -606,7 +606,7 @@ const Rooms = () => {
                         </div>
                       </div>
                       <Lock size={16} className="mr-1" />
-                      Reserva Fixa
+                      Não permite recorrência
                     </label>
                   </div>
                 </div>

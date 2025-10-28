@@ -1,5 +1,6 @@
 import React from "react";
 import { X, AlertTriangle, Clock, Info, DoorClosed, Calendar, User } from "lucide-react";
+import { formatBrazilDate } from "../../utils/dateUtils";
 
 const ReservationDetailsModal = ({
   open,
@@ -8,12 +9,65 @@ const ReservationDetailsModal = ({
   onApprove,
   onReject,
   formatDateTime,
-  getPriorityColor,
-  getPriorityText,
   user,
 }) => {
   if (!open || !reservation) return null;
   const detailsReservation = reservation;
+
+  // Obter texto do tipo de recorrência
+  const getRecurrenceTypeText = (type) => {
+    const types = {
+      daily: 'Diária',
+      weekly: 'Semanal',
+      monthly: 'Mensal'
+    };
+    return types[type] || type;
+  };
+
+  // Calcular próximas datas de recorrência
+  const calculateRecurrenceDates = () => {
+    if (!detailsReservation?.start_time || !detailsReservation?.recurrence_type) {
+      return [];
+    }
+
+    const startDate = new Date(detailsReservation.start_time);
+    const endDate = detailsReservation.recurrence_end_date ? new Date(detailsReservation.recurrence_end_date) : null;
+    
+    // Normalizar endDate para fim do dia para comparação correta
+    if (endDate) {
+      endDate.setHours(23, 59, 59, 999);
+    }
+    
+    const interval = detailsReservation.recurrence_interval || 1;
+    const dates = [];
+
+    // Limitar a 10 ocorrências para não sobrecarregar a interface
+    const maxOccurrences = 10;
+    let currentDate = new Date(startDate);
+    let count = 0;
+
+    while (count < maxOccurrences && (!endDate || currentDate <= endDate)) {
+      dates.push(new Date(currentDate));
+      count++;
+
+      // Calcular próxima data baseado no tipo
+      switch (detailsReservation.recurrence_type) {
+        case 'daily':
+          currentDate.setDate(currentDate.getDate() + interval);
+          break;
+        case 'weekly':
+          currentDate.setDate(currentDate.getDate() + (7 * interval));
+          break;
+        case 'monthly':
+          currentDate.setMonth(currentDate.getMonth() + interval);
+          break;
+        default:
+          return dates; // Se tipo não reconhecido, retorna o que tem
+      }
+    }
+
+    return dates;
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -26,17 +80,12 @@ const ReservationDetailsModal = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700">Título</label>
+            <p className="text-sm text-gray-900">{detailsReservation.title}</p>
+          </div>
+          
           <div className="md:col-span-2 grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Título</label>
-              <p className="text-sm text-gray-900">{detailsReservation.title}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Prioridade</label>
-              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(detailsReservation.priority)}`}>
-                {getPriorityText(detailsReservation.priority)}
-              </span>
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Solicitante</label>
               <p className="text-sm text-gray-900">{detailsReservation.user_name}</p>
@@ -107,24 +156,63 @@ const ReservationDetailsModal = ({
             </div>
           )}
 
-          {detailsReservation.is_recurring && (
+          {(detailsReservation.is_recurring || detailsReservation.recurrence_type) && (
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Recorrência</label>
-              <div className="bg-blue-50 p-3 rounded">
-                <p className="text-sm text-blue-800">
-                  <strong>Tipo:</strong> {detailsReservation.recurrence_type}
-                </p>
-                {detailsReservation.recurrence_interval && (
-                  <p className="text-sm text-blue-700">
-                    <strong>Intervalo:</strong> {detailsReservation.recurrence_interval}
-                  </p>
-                )}
-                {detailsReservation.recurrence_end_date && (
-                  <p className="text-sm text-blue-600">
-                    <strong>Até:</strong> {formatDateTime(detailsReservation.recurrence_end_date)}
-                  </p>
-                )}
-                <p className="text-xs text-blue-500 mt-2">Esta reserva se repete automaticamente conforme a configuração acima.</p>
+              <div className="space-y-3">
+                <div className="bg-blue-50 p-3 rounded">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <span className="text-xs font-medium text-gray-600">Tipo</span>
+                      <p className="text-sm text-blue-800 font-medium">
+                        {getRecurrenceTypeText(detailsReservation.recurrence_type)}
+                      </p>
+                    </div>
+                    {detailsReservation.recurrence_interval && (
+                      <div>
+                        <span className="text-xs font-medium text-gray-600">Intervalo</span>
+                        <p className="text-sm text-blue-700">
+                          A cada {detailsReservation.recurrence_interval} {detailsReservation.recurrence_type === 'daily' ? 'dia(s)' : detailsReservation.recurrence_type === 'weekly' ? 'semana(s)' : 'mês(es)'}
+                        </p>
+                      </div>
+                    )}
+                    {detailsReservation.recurrence_end_date && (
+                      <div className="md:col-span-2">
+                        <span className="text-xs font-medium text-gray-600">Até</span>
+                        <p className="text-sm text-blue-700">
+                          {formatBrazilDate(detailsReservation.recurrence_end_date)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Datas de Recorrência */}
+                {(() => {
+                  const recurrenceDates = calculateRecurrenceDates();
+                  if (recurrenceDates.length > 0) {
+                    return (
+                      <div>
+                        <span className="text-xs font-medium text-gray-600 block mb-2">
+                          Próximas {recurrenceDates.length} ocorrências:
+                        </span>
+                        <div className="bg-gray-50 p-3 rounded border border-gray-200 max-h-32 overflow-y-auto">
+                          <div className="flex flex-wrap gap-2">
+                            {recurrenceDates.map((date, index) => (
+                              <span 
+                                key={index}
+                                className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-medium"
+                              >
+                                {formatBrazilDate(date)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
           )}
@@ -215,7 +303,7 @@ const ReservationDetailsModal = ({
           {(detailsReservation.status === 'pending' || detailsReservation.status === 'professor_approved') ? (
             <>
               <button onClick={() => onReject(detailsReservation)} className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100">Rejeitar</button>
-              <button onClick={() => onApprove(detailsReservation.id)} className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700">{detailsReservation.status === 'professor_approved' ? 'Aprovar Final' : 'Aprovar'}</button>
+              <button onClick={() => { onApprove(detailsReservation.id); onClose(); }} className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700">{detailsReservation.status === 'professor_approved' ? 'Aprovar Final' : 'Aprovar'}</button>
             </>
           ) : detailsReservation.status === 'approved' ? (
             <div className="flex items-center gap-2">
@@ -227,7 +315,7 @@ const ReservationDetailsModal = ({
           ) : (
             <div className="flex items-center gap-2">
               <span className="px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-md">✗ Rejeitada</span>
-              <button onClick={() => onApprove(detailsReservation.id)} className="px-3 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700" title="Aprovar reserva rejeitada">Aprovar</button>
+              <button onClick={() => { onApprove(detailsReservation.id); onClose(); }} className="px-3 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700" title="Aprovar reserva rejeitada">Aprovar</button>
             </div>
           )}
         </div>

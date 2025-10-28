@@ -127,6 +127,12 @@ const DetalhesReserva = ({
 
     const startDate = new Date(reservation.start_time);
     const endDate = reservation.recurrence_end_date ? new Date(reservation.recurrence_end_date) : null;
+    
+    // Normalizar endDate para fim do dia para comparação correta
+    if (endDate) {
+      endDate.setHours(23, 59, 59, 999);
+    }
+    
     const interval = reservation.recurrence_interval || 1;
     const dates = [];
 

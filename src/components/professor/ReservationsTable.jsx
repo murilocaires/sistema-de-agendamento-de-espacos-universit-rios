@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, Clock, DoorClosed, CheckCircle, X, Eye, ChevronUp, ChevronDown } from 'lucide-react';
+import { Calendar, Clock, DoorClosed, CheckCircle, X, Eye, ChevronUp, ChevronDown, Ban } from 'lucide-react';
 
 const ReservationsTable = ({ 
   reservations, 
@@ -59,7 +59,8 @@ const ReservationsTable = ({
       pending: "bg-yellow-100 text-yellow-800",
       approved: "bg-green-100 text-green-800",
       professor_approved: "bg-blue-100 text-blue-800",
-      rejected: "bg-red-100 text-red-800"
+      rejected: "bg-red-100 text-red-800",
+      cancelled: "bg-gray-100 text-gray-600"
     };
     return colors[status] || "bg-gray-100 text-gray-800";
   };
@@ -70,7 +71,8 @@ const ReservationsTable = ({
       pending: "Pendente",
       approved: "Aprovada",
       professor_approved: "Aprovado pelo Professor",
-      rejected: "Rejeitada"
+      rejected: "Rejeitada",
+      cancelled: "Cancelada"
     };
     return texts[status] || status;
   };
@@ -86,6 +88,8 @@ const ReservationsTable = ({
         return <Clock className="text-yellow-600" size={16} />;
       case 'rejected':
         return <X className="text-red-600" size={16} />;
+      case 'cancelled':
+        return <Ban className="text-gray-600" size={16} />;
       default:
         return <Clock className="text-gray-600" size={16} />;
     }
