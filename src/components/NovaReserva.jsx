@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
+import CustomSelect from "./CustomSelect";
 import { 
   getRooms,
   createReservation,
@@ -13,9 +14,11 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Clock,
   Monitor,
   Wifi,
-  AirVent
+  AirVent 
 } from "lucide-react";
 import { 
   isSameDate, 
@@ -545,6 +548,153 @@ const NovaReserva = ({
     return project ? project.name : "";
   };
 
+  // Convert projects array to options format for CustomSelect
+  const getProjectOptions = (projects) => {
+    return [
+      { value: '', label: 'Selecione um projeto' },
+      ...projects.map(project => ({
+        value: String(project.id),
+        label: project.name
+      }))
+    ];
+  };
+
+  // --- Compact DatePicker (inline) ---
+  const DatePicker = ({ value, onChange, error, min, max }) => {
+    const [open, setOpen] = useState(false);
+    const [viewDate, setViewDate] = useState(currentDate);
+    const ref = useRef(null);
+
+    useEffect(() => {
+      const handleOutside = (e) => {
+        if (ref.current && !ref.current.contains(e.target)) {
+          setOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleOutside);
+      return () => document.removeEventListener('mousedown', handleOutside);
+    }, []);
+
+    useEffect(() => {
+      // keep viewDate in sync with global currentDate when opened
+      if (open) setViewDate(currentDate);
+    }, [open]);
+
+    const days = getDaysInMonth(viewDate);
+
+    const prevMonth = () => setViewDate(d => { const nd = new Date(d); nd.setMonth(d.getMonth() - 1); return nd; });
+    const nextMonth = () => setViewDate(d => { const nd = new Date(d); nd.setMonth(d.getMonth() + 1); return nd; });
+
+    return (
+      <div className="relative w-[100%] md:w-36" ref={ref}>
+        {/* Hide native browser datepicker icon so only our styled icon remains */}
+        <style>{`
+          .no-calendar { appearance: none; -moz-appearance: textfield; }
+          .no-calendar::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+          .no-calendar::-webkit-inner-spin-button, .no-calendar::-webkit-clear-button { display: none; }
+          .no-calendar::-ms-clear { display: none; }
+        `}</style>
+        <div className={`relative flex items-center border rounded ${error ? 'border-red-500' : 'border-[#E3E5E8]'} bg-white w-full`}>
+          <input
+            type="date"
+            name="date"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            onClick={() => setOpen(v => !v)}
+            placeholder="Selecione a data"
+            min={min}
+            max={max}
+            className="no-calendar w-full py-2 px-3 pr-10 text-sm bg-transparent focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setOpen(v => !v)}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-600 hover:text-gray-800 focus:outline-none"
+            aria-label="Abrir calendário"
+          >
+            <Calendar size={18} />
+          </button>
+        </div>
+
+        {open && (
+          <div className="absolute left-0 mt-2 z-50 w-[290px] max-h-64 overflow-auto bg-white border border-[#E3E5E8] rounded shadow-lg p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-800">
+                {viewDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+              </div>
+              <div className="flex gap-1">
+                <button onClick={prevMonth} className="p-1 rounded hover:bg-gray-100 focus:outline-none"><ChevronLeft size={14} /></button>
+                <button onClick={nextMonth} className="p-1 rounded hover:bg-gray-100 focus:outline-none"><ChevronRight size={14} /></button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 text-xs text-center text-gray-500 mb-2">
+              {['D','S','T','Q','Q','S','S'].map(d => <div key={d}>{d}</div>)}
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {days.map((day, idx) => {
+                const dayString = day.date.toISOString().split('T')[0];
+                const isSelected = value && value === dayString;
+                const disabled = isDateInPast(dayString);
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => { if (!disabled) { onChange(dayString); setOpen(false); } }}
+                    disabled={disabled}
+                    className={`text-center p-1 rounded text-xs font-medium focus:outline-none ${!day.isCurrentMonth ? 'text-gray-300' : 'text-gray-900'} ${isSelected ? 'bg-blue-600 text-white' : ''} ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-50'}`}
+                  >
+                    {day.date.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // --- TimePicker (native) ---
+  // Keep native typing (HH:MM) and only style the visible input container (border on all sides)
+  const TimePicker = ({ name, value, onChange, error }) => {
+    const inputRef = useRef(null);
+
+    const openNativePicker = () => {
+      const el = inputRef.current;
+      if (!el) return;
+      // try the modern showPicker() if available
+      if (typeof el.showPicker === 'function') {
+        try { el.showPicker(); return; } catch (e) { /* ignore */ }
+      }
+      // fallback: focus the input so browser may show its native UI
+      el.focus();
+    };
+
+    return (
+      <div className="relative w-full md:w-24">
+        <div className={`flex items-center border rounded ${error ? 'border-red-500' : 'border-[#E3E5E8]'} bg-white w-full`}>
+          <input
+            ref={inputRef}
+            type="time"
+            name={name}
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            className="no-calendar w-full py-2 px-3 pr-10 text-sm bg-transparent focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={openNativePicker}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-600 hover:text-gray-800 focus:outline-none"
+            aria-label="Abrir seletor de horário"
+          >
+            <Clock size={16} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -555,7 +705,14 @@ const NovaReserva = ({
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-[152px]">
+      {/* global component-scoped CSS to hide native date/time picker icons */}
+      <style>{`
+        .no-calendar { appearance: none; -moz-appearance: textfield; }
+        .no-calendar::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
+        .no-calendar::-webkit-inner-spin-button, .no-calendar::-webkit-clear-button { display: none; }
+        .no-calendar::-ms-clear { display: none; }
+      `}</style>
+      <div className="max-w-4xl mx-auto px-6 md:px-12">
         {/* Header */}
         <div className="mb-8">
           <h1
@@ -581,8 +738,8 @@ const NovaReserva = ({
         )}
 
         
-        {/* Layout Principal - Formulário e Calendário */}
-        <div className="flex gap-8">
+  {/* Layout Principal - Formulário e Painel lateral (stacked on mobile) */}
+  <div className="flex flex-col md:flex-row gap-6">
           {/* Formulário de Criação */}
           <div className="flex-1 bg-white rounded-lg shadow-sm border p-6">
             <form id="reservation-form" onSubmit={handleSubmit} className="space-y-4">
@@ -600,24 +757,15 @@ const NovaReserva = ({
                   >
                     PROJETO
                   </label>
-                  <select
-                    name="project_id"
+                  <CustomSelect
                     value={formData.project_id}
-                    onChange={handleInputChange}
-                    className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
-                      errors.project_id ? "border-red-500" : ""
-                    }`}
-                    style={{
-                      borderBottomColor: errors.project_id ? "#ef4444" : "#E3E5E8"
-                    }}
-                  >
-                    <option value="">Selecione um projeto</option>
-                    {myProjects.map(project => (
-                      <option key={project.id} value={project.id}>
-                        {project.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setFormData(prev => ({ ...prev, project_id: val }))}
+                    options={getProjectOptions(myProjects)}
+                    placeholder="Selecione um projeto"
+                    error={errors.project_id}
+                    label="PROJETO"
+                    className="md:w-120"
+                  />
                   {errors.project_id && <p className="mt-1 text-sm text-red-600">{errors.project_id}</p>}
                 </div>
               )}
@@ -652,7 +800,7 @@ const NovaReserva = ({
               </div>
 
               {/* Data, Horários e Participantes */}
-              <div className="flex gap-8">
+              <div className="flex flex-col md:flex-row gap-4 md:gap-8">
                 <div className="flex-1">
                   <label 
                     className="block mb-2"
@@ -665,23 +813,14 @@ const NovaReserva = ({
                   >
                     DATA
                   </label>
-                  <input
-                    type="date"
-                    name="date"
+                  <DatePicker
                     value={formData.date}
-                    onChange={handleInputChange}
-                    min={new Date().toISOString().split('T')[0]}
-                    max="2099-12-31"
-                    className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
-                      errors.date ? "border-red-500" : ""
-                    }`}
-                    style={{
-                      borderBottomColor: errors.date ? "#ef4444" : "#E3E5E8"
-                    }}
+                    onChange={(val) => setFormData(prev => ({ ...prev, date: val }))}
+                    error={errors.date}
                   />
                   {errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
                 </div>
-                <div className="w-20">
+                <div className="w-full md:w-20">
                   <label 
                     className="block mb-2"
                     style={{
@@ -693,21 +832,15 @@ const NovaReserva = ({
                   >
                     INÍCIO
                   </label>
-                  <input
-                    type="time"
+                  <TimePicker
                     name="start_time"
                     value={formData.start_time}
-                    onChange={handleInputChange}
-                    className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
-                      errors.start_time ? "border-red-500" : ""
-                    }`}
-                    style={{
-                      borderBottomColor: errors.start_time ? "#ef4444" : "#E3E5E8"
-                    }}
+                    onChange={(val) => setFormData(prev => ({ ...prev, start_time: val }))}
+                    error={errors.start_time}
                   />
                   {errors.start_time && <p className="mt-1 text-sm text-red-600">{errors.start_time}</p>}
                 </div>
-                <div className="w-20">
+                <div className="w-full md:w-20">
                   <label 
                     className="block mb-2"
                     style={{
@@ -719,21 +852,15 @@ const NovaReserva = ({
                   >
                     FIM
                   </label>
-                  <input
-                    type="time"
+                  <TimePicker
                     name="end_time"
                     value={formData.end_time}
-                    onChange={handleInputChange}
-                    className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
-                      errors.end_time ? "border-red-500" : ""
-                    }`}
-                    style={{
-                      borderBottomColor: errors.end_time ? "#ef4444" : "#E3E5E8"
-                    }}
+                    onChange={(val) => setFormData(prev => ({ ...prev, end_time: val }))}
+                    error={errors.end_time}
                   />
                   {errors.end_time && <p className="mt-1 text-sm text-red-600">{errors.end_time}</p>}
                 </div>
-                <div className="w-16">
+                <div className="w-full md:w-16">
                   <label 
                     className="block mb-2"
                     style={{
@@ -824,8 +951,8 @@ const NovaReserva = ({
                 </div>
 
                 {formData.is_recurring && (
-                  <div className="mt-6 flex gap-8">
-                    <div className="w-32">
+                  <div className="mt-6 flex flex-col md:flex-row md:gap-8 space-y-4 md:space-y-0">
+                    <div className="w-full md:w-32">
                       <label 
                         className="block mb-2"
                         style={{
@@ -837,21 +964,24 @@ const NovaReserva = ({
                       >
                         FREQUÊNCIA
                       </label>
-                      <select
-                        name="recurrence_frequency"
+                      <CustomSelect
                         value={formData.recurrence_frequency}
-                        onChange={handleInputChange}
-                        className="w-full pt-2 pb-3 border-0 border-b focus:outline-none focus:border-blue-500"
-                        style={{
-                          borderBottomColor: "#E3E5E8"
-                        }}
-                      >
-                        <option value="daily">Diária</option>
-                        <option value="weekly">Semanal</option>
-                        <option value="biweekly">Quinzenal</option>
-                      </select>
+                        onChange={(value) => handleInputChange({ 
+                          target: { 
+                            name: 'recurrence_frequency', 
+                            value 
+                          }
+                        })}
+                        options={[
+                          { value: 'daily', label: 'Diária' },
+                          { value: 'weekly', label: 'Semanal' },
+                          { value: 'biweekly', label: 'Quinzenal' }
+                        ]}
+                        placeholder="Selecione a frequência"
+                        error={errors.recurrence_frequency}
+                      />
                     </div>
-                    <div className="w-36">
+                    <div className="w-full md:w-36">
                       <label 
                         className="block mb-2"
                         style={{
@@ -863,19 +993,12 @@ const NovaReserva = ({
                       >
                         DATA FINAL
                       </label>
-                      <input
-                        type="date"
-                        name="recurrence_end_date"
+                      <DatePicker
                         value={formData.recurrence_end_date}
-                        onChange={handleInputChange}
+                        onChange={(val) => setFormData(prev => ({ ...prev, recurrence_end_date: val }))}
+                        error={errors.recurrence_end_date}
                         min={formData.date}
                         max="2099-12-31"
-                        className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
-                          errors.recurrence_end_date ? "border-red-500" : ""
-                        }`}
-                        style={{
-                          borderBottomColor: errors.recurrence_end_date ? "#ef4444" : "#E3E5E8"
-                        }}
                       />
                       {errors.recurrence_end_date && <p className="mt-1 text-sm text-red-600">{errors.recurrence_end_date}</p>}
                     </div>
@@ -885,40 +1008,41 @@ const NovaReserva = ({
             </form>
           </div>
 
-          {/* Coluna Direita - Calendário e Salas */}
-          <div className="w-80 space-y-4">
-            {/* Mini Calendário */}
-            <div className="bg-white rounded-lg shadow-sm border p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-gray-900">
-                  {currentDate.toLocaleDateString('pt-BR', { 
-                    month: 'long', 
-                    year: 'numeric',
-                    timeZone: 'America/Sao_Paulo'
-                  })}
-                </h3>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => navigateCalendar(-1)}
-                    className="p-1 rounded focus:outline-none transition-transform hover:scale-130"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    onClick={() => navigateCalendar(1)}
-                    className="p-1 rounded focus:outline-none transition-transform hover:scale-130"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-7 gap-1 mb-2">
-                {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-                  <div key={day} className="text-center text-gray-500 p-1 font-medium text-xs">
-                    {day}
+          {/* Painel lateral (Salas e Ações) */}
+          <div className="md:w-80 w-full space-y-4 mt-6 md:mt-0">
+            {/* Calendário (apenas em telas md+) */}
+            <div className="hidden md:block">
+              <div className="bg-white rounded-lg shadow-sm border p-4 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium text-gray-900">
+                    {currentDate.toLocaleDateString('pt-BR', { 
+                      month: 'long', 
+                      year: 'numeric',
+                      timeZone: 'America/Sao_Paulo'
+                    })}
+                  </h3>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => navigateCalendar(-1)}
+                      className="p-1 rounded focus:outline-none transition-transform hover:scale-105"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button
+                      onClick={() => navigateCalendar(1)}
+                      className="p-1 rounded focus:outline-none transition-transform hover:scale-105"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
                   </div>
-                ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
+                    <div key={day} className="text-center text-gray-500 p-1 font-medium text-xs">
+                      {day}
+                    </div>
+                  ))}
                 
                 {getDaysInMonth(currentDate).map((day, index) => {
                   const isToday = isSameDate(day.date, getBrazilNow());
@@ -926,49 +1050,32 @@ const NovaReserva = ({
                   const isSelected = formData.date && dayString === formData.date;
                   const recurringDays = getRecurringDays();
                   const isRecurring = recurringDays.includes(dayString);
-                  
-                  // Verificar se é sábado (6) ou domingo (0)
-                  // getDay() retorna: 0=Domingo, 1=Segunda, 2=Terça, 3=Quarta, 4=Quinta, 5=Sexta, 6=Sábado
-                  const dayOfWeek = day.date.getDay();
-                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-                  
-                  // Para recorrência diária, verificar se é primeiro, último ou intermediário
+
                   let recurringStyle = '';
                   if (isRecurring && !isSelected && formData.is_recurring && formData.recurrence_frequency === 'daily') {
                     const isFirstDay = dayString === formData.date;
                     const isLastDay = dayString === formData.recurrence_end_date;
                     const isMiddleDay = !isFirstDay && !isLastDay;
-                    
                     if (isFirstDay || isLastDay) {
-                      recurringStyle = 'bg-blue-600 text-white hover:bg-blue-600'; // Azul escuro para primeiro e último
+                      recurringStyle = 'bg-blue-600 text-white hover:bg-blue-600';
                     } else if (isMiddleDay) {
-                      recurringStyle = 'bg-blue-100 text-blue-700 hover:bg-blue-200'; // Azul claro para intermediários
+                      recurringStyle = 'bg-blue-100 text-blue-700 hover:bg-blue-200';
                     }
                   } else if (isRecurring && !isSelected) {
-                    recurringStyle = 'bg-blue-600 text-white hover:bg-blue-600'; // Azul escuro para outras frequências
+                    recurringStyle = 'bg-blue-600 text-white hover:bg-blue-600';
                   }
-                  
-                  // Estilo para fins de semana - removido o bloqueio
-                  const weekendStyle = '';
-                  
-                  
+
                   return (
                     <button
                       key={index}
-                      onClick={() => {
-                        // Permitir seleção de todos os dias
-                        setFormData(prev => ({ ...prev, date: dayString }));
-                      }}
-                      disabled={false}
-                      style={{}}
-                      className={`text-center p-1 rounded text-xs font-medium focus:outline-none ${
-                        !day.isCurrentMonth ? 'text-gray-400' : 'text-gray-900'
-                      } ${isToday ? 'border-2 border-blue-600' : ''} ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-600' : ''} ${recurringStyle} ${!isSelected && !isRecurring && day.isCurrentMonth ? 'hover:bg-blue-100' : ''}`}
+                      onClick={() => setFormData(prev => ({ ...prev, date: dayString }))}
+                      className={`text-center p-1 rounded text-xs font-medium focus:outline-none ${!day.isCurrentMonth ? 'text-gray-400' : 'text-gray-900'} ${isToday ? 'border-2 border-blue-600' : ''} ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-600' : ''} ${recurringStyle} ${!isSelected && !isRecurring && day.isCurrentMonth ? 'hover:bg-blue-100' : ''}`}
                     >
                       {day.date.getDate()}
                     </button>
                   );
                 })}
+                </div>
               </div>
             </div>
 
