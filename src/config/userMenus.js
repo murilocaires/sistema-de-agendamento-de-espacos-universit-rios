@@ -190,18 +190,11 @@ export const alunoMenu = [
 
 // Menu da Portaria
 export const portariaMenu = [
-  { id: "home", label: "Home", icon: LayoutDashboard, path: "/dashboard" },
   {
     id: "reservas",
     label: "Reservas",
     icon: ClipboardList,
     path: "/portaria/reservas",
-  },
-  {
-    id: "relatorios",
-    label: "Relatórios",
-    icon: BarChart3,
-    path: "/portaria/relatorios",
   },
 ];
 

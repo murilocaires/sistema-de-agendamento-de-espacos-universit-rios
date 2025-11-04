@@ -214,26 +214,26 @@ const AdminDashboard = () => {
 
   return (
     <DashboardLayout userType={userTypeDisplay} menuItems={menuItems}>
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1">
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-1">
             Painel de Gestão
           </h1>
-          <p className="text-gray-700 text-sm">
+          <p className="text-gray-700 text-xs md:text-sm">
             Bem-vindo, {user?.name}! Aqui está um resumo do sistema de agendamentos.
           </p>
         </div>
 
         {/* Toast de Erro */}
         {error && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
-            <div className="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
-                <AlertCircle className="text-white" size={20} />
-                <span className="text-sm font-medium">{error}</span>
+        <div className="fixed top-20 md:top-4 left-4 right-4 md:left-auto md:right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+            <div className="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 w-full md:min-w-[300px]">
+                <AlertCircle className="text-white flex-shrink-0" size={20} />
+                <span className="text-xs md:text-sm font-medium flex-1">{error}</span>
                 <button
                     onClick={() => setError("")}
-                    className="ml-auto text-white/80 hover:text-white transition-colors"
+                    className="ml-auto text-white/80 hover:text-white transition-colors flex-shrink-0"
                 >
                     <X size={16} />
                 </button>
@@ -243,15 +243,15 @@ const AdminDashboard = () => {
 
         {/* Toast de Sucesso */}
         {successMessage && (
-        <div className={`fixed right-4 z-50 animate-in slide-in-from-top-2 duration-300 ${
-            error ? 'top-20' : 'top-4'
+        <div className={`fixed left-4 right-4 md:left-auto md:right-4 z-50 animate-in slide-in-from-top-2 duration-300 ${
+            error ? 'top-32 md:top-20' : 'top-20 md:top-4'
         }`}>
-            <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
-                <CheckCircle className="text-white" size={20} />
-                <span className="text-sm font-medium">{successMessage}</span>
+            <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 w-full md:min-w-[300px]">
+                <CheckCircle className="text-white flex-shrink-0" size={20} />
+                <span className="text-xs md:text-sm font-medium flex-1">{successMessage}</span>
                 <button
                     onClick={() => setSuccessMessage("")}
-                    className="ml-auto text-white/80 hover:text-white transition-colors"
+                    className="ml-auto text-white/80 hover:text-white transition-colors flex-shrink-0"
                 >
                     <X size={16} />
                 </button>
@@ -265,51 +265,51 @@ const AdminDashboard = () => {
             <p className="mt-3 text-gray-700 text-sm">Carregando dashboard...</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* Estatísticas Principais */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <BarChart3 size={18} />
-                Estatísticas do Mês - {moment().format('MMMM YYYY')}
+              <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+                <span className="text-sm md:text-base">Estatísticas do Mês - {moment().format('MMMM YYYY')}</span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
+                <div className="bg-white p-3 md:p-4 rounded-lg shadow border">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-700">Total de Reservas</p>
-                      <p className="text-2xl font-bold text-blue-600">{monthlyStats.total}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] md:text-xs font-medium text-gray-700 truncate">Total de Reservas</p>
+                      <p className="text-xl md:text-2xl font-bold text-blue-600">{monthlyStats.total}</p>
                     </div>
-                    <Calendar className="text-blue-400" size={24} />
+                    <Calendar className="text-blue-400 flex-shrink-0 ml-2 w-5 h-5 md:w-6 md:h-6" />
                   </div>
                 </div>
                 
-                <div className="bg-white p-4 rounded-lg shadow border">
+                <div className="bg-white p-3 md:p-4 rounded-lg shadow border">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-700">Confirmadas</p>
-                      <p className="text-2xl font-bold text-green-600">{monthlyStats.approved}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] md:text-xs font-medium text-gray-700 truncate">Confirmadas</p>
+                      <p className="text-xl md:text-2xl font-bold text-green-600">{monthlyStats.approved}</p>
                     </div>
-                    <CheckCircle className="text-green-400" size={24} />
+                    <CheckCircle className="text-green-400 flex-shrink-0 ml-2 w-5 h-5 md:w-6 md:h-6" />
                   </div>
                 </div>
                 
-                <div className="bg-white p-4 rounded-lg shadow border">
+                <div className="bg-white p-3 md:p-4 rounded-lg shadow border">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-700">Aguardando</p>
-                      <p className="text-2xl font-bold text-orange-600">{monthlyStats.pending}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] md:text-xs font-medium text-gray-700 truncate">Aguardando</p>
+                      <p className="text-xl md:text-2xl font-bold text-orange-600">{monthlyStats.pending}</p>
                     </div>
-                    <Clock className="text-orange-400" size={24} />
+                    <Clock className="text-orange-400 flex-shrink-0 ml-2 w-5 h-5 md:w-6 md:h-6" />
                   </div>
                 </div>
                 
-                <div className="bg-white p-4 rounded-lg shadow border">
+                <div className="bg-white p-3 md:p-4 rounded-lg shadow border">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-700">Reprovadas</p>
-                      <p className="text-2xl font-bold text-red-600">{monthlyStats.rejected}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] md:text-xs font-medium text-gray-700 truncate">Reprovadas</p>
+                      <p className="text-xl md:text-2xl font-bold text-red-600">{monthlyStats.rejected}</p>
                     </div>
-                    <XCircle className="text-red-400" size={24} />
+                    <XCircle className="text-red-400 flex-shrink-0 ml-2 w-5 h-5 md:w-6 md:h-6" />
                   </div>
                 </div>
               </div>
@@ -317,41 +317,41 @@ const AdminDashboard = () => {
 
             {/* Estatísticas Rápidas */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <TrendingUp size={18} />
-                Visão Geral
+              <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+                <span className="text-sm md:text-base">Visão Geral</span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
+                <div className="bg-white p-3 md:p-4 rounded-lg shadow border">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-700">Salas Cadastradas</p>
-                      <p className="text-xl font-bold text-gray-800">{roomStats.total}</p>
-                      <p className="text-xs text-green-600">{roomStats.active} ativas</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] md:text-xs font-medium text-gray-700">Salas Cadastradas</p>
+                      <p className="text-lg md:text-xl font-bold text-gray-800">{roomStats.total}</p>
+                      <p className="text-[10px] md:text-xs text-green-600">{roomStats.active} ativas</p>
                     </div>
-                    <DoorClosed className="text-gray-700" size={22} />
+                    <DoorClosed className="text-gray-700 flex-shrink-0 ml-2 w-4 h-4 md:w-[22px] md:h-[22px]" />
                   </div>
                 </div>
                 
-                <div className="bg-white p-4 rounded-lg shadow border">
+                <div className="bg-white p-3 md:p-4 rounded-lg shadow border">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-700">Usuários Total</p>
-                      <p className="text-xl font-bold text-gray-800">{quickStats.totalUsers}</p>
-                      <p className="text-xs text-blue-600">Cadastrados no sistema</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] md:text-xs font-medium text-gray-700">Usuários Total</p>
+                      <p className="text-lg md:text-xl font-bold text-gray-800">{quickStats.totalUsers}</p>
+                      <p className="text-[10px] md:text-xs text-blue-600">Cadastrados no sistema</p>
                     </div>
-                    <Users className="text-gray-700" size={22} />
+                    <Users className="text-gray-700 flex-shrink-0 ml-2 w-4 h-4 md:w-[22px] md:h-[22px]" />
                   </div>
                 </div>
                 
-                <div className="bg-white p-4 rounded-lg shadow border">
+                <div className="bg-white p-3 md:p-4 rounded-lg shadow border">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-gray-700">Reservas Hoje</p>
-                      <p className="text-xl font-bold text-gray-800">{quickStats.todayReservations}</p>
-                      <p className="text-xs text-purple-600">{quickStats.thisWeekReservations} esta semana</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] md:text-xs font-medium text-gray-700">Reservas Hoje</p>
+                      <p className="text-lg md:text-xl font-bold text-gray-800">{quickStats.todayReservations}</p>
+                      <p className="text-[10px] md:text-xs text-purple-600">{quickStats.thisWeekReservations} esta semana</p>
                     </div>
-                    <Calendar className="text-gray-700" size={22} />
+                    <Calendar className="text-gray-700 flex-shrink-0 ml-2 w-4 h-4 md:w-[22px] md:h-[22px]" />
                   </div>
                 </div>
               </div>
@@ -359,34 +359,34 @@ const AdminDashboard = () => {
 
             {/* Salas Mais Utilizadas */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <TrendingUp size={18} />
-                Salas Mais Utilizadas
+              <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+                <span className="text-sm md:text-base">Salas Mais Utilizadas</span>
               </h2>
               <div className="bg-white rounded-lg shadow border">
-                <div className="p-4">
+                <div className="p-3 md:p-4">
                   {roomStats.mostUsed.length > 0 ? (
                     <div className="space-y-3">
                       {roomStats.mostUsed.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-3">
+                        <div key={index} className="flex items-center justify-between p-2 md:p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                             <div className={`
-                              w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs
+                              w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center text-white font-bold text-[10px] md:text-xs flex-shrink-0
                               ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-orange-400' : 'bg-blue-500'}
                             `}>
                               {index + 1}
                             </div>
-                            <div>
-                              <h3 className="font-medium text-gray-800 text-sm">{item.room.name}</h3>
-                              <div className="flex items-center gap-1 text-xs text-gray-700">
-                                <MapPin size={10} />
-                                {item.room.location}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-gray-800 text-xs md:text-sm truncate">{item.room.name}</h3>
+                              <div className="flex items-center gap-1 text-[10px] md:text-xs text-gray-700">
+                                <MapPin className="w-2 h-2 md:w-[10px] md:h-[10px] flex-shrink-0" />
+                                <span className="truncate">{item.room.location}</span>
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className="text-base font-bold text-gray-800">{item.count}</p>
-                            <p className="text-xs text-gray-700">reservas</p>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <p className="text-sm md:text-base font-bold text-gray-800">{item.count}</p>
+                            <p className="text-[10px] md:text-xs text-gray-700">reservas</p>
                           </div>
                         </div>
                       ))}
@@ -406,30 +406,30 @@ const AdminDashboard = () => {
 
             {/* Ações Rápidas */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <ArrowRight size={18} />
-                Ações Rápidas
+              <h2 className="text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3 flex items-center gap-2">
+                <ArrowRight className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+                <span className="text-sm md:text-base">Ações Rápidas</span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
                 {quickActions.map((action, index) => (
                   <button
                     key={index}
                     onClick={() => handleQuickAction(action.path)}
                     className={`
-                      ${action.color} text-white p-4 rounded-lg shadow 
+                      ${action.color} text-white p-3 md:p-4 rounded-lg shadow 
                       transition-all duration-200 transform hover:scale-105 
                       hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-opacity-50
                     `}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="text-left">
-                        <h3 className="text-base font-semibold mb-1">{action.title}</h3>
-                        <p className="text-xs opacity-90">{action.description}</p>
+                      <div className="text-left flex-1 min-w-0">
+                        <h3 className="text-sm md:text-base font-semibold mb-1">{action.title}</h3>
+                        <p className="text-[10px] md:text-xs opacity-90">{action.description}</p>
                       </div>
-                      <action.icon size={24} className="opacity-80" />
+                      <action.icon className="opacity-80 flex-shrink-0 ml-2 w-5 h-5 md:w-6 md:h-6" />
                     </div>
-                    <div className="mt-3 flex items-center justify-end">
-                      <ArrowRight size={14} className="opacity-80" />
+                    <div className="mt-2 md:mt-3 flex items-center justify-end">
+                      <ArrowRight className="opacity-80 w-3 h-3 md:w-[14px] md:h-[14px]" />
                     </div>
                   </button>
                 ))}

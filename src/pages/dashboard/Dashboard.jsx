@@ -24,7 +24,7 @@ const Dashboard = () => {
         case "coordenador":
           return "/coordenador/dashboard";
         case "portaria":
-          return "/portaria/dashboard";
+          return "/portaria/reservas";
         case "aluno":
           return "/aluno/reservas";
         case "servidor":

@@ -308,16 +308,16 @@ const getSelectedRoomName = () => {
 
 return (
     <DashboardLayout userType={userTypeDisplay} menuItems={menuItems}>
-    <div className="p-6">
+    <div className="p-4 md:p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-3">
-            <CheckSquare className="text-green-600" size={28} />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0 mb-4">
+        <div className="flex items-center gap-2 md:gap-3">
+            <CheckSquare className="text-green-600 w-6 h-6 md:w-7 md:h-7" />
             <div>
-            <h1 className="text-xl font-bold text-gray-800">
+            <h1 className="text-lg md:text-xl font-bold text-gray-800">
                 Aprovar Reservas
             </h1>
-            <p className="text-sm text-gray-700">
+            <p className="text-xs md:text-sm text-gray-700">
                 Revisar e aprovar reservas pendentes
             </p>
             </div>
@@ -325,25 +325,25 @@ return (
         <button
             onClick={loadAllData}
             disabled={loading}
-            className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50"
+            className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50 text-sm"
         >
-            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-            Atualizar
+            <RefreshCw className={`w-4 h-4 md:w-[18px] md:h-[18px] ${loading ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Atualizar</span>
         </button>
         </div>
 
         {/* Mensagens */}
         {/* Toast de Erro */}
         {error && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top-2 duration-300">
-            <div className="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
-                <AlertCircle className="text-white" size={20} />
-                <span className="text-sm font-medium">{error}</span>
+        <div className="fixed top-20 md:top-4 left-4 right-4 md:left-auto md:right-4 z-50 animate-in slide-in-from-top-2 duration-300">
+            <div className="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 w-full md:min-w-[300px]">
+                <AlertCircle className="text-white flex-shrink-0 w-5 h-5" />
+                <span className="text-xs md:text-sm font-medium flex-1">{error}</span>
                 <button
                     onClick={() => setError("")}
-                    className="ml-auto text-white/80 hover:text-white transition-colors"
+                    className="ml-auto text-white/80 hover:text-white transition-colors flex-shrink-0"
                 >
-                    <X size={16} />
+                    <X className="w-4 h-4" />
                 </button>
             </div>
         </div>
@@ -351,76 +351,76 @@ return (
 
         {/* Toast de Sucesso */}
         {successMessage && (
-        <div className={`fixed right-4 z-50 animate-in slide-in-from-top-2 duration-300 ${
-            error ? 'top-20' : 'top-4'
+        <div className={`fixed left-4 right-4 md:left-auto md:right-4 z-50 animate-in slide-in-from-top-2 duration-300 ${
+            error ? 'top-32 md:top-20' : 'top-20 md:top-4'
         }`}>
-            <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
-                <CheckCircle className="text-white" size={20} />
-                <span className="text-sm font-medium">{successMessage}</span>
+            <div className="bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 w-full md:min-w-[300px]">
+                <CheckCircle className="text-white flex-shrink-0 w-5 h-5" />
+                <span className="text-xs md:text-sm font-medium flex-1">{successMessage}</span>
                 <button
                     onClick={() => setSuccessMessage("")}
-                    className="ml-auto text-white/80 hover:text-white transition-colors"
+                    className="ml-auto text-white/80 hover:text-white transition-colors flex-shrink-0"
                 >
-                    <X size={16} />
+                    <X className="w-4 h-4" />
                 </button>
             </div>
         </div>
         )}
 
         {/* Layout Principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Coluna Esquerda - Reservas */}
         <div className="lg:col-span-2">
             {/* Estatísticas */}
-            <div className="mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="bg-white p-3 rounded-lg shadow border">
+            <div className="mb-4 grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+            <div className="bg-white p-2 md:p-3 rounded-lg shadow border">
                 <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-xs text-gray-700">Pendentes</p>
-                    <p className="text-xl font-bold text-orange-600">{reservations.length}</p>
+                <div className="flex-1 min-w-0">
+                    <p className="text-[10px] md:text-xs text-gray-700">Pendentes</p>
+                    <p className="text-lg md:text-xl font-bold text-orange-600">{reservations.length}</p>
                 </div>
-                <Clock className="text-orange-400" size={20} />
+                <Clock className="text-orange-400 flex-shrink-0 ml-1 w-4 h-4 md:w-5 md:h-5" />
                 </div>
             </div>
-            <div className="bg-white p-3 rounded-lg shadow border">
+            <div className="bg-white p-2 md:p-3 rounded-lg shadow border">
                 <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-xs text-gray-700">Aprovadas</p>
-                    <p className="text-xl font-bold text-green-600">{approvedReservations.length}</p>
+                <div className="flex-1 min-w-0">
+                    <p className="text-[10px] md:text-xs text-gray-700">Aprovadas</p>
+                    <p className="text-lg md:text-xl font-bold text-green-600">{approvedReservations.length}</p>
                 </div>
-                <CheckCircle className="text-green-400" size={20} />
+                <CheckCircle className="text-green-400 flex-shrink-0 ml-1 w-4 h-4 md:w-5 md:h-5" />
                 </div>
             </div>
-            <div className="bg-white p-3 rounded-lg shadow border">
+            <div className="bg-white p-2 md:p-3 rounded-lg shadow border">
                 <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-xs text-gray-700">Reprovadas</p>
-                    <p className="text-xl font-bold text-red-600">{rejectedReservations.length}</p>
+                <div className="flex-1 min-w-0">
+                    <p className="text-[10px] md:text-xs text-gray-700">Reprovadas</p>
+                    <p className="text-lg md:text-xl font-bold text-red-600">{rejectedReservations.length}</p>
                 </div>
-                <X className="text-red-400" size={20} />
+                <X className="text-red-400 flex-shrink-0 ml-1 w-4 h-4 md:w-5 md:h-5" />
                 </div>
             </div>
-            <div className="bg-white p-3 rounded-lg shadow border">
+            <div className="bg-white p-2 md:p-3 rounded-lg shadow border">
                 <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-xs text-gray-700">Total</p>
-                    <p className="text-xl font-bold text-blue-600">{reservations.length + approvedReservations.length + rejectedReservations.length}</p>
+                <div className="flex-1 min-w-0">
+                    <p className="text-[10px] md:text-xs text-gray-700">Total</p>
+                    <p className="text-lg md:text-xl font-bold text-blue-600">{reservations.length + approvedReservations.length + rejectedReservations.length}</p>
                 </div>
-                <Filter className="text-blue-400" size={20} />
+                <Filter className="text-blue-400 flex-shrink-0 ml-1 w-4 h-4 md:w-5 md:h-5" />
                 </div>
             </div>
             </div>
 
             {/* Controles */}
             <div className="mb-4">
-            <div className="flex justify-between items-center mb-3">
-                <h2 className="text-lg font-semibold text-gray-800">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-3">
+                <h2 className="text-base md:text-lg font-semibold text-gray-800">
                 {viewType === 'approved' ? 'Reservas Aprovadas' : 
                  viewType === 'rejected' ? 'Reservas Reprovadas' : 'Reservas Pendentes'}
                 </h2>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto">
                 {/* Botão de Minimizar */}
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-1 md:gap-2 cursor-pointer">
                 <div className="relative">
                     <input
                         type="checkbox"
@@ -428,22 +428,22 @@ return (
                         onChange={(e) => setIsMinimized(e.target.checked)}
                         className="sr-only peer"
                     />
-                    <div className="w-5 h-5 bg-white border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-700 peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-focus:border-blue-500 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:border-gray-400">
+                    <div className="w-4 h-4 md:w-5 md:h-5 bg-white border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-700 peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-focus:border-blue-500 transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-gray-50 hover:border-gray-400">
                         {isMinimized && (
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-2.5 h-2.5 md:w-3 md:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                             </svg>
                         )}
                     </div>
                 </div>
-                <span className="text-sm text-gray-700">Minimizar</span>
+                <span className="text-xs md:text-sm text-gray-700">Minimizar</span>
                 </label>
 
                 {/* Botões de Tipo de Reserva */}
-                <div className="flex rounded-lg p-1">
+                <div className="flex rounded-lg p-0.5 md:p-1">
                 <button
                     onClick={() => setViewType('pending')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded-md transition-colors ${
                     viewType === 'pending'
                         ? 'bg-gray-500/90 text-black shadow-sm font-medium' 
                         : 'text-gray-700 hover:text-gray-900'
@@ -453,7 +453,7 @@ return (
                 </button>
                 <button
                     onClick={() => setViewType('approved')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded-md transition-colors ${
                     viewType === 'approved'
                         ? 'bg-gray-500/90 text-black shadow-sm font-medium' 
                         : 'text-gray-700 hover:text-gray-900'
@@ -463,7 +463,7 @@ return (
                 </button>
                 <button
                     onClick={() => setViewType('rejected')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded-md transition-colors ${
                     viewType === 'rejected'
                         ? 'bg-gray-500/90 text-black font-medium' 
                         : 'text-gray-700 hover:text-gray-900'
@@ -478,7 +478,7 @@ return (
                 <select
                     value={filterType}
                     onChange={(e) => setFilterType(e.target.value)}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-1 pr-8 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="appearance-none bg-white border border-gray-300 rounded-lg px-2 md:px-3 py-1 pr-6 md:pr-8 text-xs md:text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                     <option value="all">Todas</option>
                     <option value="today">Hoje</option>
@@ -486,7 +486,7 @@ return (
                     <option value="past">Passadas</option>
                     <option value="oldest">Mais Antigas</option>
                 </select>
-                <Filter className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+                <Filter className="absolute right-1.5 md:right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none w-3 h-3 md:w-3.5 md:h-3.5" />
                 </div>
             </div>
             </div>
@@ -498,25 +498,25 @@ return (
             {loading ? (
             <div className="text-center py-6">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="mt-3 text-sm text-gray-600">Carregando...</p>
+                <p className="mt-3 text-xs md:text-sm text-gray-600">Carregando...</p>
             </div>
             ) : getFilteredReservations(
                 viewType === 'approved' ? approvedReservations : 
                 viewType === 'rejected' ? rejectedReservations : reservations
             ).length === 0 ? (
-            <div className="text-center py-8 bg-white rounded-lg shadow border">
-                <CheckCircle className="mx-auto h-8 w-8 text-green-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
+            <div className="text-center py-6 md:py-8 bg-white rounded-lg shadow border">
+                <CheckCircle className="mx-auto h-6 w-6 md:h-8 md:w-8 text-green-400" />
+                <h3 className="mt-2 text-xs md:text-sm font-medium text-gray-900">
                 {viewType === 'approved' ? 'Nenhuma reserva aprovada' : 
                  viewType === 'rejected' ? 'Nenhuma reserva reprovada' : 'Nenhuma reserva pendente'}
                 </h3>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-[10px] md:text-xs text-gray-500">
                 {viewType === 'approved' ? 'Ainda não há reservas aprovadas' : 
                  viewType === 'rejected' ? 'Ainda não há reservas reprovadas' : 'Todas as reservas foram processadas!'}
                 </p>
             </div>
             ) : (
-            <div className="space-y-2 max-h-screen overflow-y-auto pr-2">
+            <div className="space-y-2 max-h-screen overflow-y-auto pr-1 md:pr-2">
                 {getFilteredReservations(
                     viewType === 'approved' ? approvedReservations : 
                     viewType === 'rejected' ? rejectedReservations : reservations
@@ -525,40 +525,40 @@ return (
                     // Visualização Minimizada
                     <div 
                         key={reservation.id} 
-                        className="bg-white rounded-lg shadow border p-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer"
+                        className="bg-white rounded-lg shadow border p-2 md:p-3 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0 hover:bg-gray-50 cursor-pointer"
                         onClick={() => selectRoomFromReservation(reservation)}
                     >
-                    <div className="flex items-center gap-4 flex-1">
-                        <div className="flex items-center gap-2">
-                        <DoorClosed size={14} className="text-gray-500" />
-                        <span className="text-sm font-medium text-gray-900">{reservation.room_name}</span>
+                    <div className="flex flex-wrap items-center gap-2 md:gap-4 flex-1 w-full md:w-auto">
+                        <div className="flex items-center gap-1 md:gap-2">
+                        <DoorClosed className="w-3 h-3 md:w-3.5 md:h-3.5 text-gray-500" />
+                        <span className="text-xs md:text-sm font-medium text-gray-900 truncate">{reservation.room_name}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-gray-500" />
-                        <span className="text-sm text-gray-700">{formatDateTime(reservation.start_time)}</span>
+                        <div className="flex items-center gap-1 md:gap-2">
+                        <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5 text-gray-500" />
+                        <span className="text-xs md:text-sm text-gray-700">{formatDateTime(reservation.start_time)}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                        <User size={14} className="text-gray-500" />
-                        <span className="text-sm text-gray-700">{reservation.user_name}</span>
+                        <div className="flex items-center gap-1 md:gap-2">
+                        <User className="w-3 h-3 md:w-3.5 md:h-3.5 text-gray-500" />
+                        <span className="text-xs md:text-sm text-gray-700 truncate">{reservation.user_name}</span>
                         </div>
-                        <span className="text-sm font-medium text-gray-900">{reservation.title}</span>
+                        <span className="text-xs md:text-sm font-medium text-gray-900 truncate w-full md:w-auto">{reservation.title}</span>
                         {reservation.status === 'approved' && (
-                        <span className="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+                        <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-green-700 bg-green-100 rounded-full">
                             Aprovada
                         </span>
                         )}
                         {reservation.status === 'professor_approved' && (
-                        <span className="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
+                        <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
                             Aprovada pelo Professor
                         </span>
                         )}
                         {reservation.status === 'pending' && (
-                        <span className="px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">
+                        <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">
                             Pendente
                         </span>
                         )}
                         {reservation.status === 'rejected' && (
-                        <span className="px-2 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+                        <span className="px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-red-700 bg-red-100 rounded-full">
                             Reprovada
                         </span>
                         )}
@@ -568,7 +568,7 @@ return (
                             e.stopPropagation();
                             openDetailsModal(reservation);
                         }}
-                        className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                        className="px-2 md:px-3 py-1 text-[10px] md:text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors w-full md:w-auto"
                     >
                         Ver detalhes
                     </button>
@@ -577,21 +577,21 @@ return (
                     // Visualização Normal
                 <div 
                     key={reservation.id} 
-                    className="bg-white rounded-lg shadow border p-4 cursor-pointer hover:shadow-md transition-shadow"
+                    className="bg-white rounded-lg shadow border p-3 md:p-4 cursor-pointer hover:shadow-md transition-shadow"
                     onClick={() => selectRoomFromReservation(reservation)}
                 >
                     {/* Header Compacto */}
-                    <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-sm font-semibold text-gray-800 truncate">
+                    <div className="flex justify-between items-start mb-2 md:mb-3">
+                    <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-1 md:gap-2 mb-1">
+                        <h3 className="text-xs md:text-sm font-semibold text-gray-800 truncate">
                             {reservation.title}
                         </h3>
-                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPriorityColor(reservation.priority)}`}>
+                        <span className={`px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs font-medium rounded-full ${getPriorityColor(reservation.priority)}`}>
                             {getPriorityText(reservation.priority)}
                         </span>
                         </div>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-[10px] md:text-xs text-gray-600">
                         {formatDateTime(reservation.created_at)}
                         </p>
                     </div>
@@ -600,51 +600,51 @@ return (
                             e.stopPropagation();
                             openDetailsModal(reservation);
                         }}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 flex-shrink-0 ml-2"
                         title="Ver detalhes"
                     >
-                        <Info size={16} />
+                        <Info className="w-4 h-4 md:w-4 md:h-4" />
                     </button>
                     </div>
 
 
                     {/* Informações Compactas */}
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div className="flex items-center gap-2">
-                        <User className="text-gray-500" size={14} />
-                        <div>
-                        <p className="text-xs font-medium text-gray-800">{reservation.user_name}</p>
-                        <p className="text-xs text-gray-700">{reservation.user_role}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 mb-2 md:mb-3">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                        <User className="text-gray-500 w-3.5 h-3.5 md:w-3.5 md:h-3.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                        <p className="text-[10px] md:text-xs font-medium text-gray-800 truncate">{reservation.user_name}</p>
+                        <p className="text-[10px] md:text-xs text-gray-700 truncate">{reservation.user_role}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <DoorClosed className="text-gray-700" size={14} />
-                        <div>
-                        <p className="text-xs font-medium text-gray-700">{reservation.room_name}</p>
-                        <p className="text-xs text-gray-700">{reservation.room_location}</p>
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                        <DoorClosed className="text-gray-700 w-3.5 h-3.5 md:w-3.5 md:h-3.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                        <p className="text-[10px] md:text-xs font-medium text-gray-700 truncate">{reservation.room_name}</p>
+                        <p className="text-[10px] md:text-xs text-gray-700 truncate">{reservation.room_location}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <Calendar className="text-gray-700" size={14} />
-                        <div>
-                        <p className="text-xs font-medium text-gray-700">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                        <Calendar className="text-gray-700 w-3.5 h-3.5 md:w-3.5 md:h-3.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                        <p className="text-[10px] md:text-xs font-medium text-gray-700">
                             {new Date(reservation.start_time).toLocaleDateString('pt-BR')}
                         </p>
-                        <p className="text-xs text-gray-700">
+                        <p className="text-[10px] md:text-xs text-gray-700">
                             {new Date(reservation.start_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
                         </p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <Clock className="text-gray-700" size={14} />
-                        <div>
-                        <p className="text-xs font-medium text-gray-700">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                        <Clock className="text-gray-700 w-3.5 h-3.5 md:w-3.5 md:h-3.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                        <p className="text-[10px] md:text-xs font-medium text-gray-700">
                             {new Date(reservation.end_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
                         </p>
-                        <p className="text-xs text-gray-700">
+                        <p className="text-[10px] md:text-xs text-gray-700">
                             {Math.round((new Date(reservation.end_time) - new Date(reservation.start_time)) / (1000 * 60))}min
                         </p>
                         </div>
@@ -653,9 +653,9 @@ return (
 
                     {/* Recorrência Compacta */}
                     {reservation.is_recurring && (
-                    <div className="mb-3 p-2 bg-blue-50 rounded flex items-center gap-2">
-                        <AlertTriangle className="text-blue-600" size={14} />
-                        <p className="text-xs text-blue-800">
+                    <div className="mb-2 md:mb-3 p-1.5 md:p-2 bg-blue-50 rounded flex items-center gap-1.5 md:gap-2">
+                        <AlertTriangle className="text-blue-600 w-3 h-3 md:w-3.5 md:h-3.5 flex-shrink-0" />
+                        <p className="text-[10px] md:text-xs text-blue-800">
                         Recorrente ({reservation.recurrence_type})
                         </p>
                     </div>
@@ -663,19 +663,19 @@ return (
 
                     {/* Botões de Ação Compactos */}
                     {viewType === 'pending' && (
-                    <div className="flex justify-end gap-2 pt-3 border-t">
+                    <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2 md:pt-3 border-t">
                         <button
                         onClick={(e) => {
                             e.stopPropagation();
                             openRejectModal(reservation);
                         }}
                         disabled={processingIds.has(reservation.id)}
-                        className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 disabled:opacity-50 flex items-center gap-1"
+                        className="px-2 md:px-3 py-1.5 text-[10px] md:text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded hover:bg-red-100 disabled:opacity-50 flex items-center justify-center gap-1 w-full sm:w-auto"
                         >
                         {processingIds.has(reservation.id) ? (
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                            <div className="animate-spin rounded-full h-2.5 w-2.5 md:h-3 md:w-3 border-b-2 border-red-600"></div>
                         ) : (
-                            <X size={14} />
+                            <X className="w-3 h-3 md:w-3.5 md:h-3.5" />
                         )}
                         Rejeitar
                         </button>
@@ -686,12 +686,12 @@ return (
                             handleApprove(reservation.id);
                         }}
                         disabled={processingIds.has(reservation.id)}
-                        className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 border border-transparent rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
+                        className="px-2 md:px-3 py-1.5 text-[10px] md:text-xs font-medium text-white bg-green-600 border border-transparent rounded hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-1 w-full sm:w-auto"
                         >
                         {processingIds.has(reservation.id) ? (
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                            <div className="animate-spin rounded-full h-2.5 w-2.5 md:h-3 md:w-3 border-b-2 border-white"></div>
                         ) : (
-                            <Check size={14} />
+                            <Check className="w-3 h-3 md:w-3.5 md:h-3.5" />
                         )}
                         {reservation.status === 'professor_approved' ? 'Aprovar Final' : 'Aprovar'}
                         </button>
@@ -700,13 +700,13 @@ return (
 
                     {/* Status para reservas aprovadas */}
                     {viewType === 'approved' && (
-                    <div className="pt-3 border-t">
-                        <div className="flex items-center justify-between">
-                        <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                    <div className="pt-2 md:pt-3 border-t">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-0">
+                        <span className="text-[10px] md:text-xs text-green-600 bg-green-50 px-1.5 md:px-2 py-0.5 md:py-1 rounded">
                             ✓ Aprovada
                         </span>
                         {reservation.approved_by_name && (
-                            <span className="text-xs text-gray-700">
+                            <span className="text-[10px] md:text-xs text-gray-700 truncate">
                             por {reservation.approved_by_name}
                             </span>
                         )}
@@ -716,13 +716,13 @@ return (
 
                     {/* Status para reservas reprovadas */}
                     {viewType === 'rejected' && (
-                    <div className="pt-3 border-t">
-                        <div className="flex items-center justify-between">
-                        <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                    <div className="pt-2 md:pt-3 border-t">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-0">
+                        <span className="text-[10px] md:text-xs text-red-600 bg-red-50 px-1.5 md:px-2 py-0.5 md:py-1 rounded">
                             ✗ Reprovada
                         </span>
                         {reservation.rejection_reason && (
-                            <span className="text-xs text-gray-700">
+                            <span className="text-[10px] md:text-xs text-gray-700 truncate">
                             {reservation.rejection_reason}
                             </span>
                         )}
@@ -738,16 +738,16 @@ return (
 
                   {/* Coluna Direita - Calendário Semanal */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow border p-4">
+            <div className="bg-white rounded-lg shadow border p-3 md:p-4">
             {/* Header do Calendário */}
-            <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">
+            <div className="mb-3 md:mb-4">
+                <h3 className="text-base md:text-lg font-semibold text-gray-700 mb-2">
                 Agenda Semanal
                 </h3>
                 <select
                 value={selectedRoom}
                 onChange={(e) => setSelectedRoom(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                 <option value="">Selecione uma sala</option>
                 {rooms.map(room => (
@@ -761,25 +761,25 @@ return (
             {/* Calendário */}
             {selectedRoom ? (
                 <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                <h4 className="text-xs md:text-sm font-medium text-gray-700 mb-2 md:mb-3">
                     {getSelectedRoomName()}
                 </h4>
                 
                 {/* Dias da Semana */}
-                <div className="space-y-2">
+                <div className="space-y-1.5 md:space-y-2">
                     {getWeekDays().map((day, index) => {
                     const dayReservations = getReservationsForDay(day);
                     const isToday = day.toDateString() === new Date().toDateString();
                     const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
                     
                     return (
-                        <div key={index} className={`p-2 rounded-lg border ${isToday ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+                        <div key={index} className={`p-1.5 md:p-2 rounded-lg border ${isToday ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
                         {/* Header do Dia */}
-                        <div className="flex justify-between items-center mb-2">
-                            <span className={`text-xs font-medium ${isToday ? 'text-blue-800' : 'text-gray-700'}`}>
+                        <div className="flex justify-between items-center mb-1.5 md:mb-2">
+                            <span className={`text-[10px] md:text-xs font-medium ${isToday ? 'text-blue-800' : 'text-gray-700'}`}>
                             {dayNames[day.getDay()]} {day.getDate().toString().padStart(2, '0')}/{(day.getMonth() + 1).toString().padStart(2, '0')}
                             </span>
-                                                         <span className="text-xs text-gray-600">
+                            <span className="text-[10px] md:text-xs text-gray-600">
                              {dayReservations.length} reserva{dayReservations.length !== 1 ? 's' : ''}
                              </span>
                         </div>
@@ -787,32 +787,32 @@ return (
                         {/* Reservas do Dia */}
                         <div className="space-y-1">
                             {dayReservations.length === 0 ? (
-                            <p className="text-xs text-gray-700 italic">Nenhuma reserva</p>
+                            <p className="text-[10px] md:text-xs text-gray-700 italic">Nenhuma reserva</p>
                             ) : (
                             dayReservations
                                 .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))
                                 .map((reservation) => (
                                 <div
                                     key={reservation.id}
-                                    className="p-2 bg-white rounded border border-gray-200 cursor-pointer hover:border-blue-300 transition-colors"
+                                    className="p-1.5 md:p-2 bg-white rounded border border-gray-200 cursor-pointer hover:border-blue-300 transition-colors"
                                     onClick={() => openDetailsModal(reservation)}
                                 >
                                     <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <p className="text-xs font-medium text-gray-800 truncate">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[10px] md:text-xs font-medium text-gray-800 truncate">
                                         {reservation.title}
                                         </p>
-                                        <p className="text-xs text-gray-700">
+                                        <p className="text-[10px] md:text-xs text-gray-700 truncate">
                                         {reservation.user_name}
                                         </p>
                                     </div>
-                                    <span className={`ml-2 px-1.5 py-0.5 text-xs rounded ${getPriorityColor(reservation.priority)}`}>
+                                    <span className={`ml-1 md:ml-2 px-1 md:px-1.5 py-0.5 text-[10px] md:text-xs rounded flex-shrink-0 ${getPriorityColor(reservation.priority)}`}>
                                         {getPriorityText(reservation.priority)[0]}
                                     </span>
                                     </div>
-                                    <div className="mt-1 flex items-center gap-2">
-                                    <Clock className="text-gray-700" size={10} />
-                                    <span className="text-xs text-gray-700">
+                                    <div className="mt-1 flex items-center gap-1 md:gap-2">
+                                    <Clock className="text-gray-700 w-2.5 h-2.5 md:w-2.5 md:h-2.5" />
+                                    <span className="text-[10px] md:text-xs text-gray-700">
                                         {new Date(reservation.start_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} - 
                                         {new Date(reservation.end_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
                                     </span>
@@ -827,9 +827,9 @@ return (
                 </div>
                 </div>
                             ) : (
-                <div className="text-center py-8">
-                <DoorClosed className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-sm text-gray-500">
+                <div className="text-center py-6 md:py-8">
+                <DoorClosed className="mx-auto h-6 w-6 md:h-8 md:w-8 text-gray-400 mb-2" />
+                <p className="text-xs md:text-sm text-gray-500">
                     Selecione uma sala para ver a agenda semanal
                 </p>
                 </div>
@@ -840,35 +840,35 @@ return (
 
         {/* Modal de Rejeição */}
         {showRejectModal && selectedReservation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-3 md:mb-4">
+                <h3 className="text-base md:text-lg font-medium text-gray-900">
                 {selectedReservation?.status === 'approved' ? 'Revogar Aprovação' : 'Rejeitar Reserva'}
                 </h3>
                 <button
                 onClick={() => setShowRejectModal(false)}
-                className="text-gray-700 hover:text-gray-700"
+                className="text-gray-700 hover:text-gray-700 flex-shrink-0"
                 >
-                <X size={24} />
+                <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
             </div>
 
-            <div className="mb-4">
-                <p className="text-sm text-gray-700 mb-2">
+            <div className="mb-3 md:mb-4">
+                <p className="text-xs md:text-sm text-gray-700 mb-2">
                 {selectedReservation?.status === 'approved' 
                     ? 'Você está revogando a aprovação da reserva:' 
                     : 'Você está rejeitando a reserva:'
                 }
                 </p>
-                <p className="font-medium">{selectedReservation.title}</p>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm md:text-base font-medium">{selectedReservation.title}</p>
+                <p className="text-xs md:text-sm text-gray-700">
                 {selectedReservation.room_name} - {formatDateTime(selectedReservation.start_time)}
                 </p>
             </div>
 
-            <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="mb-3 md:mb-4">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                 {selectedReservation?.status === 'approved' 
                     ? 'Motivo da Revogação *' 
                     : 'Motivo da Rejeição *'
@@ -882,21 +882,21 @@ return (
                     ? 'Explique o motivo da revogação...' 
                     : 'Explique o motivo da rejeição...'
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                 />
             </div>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3">
                 <button
                 onClick={() => setShowRejectModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 w-full sm:w-auto"
                 >
                 Cancelar
                 </button>
                 <button
                 onClick={handleReject}
                 disabled={!rejectionReason.trim() || processingIds.has(selectedReservation.id)}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 disabled:opacity-50"
+                className="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 disabled:opacity-50 w-full sm:w-auto"
                 >
                 {selectedReservation?.status === 'approved' ? 'Revogar' : 'Rejeitar'}
                 </button>
@@ -907,22 +907,22 @@ return (
 
         {/* Modal de Detalhes */}
         {showDetailsModal && detailsReservation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-3 md:mb-4">
+                <h3 className="text-base md:text-lg font-medium text-gray-900">
                 Detalhes da Reserva
                 </h3>
                 <button
                 onClick={() => setShowDetailsModal(false)}
-                className="text-gray-400 hover:text-gray-700"
+                className="text-gray-400 hover:text-gray-700 flex-shrink-0"
                 >
-                <X size={24} />
+                <X className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
             </div>
 
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3 md:space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Título</label>
                     <p className="text-sm text-gray-900">{detailsReservation.title}</p>
@@ -1122,10 +1122,10 @@ return (
                 </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 mt-4 md:mt-6 pt-3 md:pt-4 border-t">
                 <button
                 onClick={() => setShowDetailsModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 w-full sm:w-auto order-last sm:order-first"
                 >
                 Fechar
                 </button>
@@ -1138,7 +1138,7 @@ return (
                         setShowDetailsModal(false);
                         openRejectModal(detailsReservation);
                     }}
-                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100"
+                    className="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 w-full sm:w-auto"
                     >
                     Rejeitar
                     </button>
@@ -1147,15 +1147,15 @@ return (
                         setShowDetailsModal(false);
                         handleApprove(detailsReservation.id);
                     }}
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
+                    className="px-3 md:px-4 py-2 text-xs md:text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 w-full sm:w-auto"
                     >
                     {detailsReservation.status === 'professor_approved' ? 'Aprovar Final' : 'Aprovar'}
                     </button>
                 </>
                 ) : detailsReservation.status === 'approved' ? (
                 /* Para reservas aprovadas - admin pode rejeitar */
-                <div className="flex items-center gap-2">
-                    <span className="px-3 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-md">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                    <span className="px-3 py-2 text-xs md:text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-md text-center">
                         ✓ Já Aprovada
                     </span>
                     {user?.role === 'admin' && (
@@ -1164,7 +1164,7 @@ return (
                             setShowDetailsModal(false);
                             openRejectModal(detailsReservation);
                         }}
-                        className="px-3 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100"
+                        className="px-3 py-2 text-xs md:text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100"
                         title="Revogar aprovação"
                     >
                         Revogar
@@ -1173,8 +1173,8 @@ return (
                 </div>
                 ) : (
                 /* Para reservas rejeitadas */
-                <div className="flex items-center gap-2">
-                    <span className="px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-md">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                    <span className="px-3 py-2 text-xs md:text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-md text-center">
                         ✗ Rejeitada
                     </span>
                     <button
@@ -1182,7 +1182,7 @@ return (
                             setShowDetailsModal(false);
                             handleApprove(detailsReservation.id);
                         }}
-                        className="px-3 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
+                        className="px-3 py-2 text-xs md:text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
                         title="Aprovar reserva rejeitada"
                     >
                         Aprovar

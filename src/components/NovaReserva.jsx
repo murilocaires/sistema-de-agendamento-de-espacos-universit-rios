@@ -746,17 +746,6 @@ const NovaReserva = ({
               {/* Projeto - Só mostra se showProjectSelection for true */}
               {showProjectSelection && (
                 <div>
-                  <label 
-                    className="block mb-2"
-                    style={{
-                      fontFamily: "Lato, sans-serif",
-                      fontSize: "10px",
-                      fontWeight: "bold",
-                      color: "#535964",
-                    }}
-                  >
-                    PROJETO
-                  </label>
                   <CustomSelect
                     value={formData.project_id}
                     onChange={(val) => setFormData(prev => ({ ...prev, project_id: val }))}
