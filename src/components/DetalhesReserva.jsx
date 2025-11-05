@@ -181,11 +181,11 @@ const DetalhesReserva = ({
 
   const content = (
     <div
-      className="px-6 md:px-16 mt-12 pb-6"
+      className="px-4 md:px-16 mt-4 md:mt-12 pb-6"
       style={{ backgroundColor: "#FFFFFF" }}
     >
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <button
           onClick={() => navigate(backPath)}
           className="flex items-center mb-4"
@@ -198,10 +198,9 @@ const DetalhesReserva = ({
           {backLabel}
         </button>
         <h1
-          className="font-bold"
+          className="font-bold text-lg md:text-2xl"
           style={{
             fontFamily: "Lato, sans-serif",
-            fontSize: "24px",
             lineHeight: "140%",
             letterSpacing: "0%",
             color: "#2E3DA3",
@@ -212,10 +211,10 @@ const DetalhesReserva = ({
       </div>
 
       {/* Content Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Left Card - Reservation Details */}
         <div
-          className="bg-white p-6 rounded-lg shadow-sm"
+          className="bg-white p-4 md:p-6 rounded-lg shadow-sm"
           style={{
             border: "1px solid #E3E5E8",
             borderRadius: "10px",
@@ -306,6 +305,14 @@ const DetalhesReserva = ({
                 <div className="bg-blue-50 p-3 rounded">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
+                      <span className="text-xs font-medium text-gray-600">Período</span>
+                      <p className="text-sm text-blue-800 font-medium">
+                        {reservation.start_time && formatBrazilDate(reservation.start_time)}
+                        {reservation.recurrence_end_date && ` - ${formatBrazilDate(reservation.recurrence_end_date)}`}
+                        {!reservation.recurrence_end_date && reservation.end_time && ` - ${formatBrazilDate(reservation.end_time)}`}
+                      </p>
+                    </div>
+                    <div>
                       <span className="text-xs font-medium text-gray-600">Tipo</span>
                       <p className="text-sm text-blue-800 font-medium">
                         {getRecurrenceTypeText(reservation.recurrence_type)}
@@ -360,8 +367,12 @@ const DetalhesReserva = ({
             </div>
           ) : (
           <div className="mb-4">
-            <span className="text-sm font-bold text-gray-500">Tipo</span>
-              <p className="text-gray-900 mt-1">Não Recorrente</p>
+            <span className="text-sm font-bold text-gray-500">Período</span>
+            <p className="text-gray-900 mt-1">
+              {reservation.start_time && formatBrazilDate(reservation.start_time)}
+              {reservation.end_time && ` - ${formatBrazilDate(reservation.end_time)}`}
+              {!reservation.start_time && !reservation.end_time && "Não informado"}
+            </p>
           </div>
           )}
 
@@ -382,19 +393,8 @@ const DetalhesReserva = ({
                   <Calendar size={16} className="text-gray-400 mr-2" />
                   <span className="text-gray-900">
                     {reservation.created_at
-                      ? formatBrazilDate(reservation.created_at)
+                      ? formatBrazilDateTime(reservation.created_at)
                       : "Data não disponível"}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <Clock size={16} className="text-gray-400 mr-2" />
-                  <span className="text-gray-900">
-                    {reservation.created_at
-                      ? new Date(reservation.created_at).toLocaleTimeString("pt-BR", {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })
-                      : "Horário não disponível"}
                   </span>
                 </div>
               </div>

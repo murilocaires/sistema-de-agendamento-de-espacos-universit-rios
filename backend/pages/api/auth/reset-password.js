@@ -50,13 +50,6 @@ async function handler(req, res) {
 
       const user = userResult.rows[0];
 
-      // Verificar se é o primeiro login
-      if (!user.first_login) {
-        return res.status(400).json({ 
-          error: 'Você já redefiniu sua senha anteriormente' 
-        });
-      }
-
       // Verificar senha atual
       const bcrypt = await import('bcryptjs');
       const isCurrentPasswordValid = await bcrypt.compare(current_password, user.password_hash);
@@ -70,25 +63,48 @@ async function handler(req, res) {
       // Hash da nova senha
       const hashedNewPassword = await hashPassword(new_password);
 
-      // Atualizar senha e marcar como não primeiro login
+      // Preparar dados para atualização
+      const updateFields = ['password_hash = $1', 'updated_at = CURRENT_TIMESTAMP'];
+      const updateValues = [hashedNewPassword];
+      let paramCount = 1;
+
+      // Se for primeiro login, marcar como não primeiro login
+      const oldValues = {
+        first_login: user.first_login,
+        password_updated: false,
+        updated_at: user.updated_at
+      };
+
+      if (user.first_login) {
+        paramCount++;
+        updateFields.push(`first_login = $${paramCount}`);
+        updateValues.push(false);
+        oldValues.first_login = true;
+      }
+
+      paramCount++;
+      updateValues.push(req.user.id);
+
+      // Atualizar senha (e first_login se necessário)
       await query(
-        'UPDATE users SET password_hash = $1, first_login = false, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-        [hashedNewPassword, req.user.id]
+        `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramCount}`,
+        updateValues
       );
 
       // Registrar log de auditoria
-      await logUpdate(req, 'users', req.user.id, {
-        first_login: false,
+      const newValues = {
+        first_login: user.first_login ? false : user.first_login,
         password_updated: true,
         updated_at: new Date().toISOString()
-      }, {
-        first_login: true,
-        password_updated: false
-      });
+      };
+
+      await logUpdate(req, 'users', req.user.id, oldValues, newValues);
 
       return res.status(200).json({
         success: true,
-        message: 'Senha redefinida com sucesso! Agora você pode usar sua nova senha para fazer login.'
+        message: user.first_login 
+          ? 'Senha redefinida com sucesso! Agora você pode usar sua nova senha para fazer login.'
+          : 'Senha alterada com sucesso!'
       });
 
     } catch (error) {

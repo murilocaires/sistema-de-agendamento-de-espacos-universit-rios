@@ -69,11 +69,17 @@ async function handler(req, res) {
         queryParams.push('approved');
       }
 
-      const whereClause = whereConditions.length > 0 
+      // Buscar reservas com informações de usuário, sala, projeto e aprovador
+      // Por padrão, filtrar apenas reservas ativas (is_active = true ou NULL)
+      // A menos que seja especificado explicitamente no filtro
+      if (!req.query.include_inactive) {
+        whereConditions.push(`(r.is_active IS NULL OR r.is_active = true)`);
+      }
+
+      const finalWhereClause = whereConditions.length > 0 
         ? `WHERE ${whereConditions.join(' AND ')}`
         : '';
 
-      // Buscar reservas com informações de usuário, sala, projeto e aprovador
       const result = await query(`
         SELECT 
           r.*,
@@ -91,18 +97,20 @@ async function handler(req, res) {
         LEFT JOIN rooms rm ON r.room_id = rm.id
         LEFT JOIN projects p ON r.project_id = p.id
         LEFT JOIN users approver ON r.approved_by = approver.id
-        ${whereClause}
+        ${finalWhereClause}
         ORDER BY r.start_time DESC
       `, queryParams);
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         reservations: result.rows
       });
+      return;
 
     } catch (error) {
       console.error('Erro ao buscar reservas:', error);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({ error: 'Erro interno do servidor' });
+      return;
     }
 
   } else if (req.method === 'POST') {
@@ -290,12 +298,13 @@ async function handler(req, res) {
         }
       }
 
-      // Verificar conflitos com outras reservas aprovadas na mesma sala
+      // Verificar conflitos com outras reservas aprovadas na mesma sala (excluindo desativadas)
       const existingReservations = await query(`
         SELECT id, title, start_time, end_time, is_recurring, recurrence_end_date, description
         FROM reservations 
         WHERE room_id = $1 
         AND status IN ('approved', 'pending')
+        AND (is_active IS NULL OR is_active = true)
         AND (
           (is_recurring = false AND start_time < $3 AND end_time > $2) OR
           (is_recurring = true AND recurrence_end_date >= $2 AND start_time <= $3)
@@ -455,21 +464,24 @@ async function handler(req, res) {
         // Não falhar a criação da reserva por erro de email
       }
 
-      return res.status(201).json({
+      res.status(201).json({
         success: true,
         message: initialStatus === 'approved' 
           ? 'Reserva criada e aprovada automaticamente'
           : 'Reserva criada e enviada para aprovação',
         reservation: reservationData
       });
+      return;
 
     } catch (error) {
       console.error('Erro ao criar reserva:', error);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({ error: 'Erro interno do servidor' });
+      return;
     }
 
   } else {
-    return res.status(405).json({ error: 'Método não permitido' });
+    res.status(405).json({ error: 'Método não permitido' });
+    return;
   }
 }
 

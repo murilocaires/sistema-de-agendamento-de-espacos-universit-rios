@@ -92,10 +92,22 @@ export const initializeDatabase = async () => {
         approved_at TIMESTAMP,
         rejection_reason TEXT,
         priority INTEGER DEFAULT 1,
+        is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Adicionar coluna is_active se não existir (para bancos existentes)
+    try {
+      await query(`
+        ALTER TABLE reservations 
+        ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true
+      `);
+    } catch (error) {
+      // Coluna já existe, ignorar erro
+      console.log('Coluna is_active já existe ou erro ao adicionar:', error.message);
+    }
 
     // Criar tabela de logs de auditoria
     await query(`

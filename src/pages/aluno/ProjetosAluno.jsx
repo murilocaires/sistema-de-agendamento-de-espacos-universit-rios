@@ -58,14 +58,13 @@ const ProjetosAluno = () => {
 
   return (
     <StudentLayout>
-      <div className="px-12 mt-12 pb-6" style={{ backgroundColor: "#FFFFFF" }}>
+      <div className="px-4 md:px-12 mt-4 md:mt-12 pb-6" style={{ backgroundColor: "#FFFFFF" }}>
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <h1
-            className="font-bold"
+            className="font-bold text-lg md:text-2xl"
             style={{
               fontFamily: "Lato, sans-serif",
-              fontSize: "24px",
               lineHeight: "140%",
               letterSpacing: "0%",
               color: "#2E3DA3",
@@ -86,7 +85,7 @@ const ProjetosAluno = () => {
         )}
 
         {/* Lista de Projetos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredProjects.map((project) => {
             return (
               <div

@@ -58,7 +58,8 @@ async function handler(req, res) {
         description,
         start_time,
         end_time,
-        room_id
+        room_id,
+        is_active
       } = req.body;
 
       const user_id = req.user.id;
@@ -80,11 +81,40 @@ async function handler(req, res) {
       // Verificar permissões
       const canApprove = user_role === 'admin';
       const canEdit = user_role === 'admin' || reservation.user_id === user_id;
+      const canDeactivate = reservation.user_id === user_id; // Alunos podem desativar suas próprias reservas
 
+      // Se está tentando atualizar apenas is_active (desativar/ativar), permitir se for o dono
+      const onlyUpdatingIsActive = is_active !== undefined && 
+                                    !status && 
+                                    !rejection_reason && 
+                                    !title && 
+                                    description === undefined && 
+                                    !start_time && 
+                                    !end_time && 
+                                    !room_id;
+
+      if (onlyUpdatingIsActive) {
+        // Permitir que alunos desativem suas próprias reservas
+        if (!canDeactivate) {
+          return res.status(403).json({ 
+            error: 'Você não tem permissão para cancelar esta reserva' 
+          });
+        }
+        // Se passou na verificação acima, continuar com a atualização
+      } else {
+        // Se está tentando atualizar status, precisa ser admin
       if (status && !canApprove) {
         return res.status(403).json({ 
           error: 'Apenas administradores podem aprovar/rejeitar reservas' 
         });
+        }
+
+        // Se está tentando atualizar is_active junto com outros campos, verificar permissões
+        if (is_active !== undefined && !canDeactivate && !canEdit) {
+          return res.status(403).json({ 
+            error: 'Você não tem permissão para desativar esta reserva' 
+          });
+        }
       }
 
       if ((title || description || start_time || end_time || room_id) && !canEdit) {
@@ -150,6 +180,13 @@ async function handler(req, res) {
         updateValues.push(end_time);
       }
 
+      // Atualização de is_active (desativar/ativar reserva)
+      if (is_active !== undefined) {
+        paramCount++;
+        updateFields.push(`is_active = $${paramCount}`);
+        updateValues.push(is_active);
+      }
+
       if (room_id) {
         // Verificar se a sala existe e está ativa
         const roomCheck = await query(
@@ -181,6 +218,7 @@ async function handler(req, res) {
           FROM reservations 
           WHERE room_id = $1 
           AND status IN ('approved', 'pending')
+          AND (is_active IS NULL OR is_active = true)
           AND id != $2
           AND (
             (start_time <= $3 AND end_time > $3) OR
@@ -276,11 +314,37 @@ async function handler(req, res) {
         });
       }
 
-      // Verificar se a reserva já começou
-      if (new Date(reservation.start_time) <= new Date()) {
+      // Não permitir deletar se foi aprovada ou rejeitada pelo admin ou professor
+      if (reservation.status === 'approved' || reservation.status === 'rejected' || reservation.status === 'professor_approved') {
         return res.status(400).json({ 
-          error: 'Não é possível deletar reservas que já iniciaram' 
+          error: 'Não é possível deletar reservas que foram aprovadas ou rejeitadas pelo administrador ou professor' 
         });
+      }
+
+      // Verificar se é reserva recorrente
+      if (reservation.is_recurring || reservation.recurrence_type) {
+        // Para reservas recorrentes, verificar se ainda tem datas futuras
+        if (reservation.recurrence_end_date) {
+          const recurrenceEndDate = new Date(reservation.recurrence_end_date);
+          const now = new Date();
+          // Se a data final de recorrência ainda não passou, não pode deletar
+          if (recurrenceEndDate >= now) {
+            return res.status(400).json({ 
+              error: 'Não é possível deletar reservas recorrentes que ainda têm datas futuras' 
+            });
+          }
+        }
+      } else {
+        // Para reservas únicas, verificar se a reserva já começou
+        if (reservation.start_time) {
+          const startTime = new Date(reservation.start_time);
+          const now = new Date();
+          if (startTime <= now) {
+            return res.status(400).json({ 
+              error: 'Não é possível deletar reservas que já iniciaram' 
+        });
+          }
+        }
       }
 
       // Deletar reserva

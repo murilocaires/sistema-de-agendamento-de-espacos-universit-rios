@@ -1,5 +1,5 @@
 import React from "react";
-import NovaReserva from "../../components/NovaReserva";
+import NovaReserva from "../../components/reservas/NovaReserva";
 import ProfessorLayout from "../../layouts/ProfessorLayout";
 
 const NovaReservaProfessor = () => {

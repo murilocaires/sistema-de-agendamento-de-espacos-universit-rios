@@ -107,6 +107,7 @@ async function handler(req, res) {
           FROM reservations 
           WHERE room_id = $1 
           AND status = 'approved'
+          AND (is_active IS NULL OR is_active = true)
           AND id != $2
           AND (
             (start_time <= $3 AND end_time > $3) OR

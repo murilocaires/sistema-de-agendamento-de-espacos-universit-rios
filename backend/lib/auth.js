@@ -59,9 +59,11 @@ export const authMiddleware = (handler) => {
       const decoded = verifyToken(token);
       req.user = decoded;
       
-      return handler(req, res);
+      await handler(req, res);
+      return;
     } catch (error) {
-      return res.status(401).json({ error: 'Token inválido ou expirado' });
+      res.status(401).json({ error: 'Token inválido ou expirado' });
+      return;
     }
   };
 };
@@ -71,9 +73,11 @@ export const requireRole = (allowedRoles) => {
   return (handler) => {
     return authMiddleware(async (req, res) => {
       if (!allowedRoles.includes(req.user.role)) {
-        return res.status(403).json({ error: 'Permissão insuficiente' });
+        res.status(403).json({ error: 'Permissão insuficiente' });
+        return;
       }
-      return handler(req, res);
+      await handler(req, res);
+      return;
     });
   };
 };

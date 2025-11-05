@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
     // Buscar usuário no banco
     const result = await query(
-      'SELECT id, name, email, siape, matricula_sigaa, password_hash, role, first_login, status FROM users WHERE email = $1',
+      'SELECT id, name, email, siape, matricula_sigaa, password_hash, role, first_login, status, created_at FROM users WHERE email = $1',
       [email.toLowerCase()]
     );
 
@@ -66,7 +66,8 @@ export default async function handler(req, res) {
       siape: user.siape,
       matricula_sigaa: user.matricula_sigaa,
       role: user.role,
-      first_login: user.first_login
+      first_login: user.first_login,
+      created_at: user.created_at
     };
 
     // Registrar log de login bem-sucedido

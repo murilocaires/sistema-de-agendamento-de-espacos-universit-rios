@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { authenticateUser, verifyToken } from "../services/authService";
 
@@ -17,9 +17,14 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const hasCheckedAuthRef = useRef(false);
 
   // Verificar se o usuário está autenticado ao carregar a aplicação
   useEffect(() => {
+    // Prevenir verificação duplicada causada pelo React.StrictMode em desenvolvimento
+    if (hasCheckedAuthRef.current) return;
+    hasCheckedAuthRef.current = true;
+
     const checkAuth = async () => {
       const token = localStorage.getItem("authToken");
       const userData = localStorage.getItem("userData");

@@ -30,7 +30,7 @@ const StudentLayout = ({ children }) => {
       <Sidebar userType={userTypeDisplay} menuItems={menuItems} />
 
       {/* Main Content Area */}
-      <div className="flex-1 bg-white rounded-tl-[20px] overflow-y-auto main-content-scroll">
+      <div className="flex-1 bg-white md:rounded-tl-[20px] overflow-y-auto main-content-scroll w-full md:w-auto pt-14 md:pt-0">
         {children}
       </div>
 

@@ -55,7 +55,9 @@ export const formatBrazilTime = (date) => {
  */
 export const formatBrazilDateTime = (date) => {
   const dateObj = new Date(date);
-  return dateObj.toLocaleString('pt-BR', { 
+  // Subtrair 3 horas para corrigir diferença de timezone
+  const adjustedDate = new Date(dateObj.getTime() - (3 * 60 * 60 * 1000));
+  return adjustedDate.toLocaleString('pt-BR', { 
     timeZone: BRAZIL_TIMEZONE,
     day: '2-digit',
     month: '2-digit',
@@ -132,4 +134,22 @@ export const getEndOfDayBrazil = (date) => {
   const dateObj = new Date(date);
   const brazilDate = new Date(dateObj.toLocaleString('en-US', { timeZone: BRAZIL_TIMEZONE }));
   return new Date(brazilDate.getFullYear(), brazilDate.getMonth(), brazilDate.getDate(), 23, 59, 59);
+};
+
+/**
+ * Cria uma string ISO para data/hora no timezone de Brasília
+ * Interpreta a data/hora como sendo em Brasília (UTC-3) e retorna em formato ISO com offset
+ * @param {string} dateString - String da data (YYYY-MM-DD)
+ * @param {string} timeString - String do horário (HH:MM)
+ * @returns {string} String ISO formatada (YYYY-MM-DDTHH:MM:SS-03:00) com offset de Brasília
+ */
+export const createBrazilDateTimeISO = (dateString, timeString) => {
+  // Criar a data interpretando como horário de Brasília
+  const [hours, minutes] = timeString.split(':').map(Number);
+  const [year, month, day] = dateString.split('-').map(Number);
+  
+  // Retornar no formato ISO com offset de Brasília (UTC-3)
+  // Formato: YYYY-MM-DDTHH:MM:SS-03:00
+  // Isso garante que o PostgreSQL e outros sistemas interpretem corretamente como horário de Brasília
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00-03:00`;
 };

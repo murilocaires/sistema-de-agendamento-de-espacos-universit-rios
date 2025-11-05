@@ -9,7 +9,7 @@ const HistoricoAluno = () => {
         title="Histórico"
         userType="student"
         showCancelButton={false}
-        showDeleteButton={false}
+        showDeleteButton={true}
       />
     </StudentLayout>
   );

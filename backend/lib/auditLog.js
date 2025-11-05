@@ -61,7 +61,8 @@ export const withAuditLog = (tableName) => {
       req.auditInfo = auditInfo;
       req.auditTable = tableName;
 
-      return handler(req, res);
+      await handler(req, res);
+      return;
     };
   };
 };

@@ -9,7 +9,7 @@ async function handler(req, res) {
   try {
     // Buscar dados atualizados do usuário no banco
     const result = await query(
-      'SELECT id, name, email, siape, matricula_sigaa, role, first_login, status FROM users WHERE id = $1',
+      'SELECT id, name, email, siape, matricula_sigaa, role, first_login, status, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
 
@@ -24,10 +24,12 @@ async function handler(req, res) {
       user: user,
       token: req.headers.authorization?.replace('Bearer ', '')
     });
+    return;
 
   } catch (error) {
     console.error('Erro na verificação do token:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
+    return;
   }
 }
 

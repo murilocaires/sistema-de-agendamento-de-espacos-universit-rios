@@ -1,5 +1,5 @@
 import React from "react";
-import MinhasReservas from "../../components/MinhasReservas";
+import MinhasReservas from "../../components/aluno/MinhasReservas";
 import StudentLayout from "../../layouts/StudentLayout";
 
 const ReservasAluno = () => {

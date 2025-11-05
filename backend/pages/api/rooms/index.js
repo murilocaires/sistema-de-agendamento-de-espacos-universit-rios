@@ -33,14 +33,16 @@ async function handler(req, res) {
 
       const result = await query(queryText);
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         rooms: result.rows
       });
+      return;
 
     } catch (error) {
       console.error('Erro ao buscar salas:', error);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
+      res.status(500).json({ error: 'Erro interno do servidor' });
+      return;
     }
 
   } else if (req.method === 'POST') {

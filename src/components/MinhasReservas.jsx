@@ -24,6 +24,7 @@ import {
   Search,
   ChevronDown,
   Ban,
+  Trash2Icon,
 } from "lucide-react";
 
 const MinhasReservas = ({
@@ -164,6 +165,134 @@ const MinhasReservas = ({
     }
   };
 
+  // Calcular ocorrências futuras de uma reserva recorrente
+  const calculateFutureRecurrenceDates = (reservation) => {
+    // Verificar se é recorrente e tem data de início
+    if (!reservation?.recurrence_type) {
+      return [];
+    }
+
+    // Obter data de início (pode ser start_time ou date)
+    let startDateTime;
+    if (reservation.start_time) {
+      startDateTime = new Date(reservation.start_time);
+    } else if (reservation.date) {
+      // Se usar date, construir datetime com start_time ou início do dia
+      const dateStr = reservation.date.includes('T') 
+        ? reservation.date 
+        : `${reservation.date}T00:00:00`;
+      startDateTime = new Date(dateStr);
+    } else {
+      return [];
+    }
+
+    const now = new Date();
+    const startDate = new Date(startDateTime);
+    const endDate = reservation.recurrence_end_date ? new Date(reservation.recurrence_end_date) : null;
+    
+    // Normalizar endDate para fim do dia para comparação correta
+    if (endDate) {
+      endDate.setHours(23, 59, 59, 999);
+    }
+    
+    // Obter horário de término da reserva original
+    let originalEndTime;
+    if (reservation.end_time) {
+      originalEndTime = new Date(reservation.end_time);
+    } else if (reservation.date && reservation.end_time) {
+      // Construir end_time a partir de date + end_time
+      const dateStr = reservation.date.includes('T') 
+        ? reservation.date.split('T')[0]
+        : reservation.date;
+      originalEndTime = new Date(`${dateStr}T${reservation.end_time}`);
+    } else {
+      // Se não tem end_time, usar mesma data/hora (duração zero)
+      originalEndTime = new Date(startDateTime);
+    }
+    
+    // Calcular duração em milissegundos
+    const duration = originalEndTime.getTime() - startDateTime.getTime();
+    
+    const interval = reservation.recurrence_interval || 1;
+    const dates = [];
+
+    // Limitar a 100 ocorrências para não sobrecarregar
+    const maxOccurrences = 100;
+    let currentDate = new Date(startDate);
+    let count = 0;
+
+    while (count < maxOccurrences && (!endDate || currentDate <= endDate)) {
+      // Calcular o horário de término desta ocorrência
+      const occurrenceEndTime = new Date(currentDate.getTime() + duration);
+      
+      // Se a ocorrência ainda não passou (incluindo hoje - verificar se o horário de término >= agora)
+      if (occurrenceEndTime >= now) {
+        dates.push(new Date(currentDate));
+      }
+      
+      count++;
+
+      // Calcular próxima data baseado no tipo
+      switch (reservation.recurrence_type) {
+        case 'daily':
+          currentDate.setDate(currentDate.getDate() + interval);
+          break;
+        case 'weekly':
+          currentDate.setDate(currentDate.getDate() + (7 * interval));
+          break;
+        case 'monthly':
+          currentDate.setMonth(currentDate.getMonth() + interval);
+          break;
+        default:
+          return dates; // Se tipo não reconhecido, retorna o que tem
+      }
+
+      // Se já passamos a data final, não precisa continuar
+      if (endDate && currentDate > endDate) {
+        break;
+      }
+    }
+
+    return dates;
+  };
+
+  // Verificar se uma reserva tem ocorrências futuras
+  const hasFutureOccurrences = (reservation) => {
+    const now = new Date();
+
+    // Se for reserva recorrente, verificar ocorrências futuras
+    if (reservation.is_recurring || reservation.recurrence_type) {
+      const futureDates = calculateFutureRecurrenceDates(reservation);
+      return futureDates.length > 0;
+    }
+
+    // Para reservas únicas, verificar se o horário final não passou
+    if (reservation.start_time && reservation.end_time) {
+      const endDateTime = new Date(reservation.end_time);
+      return endDateTime >= now;
+    }
+
+    // Se usar date e end_time (formato antigo)
+    if (reservation.date && reservation.end_time) {
+      let reservationEndDateTime;
+      
+      if (reservation.date.includes('T')) {
+        reservationEndDateTime = new Date(reservation.date);
+      } else {
+        reservationEndDateTime = new Date(`${reservation.date}T${reservation.end_time}`);
+      }
+      
+      if (isNaN(reservationEndDateTime.getTime())) {
+        return true; // Se data inválida, considerar como válida
+      }
+      
+      return reservationEndDateTime >= now;
+    }
+
+    // Se não há data ou horário, considerar como válida
+    return true;
+  };
+
   // Navegar para página de detalhes
   const openModal = (reservation) => {
     if (onReservationClick) {
@@ -237,7 +366,7 @@ const MinhasReservas = ({
     setReservationToCancel(null);
   };
 
-  // Filtrar reservas (aprovadas, pendentes e não expiradas)
+  // Filtrar reservas futuras (incluindo todas as ocorrências recorrentes)
   const filteredReservations = reservations.filter((reservation) => {
     const matchesSearch = reservation.title
       .toLowerCase()
@@ -245,58 +374,36 @@ const MinhasReservas = ({
     const matchesStatus =
       statusFilter === "all" || reservation.status === statusFilter;
 
-    // Verificar se é uma reserva válida (aprovada ou pendente)
-    const isValidStatus = reservation.status === "approved" || reservation.status === "pending";
-    console.log(`🔍 [Filtro] ID ${reservation.id} - Status: ${reservation.status}, isValidStatus: ${isValidStatus}`);
+    // Incluir todas as reservas futuras, exceto rejeitadas e canceladas
+    // Isso inclui: approved, pending, professor_approved, changed
+    const isValidStatus = 
+      reservation.status !== "rejected" && 
+      reservation.status !== "cancelled";
     
-    // Verificar se a reserva não expirou
-    const isNotExpired = (() => {
-      const now = new Date();
-      
-      // Se for reserva recorrente, verificar se a data final da recorrência não passou
-      if (reservation.recurrence_type && reservation.recurrence_type !== "none" && reservation.recurrence_end_date) {
-        const recurrenceEndDate = new Date(reservation.recurrence_end_date + "T23:59:59");
-        return recurrenceEndDate > now;
-      }
-      
-      // Para reservas únicas, verificar se o horário final não passou
-      if (reservation.date && reservation.end_time) {
-        // Tentar diferentes formatos de data
-        let reservationEndDateTime;
-        
-        // Se a data já está no formato ISO
-        if (reservation.date.includes('T')) {
-          reservationEndDateTime = new Date(reservation.date);
-        } else {
-          // Construir a data no formato ISO
-          reservationEndDateTime = new Date(`${reservation.date}T${reservation.end_time}`);
-        }
-        
-        // Se a data é inválida, considerar como não expirada para não perder a reserva
-        if (isNaN(reservationEndDateTime.getTime())) {
-          return true;
-        }
-        
-        return reservationEndDateTime > now;
-      }
-      
-      // Se não há data ou horário, considerar como não expirada
-      return true;
-    })();
+    // Verificar se a reserva tem ocorrências futuras (incluindo hoje)
+    const hasFuture = hasFutureOccurrences(reservation);
 
     // Filtrar apenas reservas do usuário logado
     const matchesUser = user && reservation.user_email === user.email;
 
-    console.log(`🔍 [Filtro] ID ${reservation.id} - Final: matchesSearch=${matchesSearch}, matchesStatus=${matchesStatus}, isValidStatus=${isValidStatus}, isNotExpired=${isNotExpired}, matchesUser=${matchesUser}`);
-
     return (
-      matchesSearch && matchesStatus && isValidStatus && isNotExpired && matchesUser
+      matchesSearch && matchesStatus && isValidStatus && hasFuture && matchesUser
     );
   }).sort((a, b) => {
-    // Ordenar do mais recente para o menos recente
-    const dateA = new Date(a.updated_at || a.created_at);
-    const dateB = new Date(b.updated_at || b.created_at);
-    return dateB - dateA;
+    // Ordenar por data de início (mais próxima primeiro)
+    const getStartDate = (reservation) => {
+      if (reservation.start_time) {
+        return new Date(reservation.start_time);
+      }
+      if (reservation.date) {
+        return new Date(reservation.date);
+      }
+      return new Date(reservation.created_at);
+    };
+    
+    const dateA = getStartDate(a);
+    const dateB = getStartDate(b);
+    return dateA - dateB; // Mais próxima primeiro
   });
 
   // Paginação
@@ -343,7 +450,7 @@ const MinhasReservas = ({
             }}
             title="Cancelar reserva"
           >
-            <Ban size={14} style={{ color: "#D03E3E" }} />
+            <Trash2 size={14} style={{ color: "#D03E3E" }} />
           </button>
         )}
       </div>
@@ -647,7 +754,7 @@ const MinhasReservas = ({
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-start pt-32">
           <div className="bg-white p-8 rounded-lg shadow-xl max-w-sm w-full relative">
             <div className="flex items-center justify-center mb-4">
-              <Ban size={48} style={{ color: "#D03E3E" }} />
+              <Trash2 size={48} style={{ color: "#D03E3E" }} />
             </div>
             <h2 className="text-xl font-bold mb-4 text-gray-800 text-center">
               Cancelar Reserva
