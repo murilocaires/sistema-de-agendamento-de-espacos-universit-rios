@@ -16,17 +16,25 @@ async function handler(req, res) {
     try {
       const { professor_id } = req.query;
       
+      // Normalizar role para comparação
+      const userRole = req.user?.role?.toLowerCase()?.trim();
+      
       let whereClause = '';
       let queryParams = [];
       
       // Professores e servidores só podem ver seus próprios projetos
-      const userRole = req.user.role?.toLowerCase()?.trim();
+      // Ignorar professor_id da query se for professor ou servidor (sempre usar req.user.id)
       if (userRole === 'professor' || userRole === 'servidor') {
         whereClause = 'WHERE p.professor_id = $1';
         queryParams = [req.user.id];
-      } else if (professor_id) {
+      } else if (userRole === 'admin' && professor_id) {
+        // Admins podem buscar por qualquer professor_id
         whereClause = 'WHERE p.professor_id = $1';
         queryParams = [professor_id];
+      } else if (userRole === 'admin') {
+        // Admins sem professor_id veem todos os projetos
+        whereClause = '';
+        queryParams = [];
       }
 
       // Buscar projetos com informações do professor
