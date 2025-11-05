@@ -114,35 +114,46 @@ export const emailTemplates = {
   }),
 
   // Notificação de status da reserva para aluno
-  reservationStatusUpdate: (data) => ({
-    subject: `Status da Reserva Atualizado - ${data.title}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: ${data.status === 'approved' ? '#059669' : '#dc2626'};">
-          Reserva ${data.status === 'approved' ? 'Aprovada' : 'Rejeitada'} - ${data.title}
-        </h2>
-        <p>Olá <strong>${data.student_name}</strong>,</p>
-        <p>Sua solicitação de reserva foi <strong>${data.status === 'approved' ? 'aprovada' : 'rejeitada'}</strong>:</p>
-        
-        <div style="background-color: ${data.status === 'approved' ? '#f0fdf4' : '#fef2f2'}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${data.status === 'approved' ? '#059669' : '#dc2626'};">
-          <h3 style="color: #374151; margin-top: 0;">Detalhes da Reserva</h3>
-          <p><strong>Evento:</strong> ${data.title}</p>
-          <p><strong>Sala:</strong> ${data.room_name}</p>
-          <p><strong>Data:</strong> ${new Date(data.start_time).toLocaleDateString('pt-BR')}</p>
-          <p><strong>Horário:</strong> ${new Date(data.start_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} - ${new Date(data.end_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</p>
-          <p><strong>Status:</strong> <span style="color: ${data.status === 'approved' ? '#059669' : '#dc2626'}; font-weight: bold;">${data.status === 'approved' ? 'APROVADA' : 'REJEITADA'}</span></p>
-          ${data.rejection_reason ? `<p><strong>Motivo da rejeição:</strong> ${data.rejection_reason}</p>` : ''}
+  reservationStatusUpdate: (data) => {
+    // Verificar se foi aprovada (approved ou professor_approved)
+    const isApproved = data.status === 'approved' || data.status === 'professor_approved';
+    const isProfessorApproved = data.status === 'professor_approved';
+    const statusText = isProfessorApproved ? 'Aprovada pelo Professor' : (isApproved ? 'Aprovada' : 'Rejeitada');
+    const statusLabel = isProfessorApproved ? 'APROVADA PELO PROFESSOR' : (isApproved ? 'APROVADA' : 'REJEITADA');
+    
+    return {
+      subject: isProfessorApproved ? `Reserva Aprovada pelo Professor - ${data.title}` : `Status da Reserva Atualizado - ${data.title}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: ${isApproved ? '#059669' : '#dc2626'};">
+            Reserva ${statusText} - ${data.title}
+          </h2>
+          <p>Olá <strong>${data.student_name}</strong>,</p>
+          <p>Sua solicitação de reserva foi <strong>${isProfessorApproved ? 'aprovada pelo professor' : (isApproved ? 'aprovada' : 'rejeitada')}</strong>:</p>
+          
+          <div style="background-color: ${isApproved ? '#f0fdf4' : '#fef2f2'}; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${isApproved ? '#059669' : '#dc2626'};">
+            <h3 style="color: #374151; margin-top: 0;">Detalhes da Reserva</h3>
+            <p><strong>Evento:</strong> ${data.title}</p>
+            <p><strong>Sala:</strong> ${data.room_name}</p>
+            <p><strong>Data:</strong> ${new Date(data.start_time).toLocaleDateString('pt-BR')}</p>
+            <p><strong>Horário:</strong> ${new Date(data.start_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} - ${new Date(data.end_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</p>
+            <p><strong>Status:</strong> <span style="color: ${isApproved ? '#059669' : '#dc2626'}; font-weight: bold;">${statusLabel}</span></p>
+            ${data.rejection_reason ? `<p><strong>Motivo da rejeição:</strong> ${data.rejection_reason}</p>` : ''}
+          </div>
+          
+          ${isProfessorApproved ? 
+            '<p style="color: #2563eb; font-weight: bold;">✅ Sua reserva foi aprovada pelo professor e enviada para aprovação final do administrador. Você será notificado quando houver uma resposta final.</p>' : 
+            (isApproved ? 
+              '<p style="color: #059669; font-weight: bold;">✅ Sua reserva foi confirmada! Você pode usar o espaço no horário agendado.</p>' : 
+              '<p style="color: #dc2626;">❌ Sua reserva foi rejeitada. Entre em contato com a administração se tiver dúvidas.</p>'
+            )
+          }
+          <p style="color: #6b7280; font-size: 14px;">Este é um email automático do Sistema de Agendamento de Espaços.</p>
         </div>
-        
-        ${data.status === 'approved' ? 
-          '<p style="color: #059669; font-weight: bold;">✅ Sua reserva foi confirmada! Você pode usar o espaço no horário agendado.</p>' : 
-          '<p style="color: #dc2626;">❌ Sua reserva foi rejeitada. Entre em contato com a administração se tiver dúvidas.</p>'
-        }
-        <p style="color: #6b7280; font-size: 14px;">Este é um email automático do Sistema de Agendamento de Espaços.</p>
-      </div>
-    `,
-    text: `Status da Reserva Atualizado - ${data.title}\n\nOlá ${data.student_name},\n\nSua solicitação de reserva foi ${data.status === 'approved' ? 'aprovada' : 'rejeitada'}:\n\nEvento: ${data.title}\nSala: ${data.room_name}\nData: ${new Date(data.start_time).toLocaleDateString('pt-BR')}\nHorário: ${new Date(data.start_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} - ${new Date(data.end_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\nStatus: ${data.status === 'approved' ? 'APROVADA' : 'REJEITADA'}\n${data.rejection_reason ? `Motivo da rejeição: ${data.rejection_reason}\n` : ''}\n${data.status === 'approved' ? 'Sua reserva foi confirmada! Você pode usar o espaço no horário agendado.' : 'Sua reserva foi rejeitada. Entre em contato com a administração se tiver dúvidas.'}`
-  }),
+      `,
+      text: `${isProfessorApproved ? 'Reserva Aprovada pelo Professor' : 'Status da Reserva Atualizado'} - ${data.title}\n\nOlá ${data.student_name},\n\nSua solicitação de reserva foi ${isProfessorApproved ? 'aprovada pelo professor' : (isApproved ? 'aprovada' : 'rejeitada')}:\n\nEvento: ${data.title}\nSala: ${data.room_name}\nData: ${new Date(data.start_time).toLocaleDateString('pt-BR')}\nHorário: ${new Date(data.start_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})} - ${new Date(data.end_time).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}\nStatus: ${statusLabel}\n${data.rejection_reason ? `Motivo da rejeição: ${data.rejection_reason}\n` : ''}\n${isProfessorApproved ? 'Sua reserva foi aprovada pelo professor e enviada para aprovação final do administrador. Você será notificado quando houver uma resposta final.' : (isApproved ? 'Sua reserva foi confirmada! Você pode usar o espaço no horário agendado.' : 'Sua reserva foi rejeitada. Entre em contato com a administração se tiver dúvidas.')}`
+    };
+  },
 
   // Notificação de nova solicitação de projeto para professor
   newProjectRequest: (data) => ({

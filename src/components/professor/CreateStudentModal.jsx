@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createStudent, addStudentToProject } from '../../services/authService';
+import ToastNotification from '../aluno/ToastNotification';
 
 const CreateStudentModal = ({ 
   isOpen, 
@@ -16,16 +17,13 @@ const CreateStudentModal = ({
     password: ''
   });
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [toast, setToast] = useState({ show: false, message: "", type: "" });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (error) setError('');
-    if (success) setSuccess('');
   };
 
   const handleSubmit = async (e) => {
@@ -59,22 +57,48 @@ const CreateStudentModal = ({
       if (createdStudentId && selectedProjectId) {
         try {
           await addStudentToProject(selectedProjectId, createdStudentId);
-          setSuccess('Aluno cadastrado e vinculado ao projeto com sucesso');
+          setToast({
+            show: true,
+            message: 'Aluno cadastrado e vinculado ao projeto com sucesso',
+            type: 'success'
+          });
         } catch (linkErr) {
           console.error('Erro ao vincular aluno ao projeto:', linkErr);
-          setSuccess('Aluno cadastrado. Não foi possível vincular ao projeto automaticamente. Tente gerenciar alunos.');
+          setToast({
+            show: true,
+            message: 'Aluno cadastrado. Não foi possível vincular ao projeto automaticamente. Tente gerenciar alunos.',
+            type: 'success'
+          });
         }
       } else {
-        setSuccess(response.message || 'Aluno cadastrado com sucesso');
+        setToast({
+          show: true,
+          message: response.message || 'Aluno cadastrado com sucesso',
+          type: 'success'
+        });
       }
       setFormData({ name: '', email: '', matricula_sigaa: '', password: '' });
       setSelectedProjectId('');
+      
+      // Auto-hide toast após 3 segundos
+      setTimeout(() => {
+        setToast({ show: false, message: "", type: "" });
+      }, 3000);
       
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
-      setError(err.message || 'Erro ao cadastrar aluno');
+      setToast({
+        show: true,
+        message: err.message || 'Erro ao cadastrar aluno',
+        type: 'error'
+      });
+      
+      // Auto-hide toast após 3 segundos
+      setTimeout(() => {
+        setToast({ show: false, message: "", type: "" });
+      }, 3000);
     } finally {
       setSubmitting(false);
     }
@@ -82,10 +106,9 @@ const CreateStudentModal = ({
 
   const handleClose = () => {
     setFormData({ name: '', email: '', matricula_sigaa: '', password: '' });
-    setError('');
-    setSuccess('');
     setShowPassword(false);
     setSelectedProjectId('');
+    setToast({ show: false, message: "", type: "" });
     onClose();
   };
 
@@ -108,7 +131,7 @@ const CreateStudentModal = ({
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
           {/* Header com gradiente */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white relative">
+          <div className="bg-blue-600 p-6 text-white relative">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">Cadastrar Aluno</h2>
               <button 
@@ -131,29 +154,6 @@ const CreateStudentModal = ({
 
           {/* Conteúdo do formulário */}
           <div className="p-6">
-            <AnimatePresence>
-              {error && (
-                <motion.div 
-                  className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  {error}
-                </motion.div>
-              )}
-              {success && (
-                <motion.div 
-                  className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm"
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  {success}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <form onSubmit={handleSubmit} className="space-y-5">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -258,7 +258,7 @@ const CreateStudentModal = ({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+                  className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
                 >
                   {submitting ? 'Cadastrando...' : 'Cadastrar Aluno'}
                 </button>
@@ -266,8 +266,6 @@ const CreateStudentModal = ({
                   type="button"
                   onClick={() => {
                     setFormData({ name: '', email: '', matricula_sigaa: '', password: '' });
-                    setError('');
-                    setSuccess('');
                   }}
                   className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium"
                 >
@@ -277,16 +275,14 @@ const CreateStudentModal = ({
             </form>
           </div>
 
-          {/* Linha separadora na parte inferior */}
-          <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
-            <div className="flex items-center justify-center">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-              <span className="px-3 text-xs text-gray-500 bg-gray-50">Sistema de Agendamento</span>
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-            </div>
-          </div>
         </motion.div>
       </motion.div>
+      
+      {/* Toast de notificação */}
+      <ToastNotification
+        toast={toast}
+        onClose={() => setToast({ show: false, message: "", type: "" })}
+      />
     </AnimatePresence>
   );
 };

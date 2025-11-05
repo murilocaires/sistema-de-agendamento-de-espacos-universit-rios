@@ -45,6 +45,7 @@ async function handler(req, res) {
         LEFT JOIN users prof ON r.professor_approved_by = prof.id
         LEFT JOIN users approver ON r.approved_by = approver.id
         WHERE r.status IN ('pending', 'professor_approved')
+          AND (r.is_active IS NULL OR r.is_active = true)
         ORDER BY 
           CASE 
             WHEN r.status = 'professor_approved' THEN 1

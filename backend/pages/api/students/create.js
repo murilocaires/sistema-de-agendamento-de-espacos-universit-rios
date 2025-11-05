@@ -14,9 +14,10 @@ async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    // Apenas professores podem cadastrar alunos
-    if (req.user.role !== 'professor') {
-      return res.status(403).json({ error: 'Apenas professores podem cadastrar alunos' });
+    // Professores e servidores podem cadastrar alunos
+    if (!['professor', 'servidor'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Apenas professores e servidores podem cadastrar alunos' });
+      return;
     }
 
     try {
@@ -27,6 +28,7 @@ async function handler(req, res) {
         return res.status(400).json({ 
           error: 'Nome, email e matrícula do SIGAA são obrigatórios' 
         });
+        return;
       }
 
       // Validar formato da matrícula (6 dígitos)
@@ -34,6 +36,7 @@ async function handler(req, res) {
         return res.status(400).json({ 
           error: 'A matrícula do SIGAA deve conter exatamente 6 dígitos' 
         });
+        return;
       }
 
       // Validar formato do email
@@ -42,6 +45,7 @@ async function handler(req, res) {
         return res.status(400).json({ 
           error: 'Formato de email inválido' 
         });
+        return;
       }
 
       // Verificar se email já existe
@@ -54,6 +58,7 @@ async function handler(req, res) {
         return res.status(409).json({ 
           error: 'Este email já está cadastrado no sistema' 
         });
+        return;
       }
 
       // Verificar se matrícula já existe
@@ -66,6 +71,7 @@ async function handler(req, res) {
         return res.status(409).json({ 
           error: 'Esta matrícula do SIGAA já está cadastrada no sistema' 
         });
+        return;
       }
 
       // Definir senha (se não fornecida, usar a matrícula)
@@ -105,17 +111,20 @@ async function handler(req, res) {
           created_by: newStudent.created_by
         },
         password_info: password ? 
-          'Senha personalizada definida pelo professor' : 
+          'Senha personalizada definida pelo professor/servidor' : 
           `Senha padrão: ${matricula_sigaa} (matrícula do SIGAA)`
       });
+      return;
 
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error);
       return res.status(500).json({ error: 'Erro interno do servidor' });
+      return;
     }
 
   } else {
     return res.status(405).json({ error: 'Método não permitido' });
+    return;
   }
 }
 

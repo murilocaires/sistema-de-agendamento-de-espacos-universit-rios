@@ -14,6 +14,16 @@ async function handler(req, res) {
 
   const projectId = req.query.id;
 
+  // Parse body if it's a string (for DELETE requests)
+  if ((req.method === 'POST' || req.method === 'DELETE') && typeof req.body === 'string') {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch (e) {
+      return res.status(400).json({ error: 'Corpo da requisição inválido' });
+      return;
+    }
+  }
+
   if (req.method === 'GET') {
     try {
       // Buscar alunos do projeto
@@ -39,16 +49,19 @@ async function handler(req, res) {
         success: true,
         students: result.rows
       });
+      return;
 
     } catch (error) {
       console.error('Erro ao buscar alunos do projeto:', error);
       return res.status(500).json({ error: 'Erro interno do servidor' });
+      return;
     }
 
   } else if (req.method === 'POST') {
-    // Professores e admins podem adicionar alunos
-    if (!['professor', 'admin'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Apenas professores e administradores podem adicionar alunos' });
+    // Professores, servidores e admins podem adicionar alunos
+    if (!['professor', 'admin', 'servidor'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Apenas professores, servidores e administradores podem adicionar alunos' });
+      return;
     }
 
     try {
@@ -56,6 +69,7 @@ async function handler(req, res) {
 
       if (!student_id) {
         return res.status(400).json({ error: 'ID do aluno é obrigatório' });
+        return;
       }
 
       // Verificar se o projeto pertence ao professor (somente quando o usuário é professor)
@@ -67,6 +81,7 @@ async function handler(req, res) {
 
         if (projectCheck.rows.length === 0) {
           return res.status(403).json({ error: 'Você não tem permissão para modificar este projeto' });
+          return;
         }
       }
 
@@ -78,6 +93,7 @@ async function handler(req, res) {
 
       if (studentCheck.rows.length === 0) {
         return res.status(400).json({ error: 'Aluno não encontrado' });
+        return;
       }
 
       // Verificar se o aluno já está no projeto
@@ -88,6 +104,7 @@ async function handler(req, res) {
 
       if (existingCheck.rows.length > 0) {
         return res.status(409).json({ error: 'Aluno já está neste projeto' });
+        return;
       }
 
       // Adicionar aluno ao projeto
@@ -112,16 +129,19 @@ async function handler(req, res) {
         message: 'Aluno adicionado ao projeto com sucesso',
         project_student: newProjectStudent
       });
+      return;
 
     } catch (error) {
       console.error('Erro ao adicionar aluno ao projeto:', error);
       return res.status(500).json({ error: 'Erro interno do servidor' });
+      return;
     }
 
   } else if (req.method === 'DELETE') {
-    // Professores e admins podem remover alunos
-    if (!['professor', 'admin'].includes(req.user.role)) {
-      return res.status(403).json({ error: 'Apenas professores e administradores podem remover alunos' });
+    // Professores, servidores e admins podem remover alunos
+    if (!['professor', 'admin', 'servidor'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Apenas professores, servidores e administradores podem remover alunos' });
+      return;
     }
 
     try {
@@ -129,6 +149,7 @@ async function handler(req, res) {
 
       if (!student_id) {
         return res.status(400).json({ error: 'ID do aluno é obrigatório' });
+        return;
       }
 
       // Verificar se o projeto pertence ao professor (somente quando o usuário é professor)
@@ -140,6 +161,7 @@ async function handler(req, res) {
 
         if (projectCheck.rows.length === 0) {
           return res.status(403).json({ error: 'Você não tem permissão para modificar este projeto' });
+          return;
         }
       }
 
@@ -153,6 +175,7 @@ async function handler(req, res) {
 
       if (studentCheck.rows.length === 0) {
         return res.status(404).json({ error: 'Aluno não encontrado neste projeto' });
+        return;
       }
 
       // Remover aluno do projeto
@@ -172,14 +195,17 @@ async function handler(req, res) {
         success: true,
         message: 'Aluno removido do projeto com sucesso'
       });
+      return;
 
     } catch (error) {
       console.error('Erro ao remover aluno do projeto:', error);
       return res.status(500).json({ error: 'Erro interno do servidor' });
+      return;
     }
 
   } else {
     return res.status(405).json({ error: 'Método não permitido' });
+    return;
   }
 }
 

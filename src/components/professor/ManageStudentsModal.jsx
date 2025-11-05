@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Search, UserPlus, UserMinus } from 'lucide-react';
 import { addStudentToProject, removeStudentFromProject, getAvailableStudents } from '../../services/authService';
 
@@ -13,63 +13,60 @@ const ManageStudentsModal = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredAvailableStudents, setFilteredAvailableStudents] = useState([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
+  const hasLoadedRef = useRef(false);
+  const debounceTimeoutRef = useRef(null);
 
-  // Debounce para busca no backend
-  const debouncedSearch = useCallback(
-    debounce(async (term, projectId) => {
-      if (!projectId) return;
-      
-      setLoadingSearch(true);
-      try {
-        const data = await getAvailableStudents(projectId, term);
-        setFilteredAvailableStudents(data || []);
-      } catch (error) {
-        console.error('Erro ao buscar alunos:', error);
-        setFilteredAvailableStudents([]);
-      } finally {
-        setLoadingSearch(false);
+  // Função para buscar alunos
+  const fetchStudents = useCallback(async (term, projectId) => {
+    if (!projectId) return;
+    
+    setLoadingSearch(true);
+    try {
+      const data = await getAvailableStudents(projectId, term);
+      setFilteredAvailableStudents(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar alunos:', error);
+      setFilteredAvailableStudents([]);
+    } finally {
+      setLoadingSearch(false);
+    }
+  }, []);
+
+  // Unificar lógica de carregamento: carregar quando modal abrir e quando searchTerm mudar
+  useEffect(() => {
+    if (!isOpen || !project?.id) {
+      // Resetar quando modal fechar
+      hasLoadedRef.current = false;
+      setSearchTerm('');
+      setFilteredAvailableStudents([]);
+      return;
+    }
+
+    // Limpar timeout anterior se houver
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Se searchTerm está vazio e já carregamos, não fazer nova requisição
+    if (!searchTerm && hasLoadedRef.current) {
+      return;
+    }
+
+    // Debounce de 300ms para busca, ou carregamento imediato se for a primeira vez
+    const delay = hasLoadedRef.current ? 300 : 0;
+    
+    debounceTimeoutRef.current = setTimeout(() => {
+      fetchStudents(searchTerm, project.id);
+      hasLoadedRef.current = true;
+    }, delay);
+
+    // Cleanup
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
       }
-    }, 300),
-    []
-  );
-
-  // Função debounce
-  function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
     };
-  }
-
-  // Buscar alunos quando o termo de busca mudar
-  useEffect(() => {
-    if (project?.id) {
-      debouncedSearch(searchTerm, project.id);
-    }
-  }, [searchTerm, project?.id, debouncedSearch]);
-
-  // Carregar alunos iniciais quando o modal abrir
-  useEffect(() => {
-    if (isOpen && project?.id && !searchTerm) {
-      setLoadingSearch(true);
-      getAvailableStudents(project.id, '')
-        .then(data => {
-          setFilteredAvailableStudents(data || []);
-        })
-        .catch(error => {
-          console.error('Erro ao carregar alunos iniciais:', error);
-          setFilteredAvailableStudents([]);
-        })
-        .finally(() => {
-          setLoadingSearch(false);
-        });
-    }
-  }, [isOpen, project?.id, searchTerm]);
+  }, [isOpen, project?.id, searchTerm, fetchStudents]);
 
   const handleAddStudent = async (studentId) => {
     try {

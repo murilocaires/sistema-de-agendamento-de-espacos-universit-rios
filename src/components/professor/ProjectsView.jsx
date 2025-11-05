@@ -11,31 +11,31 @@ const ProjectsView = ({
   formatDate 
 }) => {
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 md:gap-6">
       {/* Projetos - ocupa 3 colunas */}
       <div className="xl:col-span-3">
         {projects.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-8 md:py-12">
             <div className="text-gray-400 mb-4">
-              <Users className="w-16 h-16 mx-auto" />
+              <Users className="w-12 h-12 md:w-16 md:h-16 mx-auto" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum projeto encontrado</h3>
-            <p className="text-gray-500 mb-4">Crie seu primeiro projeto de extensão para começar.</p>
+            <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2">Nenhum projeto encontrado</h3>
+            <p className="text-sm md:text-base text-gray-500 mb-4">Crie seu primeiro projeto de extensão para começar.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {projects.map((project) => (
               <div 
                 key={project.id} 
-                className="group bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg hover:bg-blue-50 transition-all duration-200 border border-transparent hover:border-blue-200"
+                className="group bg-white rounded-lg shadow-md p-4 md:p-6 cursor-pointer hover:shadow-lg hover:bg-blue-50 transition-all duration-200 border border-transparent hover:border-blue-200"
                 onClick={() => onShowStudents(project)}
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800">{project.name}</h3>
-                    <p className="text-sm text-gray-600">{project.type}</p>
+                <div className="flex justify-between items-start mb-3 md:mb-4">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-800 break-words">{project.name}</h3>
+                    <p className="text-xs md:text-sm text-gray-600">{project.type}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 ml-2 flex-shrink-0">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -59,11 +59,11 @@ const ProjectsView = ({
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between text-sm text-gray-500">
+                <div className="flex items-center justify-between text-xs md:text-sm text-gray-500">
                   <span>{project.student_count || 0} aluno(s)</span>
                   <span>{new Date(project.created_at).toLocaleDateString('pt-BR')}</span>
                 </div>
-                <div className="mt-2 text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-2 text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block">
                   Clique para gerenciar alunos
                 </div>
               </div>
@@ -75,19 +75,19 @@ const ProjectsView = ({
       {/* Seção de Solicitações Pendentes - ocupa 1 coluna */}
       {pendingRequests.length > 0 && (
         <div className="xl:col-span-1">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 sticky top-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 md:p-4 sticky top-4">
             <div className="flex items-center gap-2 mb-3">
-              <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 md:w-5 md:h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 2L3 7v11h4v-6h6v6h4V7l-7-5z"/>
               </svg>
-              <h2 className="text-lg font-bold text-yellow-800">
+              <h2 className="text-base md:text-lg font-bold text-yellow-800">
                 Solicitações ({pendingRequests.length})
               </h2>
             </div>
             
-            <div className="space-y-3 max-h-[70vh] overflow-y-auto">
+            <div className="space-y-2 md:space-y-3 max-h-[70vh] overflow-y-auto">
               {pendingRequests.map((request) => (
-                <div key={request.id} className="bg-white border border-yellow-200 rounded-lg p-3">
+                <div key={request.id} className="bg-white border border-yellow-200 rounded-lg p-2 md:p-3">
                   <div className="space-y-2">
                     <h3 className="font-semibold text-gray-800 text-sm">
                       {request.student_name}

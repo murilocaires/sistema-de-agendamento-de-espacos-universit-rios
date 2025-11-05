@@ -36,7 +36,7 @@ export const docenteMenu = [
   { id: "minhas-reservas", label: "Minhas Reservas", icon: Calendar, path: "/professor/minhas-reservas" },
   { id: "nova-reserva", label: "Nova Reserva", icon: CalendarPlus, path: "/professor/nova-reserva" },
   { id: "historico", label: "Histórico", icon: Clock, path: "/professor/historico" },
-  { id: "configuracoes", label: "Configurações", icon: Settings, path: "/professor/configuracoes" },
+  { id: "perfil", label: "Meu Perfil", icon: Users, path: "/professor/perfil" },
 ];
 
 

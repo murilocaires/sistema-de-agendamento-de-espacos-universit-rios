@@ -77,8 +77,7 @@ const Projetos = () => {
       if (selectedProjectForStudents) {
         loadProjectStudents(selectedProjectForStudents.id);
       } else {
-        loadAllProjectStudents();
-        loadMyUnassignedStudents();
+        loadAllMyStudents(); // Carregar todos os alunos cadastrados pelo professor
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,18 +107,84 @@ const Projetos = () => {
     }
   };
 
-  const loadMyUnassignedStudents = async () => {
+  const loadAllMyStudents = async () => {
     try {
-      const data = await getMyStudents('', true); // unassignedOnly = true
-      const normalized = (data || []).map((s) => ({ ...s, projects: [] }));
-      // Adicionar alunos sem projeto à lista principal de alunos
-      setStudents(prevStudents => {
-        const existingIds = new Set(prevStudents.map(s => s.student_id || s.id));
-        const newStudents = normalized.filter(s => !existingIds.has(s.student_id || s.id));
-        return [...prevStudents, ...newStudents];
+      // Carregar todos os alunos cadastrados pelo professor (com e sem projeto)
+      const allMyStudents = await getMyStudents('', false); // unassignedOnly = false para pegar todos
+      
+      // Carregar também os alunos dos projetos para ter informações dos projetos
+      const projectStudents = await loadAllProjectStudentsData();
+      
+      // Combinar: usar getMyStudents como base e adicionar informações de projetos
+      const studentIdToData = new Map();
+      
+      // Primeiro, adicionar todos os alunos cadastrados pelo professor
+      (allMyStudents || []).forEach(s => {
+        const sid = s.student_id || s.id;
+        if (sid) {
+          studentIdToData.set(sid, {
+            ...s,
+            projects: []
+          });
+        }
       });
+      
+      // Depois, adicionar informações de projetos aos alunos que estão em projetos
+      projectStudents.forEach(s => {
+        const sid = s.student_id || s.id;
+        if (sid && studentIdToData.has(sid)) {
+          const entry = studentIdToData.get(sid);
+          if (s.projects && s.projects.length > 0) {
+            entry.projects = s.projects;
+          }
+        }
+      });
+      
+      const finalStudents = Array.from(studentIdToData.values());
+      setStudents(finalStudents);
     } catch (error) {
-      console.error('Erro ao buscar meus alunos sem projeto:', error);
+      console.error('Erro ao buscar todos os meus alunos:', error);
+      // Fallback: tentar carregar apenas os alunos dos projetos
+      loadAllProjectStudents();
+    }
+  };
+
+  const loadAllProjectStudentsData = async () => {
+    try {
+      if (!projects || projects.length === 0) {
+        return [];
+      }
+      const results = await Promise.all(
+        projects.map((p) => getProjectStudents(p.id)
+          .then(list => ({ project: p, list }))
+          .catch(() => ({ project: p, list: [] })))
+      );
+
+      // Combinar por aluno, agregando os nomes dos projetos do professor
+      const studentIdToData = new Map();
+      for (const { project, list } of results) {
+        for (const s of list) {
+          const sid = s.student_id || s.id;
+          if (!sid) continue;
+          
+          if (!studentIdToData.has(sid)) {
+            studentIdToData.set(sid, {
+              ...s,
+              projects: [],
+            });
+          }
+          
+          const entry = studentIdToData.get(sid);
+          if (!entry.projects.some(p => p === project.name)) {
+            entry.projects.push(project.name);
+          }
+        }
+      }
+      
+      return Array.from(studentIdToData.values());
+    } catch (error) {
+      console.error('Erro ao carregar dados dos alunos dos projetos:', error);
+      return [];
     }
   };
 
@@ -185,7 +250,8 @@ const Projetos = () => {
   const handleShowStudents = async (project) => {
     setSelectedProject(project);
     setShowManageStudentsModal(true);
-    await loadAvailableStudents(project.id);
+    // Não carregar alunos disponíveis aqui - o modal gerencia seu próprio estado
+    // await loadAvailableStudents(project.id);
     await loadProjectStudents(project.id);
   };
 
@@ -198,8 +264,12 @@ const Projetos = () => {
 
   const handleCreateStudentSuccess = async () => {
     // Recarregar listas se estiver na visão de alunos
-    if (viewMode === 'students' && selectedProjectForStudents) {
-      await loadProjectStudents(selectedProjectForStudents.id);
+    if (viewMode === 'students') {
+      if (selectedProjectForStudents) {
+        await loadProjectStudents(selectedProjectForStudents.id);
+      } else {
+        await loadAllMyStudents();
+      }
     }
   };
 
@@ -247,36 +317,36 @@ const Projetos = () => {
 
   return (
     <ProfessorLayout>
-      <div className="p-6">
+      <div className="p-4 md:p-6">
       {/* Header com ações */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Meus Projetos</h1>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Meus Projetos</h1>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <button
             onClick={() => setShowCreateStudentModal(true)}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
+            className="bg-purple-600 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2 text-sm md:text-base"
           >
             <Users className="w-4 h-4" />
-            Cadastrar Aluno
+            <span className="whitespace-nowrap">Cadastrar Aluno</span>
           </button>
-        <button
-              onClick={() => setShowCreateProjectModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Novo Projeto
-        </button>
+          <button
+            onClick={() => setShowCreateProjectModal(true)}
+            className="bg-blue-600 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 text-sm md:text-base"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="whitespace-nowrap">Novo Projeto</span>
+          </button>
+        </div>
       </div>
-          </div>
 
       {/* Alternador de visualização */}
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <div className="relative">
-          <div className="flex space-x-8">
+          <div className="flex space-x-4 md:space-x-8">
             <motion.button
               type="button"
               onClick={() => setViewMode('projects')}
-              className="relative px-1 py-2 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+              className="relative px-1 py-2 text-base md:text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
               whileTap={{ scale: 0.95 }}
             >
               Projetos
@@ -293,7 +363,7 @@ const Projetos = () => {
             <motion.button
               type="button"
               onClick={() => setViewMode('students')}
-              className="relative px-1 py-2 text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
+              className="relative px-1 py-2 text-base md:text-lg font-medium text-gray-600 hover:text-gray-900 transition-colors duration-200"
               whileTap={{ scale: 0.95 }}
             >
               Alunos
@@ -309,7 +379,7 @@ const Projetos = () => {
           </div>
           
           {/* Barra de separação */}
-          <div className="mt-4 border-b border-gray-200"></div>
+          <div className="mt-3 md:mt-4 border-b border-gray-200"></div>
         </div>
       </div>
               

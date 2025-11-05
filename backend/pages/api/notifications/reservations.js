@@ -43,12 +43,13 @@ async function handler(req, res) {
           JOIN rooms rm ON r.room_id = rm.id
           LEFT JOIN projects p ON r.project_id = p.id
           LEFT JOIN users up ON p.professor_id = up.id
-          WHERE r.status = 'professor_approved'
+          WHERE (r.status = 'professor_approved'
              OR (
                r.status = 'pending' AND (
                  p.professor_id IS NULL OR (up.role = 'admin')
                )
-             )
+             ))
+             AND (r.is_active IS NULL OR r.is_active = true)
           ORDER BY r.created_at DESC
         `);
       } else {
@@ -77,9 +78,11 @@ async function handler(req, res) {
           JOIN users u ON r.user_id = u.id
           JOIN rooms rm ON r.room_id = rm.id
           LEFT JOIN projects p ON r.project_id = p.id
-          WHERE r.status = 'pending' AND r.project_id IN (
-            SELECT id FROM projects WHERE professor_id = $1
-          )
+          WHERE r.status = 'pending' 
+            AND r.project_id IN (
+              SELECT id FROM projects WHERE professor_id = $1
+            )
+            AND (r.is_active IS NULL OR r.is_active = true)
           ORDER BY r.created_at DESC
         `, [req.user.id]);
       }

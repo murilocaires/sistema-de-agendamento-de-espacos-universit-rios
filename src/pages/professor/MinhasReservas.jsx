@@ -127,19 +127,16 @@ const MinhasReservas = () => {
       <div className="p-8">
         <ReservationsHeader 
           viewMode={viewMode} 
-          onViewModeChange={setViewMode} 
+          onViewModeChange={setViewMode}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
         />
 
         <ErrorToast 
           error={error} 
           onClose={() => setError("")} 
-        />
-
-        <ReservationsFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
         />
 
         <ReservationsTable

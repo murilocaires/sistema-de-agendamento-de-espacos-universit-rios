@@ -29,7 +29,7 @@ import Projetos from "./pages/professor/Projetos";
 import AprovarReservas from "./pages/professor/AprovarReservas";
 import HistoricoProfessor from "./pages/professor/HistoricoProfessor";
 import DetalhesHistoricoProfessor from "./pages/professor/DetalhesHistorico";
-import Configuracoes from "./pages/professor/Configuracoes";
+import PerfilProfessor from "./pages/professor/PerfilProfessor";
 import ProjetosAluno from "./pages/aluno/ProjetosAluno";
 import ReservasAluno from "./pages/aluno/ReservasAluno";
 import NovaReservaAluno from "./pages/aluno/NovaReservaAluno";
@@ -253,10 +253,10 @@ function App() {
           />
 
           <Route
-            path="/professor/configuracoes"
+            path="/professor/perfil"
             element={
               <ProtectedRoute>
-                <Configuracoes />
+                <PerfilProfessor />
               </ProtectedRoute>
             }
           />

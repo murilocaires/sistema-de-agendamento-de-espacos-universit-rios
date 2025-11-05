@@ -61,7 +61,7 @@ async function handler(req, res) {
       const isAdmin = req.user.role === 'admin';
       const isProfessor = req.user.role === 'professor' || req.user.role === 'servidor';
 
-      // Professor: só pode aprovar/rejeitar reservas PENDENTES de projetos que coordena
+      // Professor: pode aprovar/rejeitar reservas PENDENTES ou reprovar reservas PROFESSOR_APPROVED
       if (isProfessor) {
         // Precisa ter projeto associado
         if (!reservation.project_professor_id) {
@@ -71,9 +71,13 @@ async function handler(req, res) {
         if (reservation.project_professor_id !== req.user.id) {
           return res.status(403).json({ error: 'Você não é responsável por este projeto' });
         }
-        // Somente status pending pode ser tratado pelo professor
-        if (reservation.status !== 'pending') {
-          return res.status(400).json({ error: 'Somente reservas pendentes podem ser processadas pelo professor' });
+        // Professor pode aprovar apenas reservas pendentes
+        // Professor pode rejeitar reservas pendentes ou reprovar reservas professor_approved
+        if (action === 'approve' && reservation.status !== 'pending') {
+          return res.status(400).json({ error: 'Somente reservas pendentes podem ser aprovadas pelo professor' });
+        }
+        if (action === 'reject' && !['pending', 'professor_approved'].includes(reservation.status)) {
+          return res.status(400).json({ error: 'Somente reservas pendentes ou aprovadas por você podem ser rejeitadas' });
         }
       }
 
@@ -299,6 +303,7 @@ async function handler(req, res) {
         LEFT JOIN users u ON r.user_id = u.id
         LEFT JOIN rooms rm ON r.room_id = rm.id
         WHERE r.status = 'pending'
+          AND (r.is_active IS NULL OR r.is_active = true)
         ORDER BY r.created_at ASC
       `);
 

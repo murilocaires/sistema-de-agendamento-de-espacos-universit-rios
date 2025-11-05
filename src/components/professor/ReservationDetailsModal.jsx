@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, CheckCircle, Clock, Ban } from 'lucide-react';
+import { formatBrazilDateTime, toBrazilTime } from '../../utils/dateUtils';
 
 const ReservationDetailsModal = ({ 
 isOpen, 
@@ -200,7 +201,7 @@ return (
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Criada em</label>
-                <p className="text-sm text-gray-900">{formatDate(reservation.created_at)}</p>
+                <p className="text-sm text-gray-900">{formatBrazilDateTime(reservation.created_at)}</p>
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Número de Pessoas</label>
@@ -246,56 +247,31 @@ return (
         )}
 
         {/* Informações de Recorrência */}
-        {(reservation.is_recurring || reservation.recurrence_type) && (
-            <div className="">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Recorrência</h3>
-            <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Tipo de Recorrência</label>
-                    <p className="text-sm text-gray-900">{getRecurrenceTypeText(reservation.recurrence_type)}</p>
+        {(() => {
+            const hasRecurrence = reservation.is_recurring || reservation.recurrence_type;
+            if (!hasRecurrence) return null;
+            
+            const recurrenceDates = calculateRecurrenceDates();
+            if (recurrenceDates.length === 0) return null;
+            
+            return (
+                <div className="">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Datas da Recorrência</h3>
+                    <div className="bg-gray-50 p-3 rounded border max-h-32 overflow-y-auto">
+                        <div className="flex flex-wrap gap-2">
+                            {recurrenceDates.map((date, index) => (
+                                <span 
+                                    key={index}
+                                    className="px-2 py-1 bg-gray-200/10 text-gray-700 text-xs rounded"
+                                >
+                                    {formatDateOnly(date)}
+                                </span>
+                            ))}
+                        </div>
                     </div>
-                    {reservation.recurrence_end_date && (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">Data de Fim</label>
-                        <p className="text-sm text-gray-900">{formatDate(reservation.recurrence_end_date)}</p>
-                    </div>
-                    )}
-                    {reservation.recurrence_interval && (
-                    <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-1">Intervalo</label>
-                        <p className="text-sm text-gray-900">A cada {reservation.recurrence_interval} {reservation.recurrence_type}</p>
-                    </div>
-                    )}
                 </div>
-                
-                {/* Datas de Recorrência */}
-                {(() => {
-                    const recurrenceDates = calculateRecurrenceDates();
-                    if (recurrenceDates.length > 0) {
-                        return (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-2">Datas da Recorrência</label>
-                                <div className="bg-gray-50 p-3 rounded border max-h-32 overflow-y-auto">
-                                    <div className="flex flex-wrap gap-2">
-                                        {recurrenceDates.map((date, index) => (
-                                            <span 
-                                                key={index}
-                                                className="px-2 py-1 bg-gray-200/10 text-gray-700 text-xs rounded"
-                                            >
-                                                {formatDateOnly(date)}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    }
-                    return null;
-                })()}
-            </div>
-            </div>
-        )}
+            );
+        })()}
 
         {/* Informações de Aprovação */}
         {reservation.approved_by_name && (

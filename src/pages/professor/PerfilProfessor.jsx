@@ -18,9 +18,10 @@ import {
   Lock,
   UserCheck,
   Shield,
-  X
+  X,
+  GraduationCap
 } from "lucide-react";
-import StudentLayout from "../../layouts/StudentLayout";
+import ProfessorLayout from "../../layouts/ProfessorLayout";
 
 // Hook para fechar modal com ESC
 const useEscapeKey = (callback) => {
@@ -37,7 +38,7 @@ const useEscapeKey = (callback) => {
   }, [callback]);
 };
 
-const PerfilAluno = () => {
+const PerfilProfessor = () => {
   const { user } = useAuth();
 
   // Estados
@@ -174,7 +175,7 @@ const PerfilAluno = () => {
   };
 
   return (
-    <StudentLayout>
+    <ProfessorLayout>
       <div className="p-4 md:p-8">
         {/* Header */}
         <div className="mb-6 md:mb-8">
@@ -255,16 +256,31 @@ const PerfilAluno = () => {
               </div>
             </div>
 
+            {/* SIAPE */}
+            {user?.siape && (
+              <div className="flex items-center gap-3 p-3 md:p-4 bg-gray-50 rounded-lg">
+                <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                  <GraduationCap className="text-purple-600" size={18} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm font-medium text-gray-600">SIAPE</p>
+                  <p className="text-sm md:text-lg font-semibold text-gray-900 break-words">{user.siape}</p>
+                </div>
+              </div>
+            )}
+
             {/* Matrícula SIGAA */}
-            <div className="flex items-center gap-3 p-3 md:p-4 bg-gray-50 rounded-lg">
-              <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
-                <Shield className="text-purple-600" size={18} />
+            {user?.matricula_sigaa && (
+              <div className="flex items-center gap-3 p-3 md:p-4 bg-gray-50 rounded-lg">
+                <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                  <Shield className="text-purple-600" size={18} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm font-medium text-gray-600">Matrícula SIGAA</p>
+                  <p className="text-sm md:text-lg font-semibold text-gray-900 break-words">{user.matricula_sigaa}</p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Matrícula SIGAA</p>
-                <p className="text-sm md:text-lg font-semibold text-gray-900 break-words">{user?.matricula_sigaa || 'Não informada'}</p>
-              </div>
-            </div>
+            )}
 
             {/* Data de Criação */}
             <div className="flex items-center gap-3 p-3 md:p-4 bg-gray-50 rounded-lg">
@@ -314,7 +330,9 @@ const PerfilAluno = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs md:text-sm font-medium text-gray-600">Nível de Acesso</p>
-                <p className="text-xs md:text-sm text-gray-900 break-words">Aluno - Acesso básico ao sistema</p>
+                <p className="text-xs md:text-sm text-gray-900 break-words">
+                  {user?.role === 'servidor' ? 'Servidor - Acesso a projetos e reservas' : 'Professor - Acesso a projetos e reservas'}
+                </p>
               </div>
             </div>
           </div>
@@ -441,7 +459,7 @@ const PerfilAluno = () => {
                 </div>
 
                 {/* Botões */}
-                <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row justify-end gap-2 md:gap-3">
                   <button
                     type="button"
                     onClick={handleCloseModal}
@@ -473,8 +491,9 @@ const PerfilAluno = () => {
           </div>
         )}
       </div>
-    </StudentLayout>
+    </ProfessorLayout>
   );
 };
 
-export default PerfilAluno;
+export default PerfilProfessor;
+
