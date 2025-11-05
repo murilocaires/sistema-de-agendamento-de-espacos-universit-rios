@@ -19,10 +19,11 @@ async function handler(req, res) {
       // Para servidores, buscar projetos onde eles são o professor_id
       // Para professores, buscar normalmente
       // Para admins, buscar todos
+      const userRole = req.user.role?.toLowerCase()?.trim();
       let whereClause = '';
       let queryParams = [];
 
-      if (req.user.role === 'admin') {
+      if (userRole === 'admin') {
         // Admins podem ver todas as solicitações
         whereClause = 'WHERE pr.status = $1';
         queryParams = [status];

@@ -74,10 +74,16 @@ export const requireRole = (allowedRoles) => {
     return authMiddleware(async (req, res) => {
       const userRole = req.user?.role;
       
-      if (!userRole || !allowedRoles.includes(userRole)) {
+      // Normalizar para comparação case-insensitive
+      const normalizedUserRole = userRole?.toLowerCase()?.trim();
+      const normalizedAllowedRoles = allowedRoles.map(role => role?.toLowerCase()?.trim());
+      
+      if (!normalizedUserRole || !normalizedAllowedRoles.includes(normalizedUserRole)) {
         console.error('Permissão negada:', {
           userRole,
+          normalizedUserRole,
           allowedRoles,
+          normalizedAllowedRoles,
           userId: req.user?.id,
           email: req.user?.email,
           userObject: req.user

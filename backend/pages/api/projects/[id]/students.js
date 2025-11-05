@@ -59,7 +59,8 @@ async function handler(req, res) {
 
   } else if (req.method === 'POST') {
     // Professores, servidores e admins podem adicionar alunos
-    if (!['professor', 'admin', 'servidor'].includes(req.user.role)) {
+    const userRole = req.user.role?.toLowerCase()?.trim();
+    if (!['professor', 'admin', 'servidor'].includes(userRole)) {
       return res.status(403).json({ error: 'Apenas professores, servidores e administradores podem adicionar alunos' });
       return;
     }
@@ -73,7 +74,8 @@ async function handler(req, res) {
       }
 
       // Verificar se o projeto pertence ao professor/servidor (somente quando o usuário é professor ou servidor)
-      if (req.user.role === 'professor' || req.user.role === 'servidor') {
+      const userRole = req.user.role?.toLowerCase()?.trim();
+      if (userRole === 'professor' || userRole === 'servidor') {
         const projectCheck = await query(
           'SELECT id FROM projects WHERE id = $1 AND professor_id = $2',
           [projectId, req.user.id]
@@ -139,7 +141,8 @@ async function handler(req, res) {
 
   } else if (req.method === 'DELETE') {
     // Professores, servidores e admins podem remover alunos
-    if (!['professor', 'admin', 'servidor'].includes(req.user.role)) {
+    const userRole = req.user.role?.toLowerCase()?.trim();
+    if (!['professor', 'admin', 'servidor'].includes(userRole)) {
       return res.status(403).json({ error: 'Apenas professores, servidores e administradores podem remover alunos' });
       return;
     }
@@ -153,7 +156,8 @@ async function handler(req, res) {
       }
 
       // Verificar se o projeto pertence ao professor/servidor (somente quando o usuário é professor ou servidor)
-      if (req.user.role === 'professor' || req.user.role === 'servidor') {
+      const userRole = req.user.role?.toLowerCase()?.trim();
+      if (userRole === 'professor' || userRole === 'servidor') {
         const projectCheck = await query(
           'SELECT id FROM projects WHERE id = $1 AND professor_id = $2',
           [projectId, req.user.id]

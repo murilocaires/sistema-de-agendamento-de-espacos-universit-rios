@@ -29,8 +29,7 @@ const CreateStudentModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
-    setSuccess('');
+    setToast({ show: false, message: "", type: "" });
     
     try {
       if (!selectedProjectId) {
@@ -112,24 +111,25 @@ const CreateStudentModal = ({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div 
-        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-      >
+      {isOpen && (
         <motion.div 
-          className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden"
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+          key="modal-overlay"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
         >
+          <motion.div 
+            key="modal-content"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
           {/* Header com gradiente */}
           <div className="bg-blue-600 p-6 text-white relative">
             <div className="flex items-center justify-between">
@@ -275,14 +275,18 @@ const CreateStudentModal = ({
             </form>
           </div>
 
+          </motion.div>
         </motion.div>
-      </motion.div>
+      )}
       
-      {/* Toast de notificação */}
-      <ToastNotification
-        toast={toast}
-        onClose={() => setToast({ show: false, message: "", type: "" })}
-      />
+      {/* Toast de notificação - sempre renderizado quando há toast */}
+      {toast.show && (
+        <ToastNotification
+          key="toast-notification"
+          toast={toast}
+          onClose={() => setToast({ show: false, message: "", type: "" })}
+        />
+      )}
     </AnimatePresence>
   );
 };

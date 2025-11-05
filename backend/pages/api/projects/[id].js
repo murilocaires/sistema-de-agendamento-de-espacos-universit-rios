@@ -36,8 +36,9 @@ async function handler(req, res) {
 
       const project = result.rows[0];
 
-      // Verificar se o professor tem permissão para ver este projeto
-      if (req.user.role === 'professor' && project.professor_id !== req.user.id) {
+      // Verificar se o professor/servidor tem permissão para ver este projeto
+      const userRole = req.user.role?.toLowerCase()?.trim();
+      if ((userRole === 'professor' || userRole === 'servidor') && project.professor_id !== req.user.id) {
         return res.status(403).json({ error: 'Você não tem permissão para ver este projeto' });
       }
 
@@ -52,9 +53,10 @@ async function handler(req, res) {
     }
 
   } else if (req.method === 'DELETE') {
-    // Apenas professores podem excluir projetos
-    if (req.user.role !== 'professor') {
-      return res.status(403).json({ error: 'Apenas professores podem excluir projetos' });
+    // Professores e servidores podem excluir projetos
+    const userRole = req.user.role?.toLowerCase()?.trim();
+    if (userRole !== 'professor' && userRole !== 'servidor') {
+      return res.status(403).json({ error: 'Apenas professores e servidores podem excluir projetos' });
     }
 
     try {

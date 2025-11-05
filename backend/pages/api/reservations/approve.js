@@ -15,7 +15,8 @@ async function handler(req, res) {
 
   if (req.method === 'POST') {
     // Apenas admins, professores e servidores podem aprovar/rejeitar reservas
-    if (!['admin', 'professor', 'servidor'].includes(req.user.role)) {
+    const userRole = req.user.role?.toLowerCase()?.trim();
+    if (!['admin', 'professor', 'servidor'].includes(userRole)) {
       return res.status(403).json({ error: 'Apenas administradores, professores e servidores podem aprovar ou rejeitar reservas' });
     }
 
@@ -58,8 +59,9 @@ async function handler(req, res) {
       const oldValues = reservation;
 
       // Fluxo de aprovação por papel
-      const isAdmin = req.user.role === 'admin';
-      const isProfessor = req.user.role === 'professor' || req.user.role === 'servidor';
+      const userRole = req.user.role?.toLowerCase()?.trim();
+      const isAdmin = userRole === 'admin';
+      const isProfessor = userRole === 'professor' || userRole === 'servidor';
 
       // Professor: pode aprovar/rejeitar reservas PENDENTES ou reprovar reservas PROFESSOR_APPROVED
       if (isProfessor) {

@@ -15,7 +15,8 @@ async function handler(req, res) {
 
   if (req.method === 'POST') {
     // Professores e servidores podem cadastrar alunos
-    if (!['professor', 'servidor'].includes(req.user.role)) {
+    const userRole = req.user.role?.toLowerCase()?.trim();
+    if (!['professor', 'servidor'].includes(userRole)) {
       return res.status(403).json({ error: 'Apenas professores e servidores podem cadastrar alunos' });
       return;
     }
