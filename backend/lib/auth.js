@@ -72,7 +72,16 @@ export const authMiddleware = (handler) => {
 export const requireRole = (allowedRoles) => {
   return (handler) => {
     return authMiddleware(async (req, res) => {
-      if (!allowedRoles.includes(req.user.role)) {
+      const userRole = req.user?.role;
+      
+      if (!userRole || !allowedRoles.includes(userRole)) {
+        console.error('Permissão negada:', {
+          userRole,
+          allowedRoles,
+          userId: req.user?.id,
+          email: req.user?.email,
+          userObject: req.user
+        });
         res.status(403).json({ error: 'Permissão insuficiente' });
         return;
       }

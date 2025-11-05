@@ -93,9 +93,9 @@ const ReservationsLayout = ({
               </label>
 
               <div className="flex rounded-lg p-1">
-                <button onClick={() => setViewType('pending')} className={`px-3 py-1 text-sm rounded-md transition-colors ${viewType === 'pending' ? 'bg-gray-500/90 text-black shadow-sm font-medium' : 'text-gray-700 hover:text-gray-900'}`}>Pendentes</button>
-                <button onClick={() => setViewType('approved')} className={`px-3 py-1 text-sm rounded-md transition-colors ${viewType === 'approved' ? 'bg-gray-500/90 text-black shadow-sm font-medium' : 'text-gray-700 hover:text-gray-900'}`}>Aprovadas</button>
-                <button onClick={() => setViewType('rejected')} className={`px-3 py-1 text-sm rounded-md transition-colors ${viewType === 'rejected' ? 'bg-gray-500/90 text-black font-medium' : 'text-gray-700 hover:text-gray-900'}`}>Reprovadas</button>
+                <button onClick={() => setViewType('pending')} className={`px-3 py-1 text-sm rounded-md transition-colors ${viewType === 'pending' ? 'bg-gray-500/20 text-black shadow-sm font-medium' : 'text-gray-700 hover:text-gray-900'}`}>Pendentes</button>
+                <button onClick={() => setViewType('approved')} className={`px-3 py-1 text-sm rounded-md transition-colors ${viewType === 'approved' ? 'bg-gray-500/20 text-black shadow-sm font-medium' : 'text-gray-700 hover:text-gray-900'}`}>Aprovadas</button>
+                <button onClick={() => setViewType('rejected')} className={`px-3 py-1 text-sm rounded-md transition-colors ${viewType === 'rejected' ? 'bg-gray-500/20 text-black font-medium' : 'text-gray-700 hover:text-gray-900'}`}>Reprovadas</button>
               </div>
 
               <div className="relative">

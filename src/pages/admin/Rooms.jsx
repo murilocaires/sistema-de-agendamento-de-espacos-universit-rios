@@ -606,7 +606,7 @@ const Rooms = () => {
                         </div>
                       </div>
                       <Lock size={16} className="mr-1" />
-                      Não permite recorrência
+                      Sem recorrência
                     </label>
                   </div>
                 </div>

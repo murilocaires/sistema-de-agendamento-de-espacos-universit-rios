@@ -13,10 +13,26 @@ async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const professor_id = req.user.id;
+      const user_id = req.user.id;
       const { status = 'pending' } = req.query;
 
-      // Buscar solicitações pendentes para o professor
+      // Para servidores, buscar projetos onde eles são o professor_id
+      // Para professores, buscar normalmente
+      // Para admins, buscar todos
+      let whereClause = '';
+      let queryParams = [];
+
+      if (req.user.role === 'admin') {
+        // Admins podem ver todas as solicitações
+        whereClause = 'WHERE pr.status = $1';
+        queryParams = [status];
+      } else {
+        // Professores e servidores veem apenas solicitações dos seus projetos
+        whereClause = 'WHERE pr.professor_id = $1 AND pr.status = $2';
+        queryParams = [user_id, status];
+      }
+
+      // Buscar solicitações pendentes
       const result = await query(`
         SELECT 
           pr.id,
@@ -33,9 +49,9 @@ async function handler(req, res) {
         FROM project_requests pr
         JOIN projects p ON pr.project_id = p.id
         JOIN users s ON pr.student_id = s.id
-        WHERE pr.professor_id = $1 AND pr.status = $2
+        ${whereClause}
         ORDER BY pr.created_at DESC
-      `, [professor_id, status]);
+      `, queryParams);
 
       return res.status(200).json({
         success: true,

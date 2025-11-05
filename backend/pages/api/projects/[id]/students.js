@@ -72,8 +72,8 @@ async function handler(req, res) {
         return;
       }
 
-      // Verificar se o projeto pertence ao professor (somente quando o usuário é professor)
-      if (req.user.role === 'professor') {
+      // Verificar se o projeto pertence ao professor/servidor (somente quando o usuário é professor ou servidor)
+      if (req.user.role === 'professor' || req.user.role === 'servidor') {
         const projectCheck = await query(
           'SELECT id FROM projects WHERE id = $1 AND professor_id = $2',
           [projectId, req.user.id]
@@ -152,8 +152,8 @@ async function handler(req, res) {
         return;
       }
 
-      // Verificar se o projeto pertence ao professor (somente quando o usuário é professor)
-      if (req.user.role === 'professor') {
+      // Verificar se o projeto pertence ao professor/servidor (somente quando o usuário é professor ou servidor)
+      if (req.user.role === 'professor' || req.user.role === 'servidor') {
         const projectCheck = await query(
           'SELECT id FROM projects WHERE id = $1 AND professor_id = $2',
           [projectId, req.user.id]
