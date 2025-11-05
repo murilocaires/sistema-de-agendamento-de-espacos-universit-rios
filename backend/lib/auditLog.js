@@ -43,17 +43,36 @@ export const createAuditLog = async ({
 export const withAuditLog = (tableName) => {
   return (handler) => {
     return async (req, res) => {
+      // Configurar CORS no início (caso não tenha sido configurado antes)
+      if (!res.getHeader('Access-Control-Allow-Origin')) {
+        const origin = req.headers.origin;
+        if (origin && (origin.includes('vercel.app') || origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+          res.setHeader('Access-Control-Allow-Origin', origin);
+          res.setHeader('Access-Control-Allow-Credentials', 'true');
+        } else {
+          res.setHeader('Access-Control-Allow-Origin', '*');
+        }
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+      }
+
+      // Responder a preflight requests
+      if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+      }
+
       // Capturar informações da requisição
       const auditInfo = {
-        userId: req.user?.userId || null,
+        userId: req.user?.userId || req.user?.id || null,
         userEmail: req.user?.email || null,
         userName: req.user?.name || null,
         userRole: req.user?.role || null,
         ipAddress: req.headers['x-forwarded-for'] || 
                    req.headers['x-real-ip'] || 
-                   req.connection.remoteAddress || 
-                   req.socket.remoteAddress ||
-                   (req.connection.socket ? req.connection.socket.remoteAddress : null),
+                   req.connection?.remoteAddress || 
+                   req.socket?.remoteAddress ||
+                   (req.connection?.socket ? req.connection.socket.remoteAddress : null),
         userAgent: req.headers['user-agent'] || null
       };
 

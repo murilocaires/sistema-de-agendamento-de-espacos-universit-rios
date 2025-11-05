@@ -39,21 +39,30 @@ export const verifyToken = (token) => {
 // Middleware de autenticação para APIs
 export const authMiddleware = (handler) => {
   return async (req, res) => {
-    // Configurar CORS sempre
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Configurar CORS sempre ANTES de qualquer verificação
+    // Permitir origem específica do frontend ou usar * (sem credentials)
+    const origin = req.headers.origin;
+    if (origin && (origin.includes('vercel.app') || origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-    // Responder a preflight requests
+    // Responder a preflight requests ANTES de qualquer outra verificação
     if (req.method === 'OPTIONS') {
-      return res.status(200).end();
+      res.status(200).end();
+      return;
     }
 
     try {
       const token = req.headers.authorization?.replace('Bearer ', '');
       
       if (!token) {
-        return res.status(401).json({ error: 'Token de acesso necessário' });
+        res.status(401).json({ error: 'Token de acesso necessário' });
+        return;
       }
 
       const decoded = verifyToken(token);
