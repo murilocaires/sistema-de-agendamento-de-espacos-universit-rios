@@ -16,7 +16,7 @@ const SmartRedirect = () => {
       case 'coordenador':
         return '/coordenador/dashboard';
       case 'portaria':
-        return '/portaria/reservas';
+        return '/portaria/calendario-geral';
       case 'aluno':
         return '/aluno/reservas';
       default:

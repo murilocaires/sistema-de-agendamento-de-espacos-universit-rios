@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
           case 'coordenador':
             return '/coordenador/dashboard';
           case 'portaria':
-            return '/portaria/reservas';
+            return '/portaria/calendario-geral';
           case 'aluno':
             return '/aluno/dashboard';
           default:

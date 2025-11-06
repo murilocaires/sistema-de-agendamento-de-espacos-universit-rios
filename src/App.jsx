@@ -22,7 +22,8 @@ import AprovarContas from "./pages/admin/AprovarContas";
 import Logs from "./pages/admin/Logs";
 import ProjetosAdmin from "./pages/admin/Projetos";
 import CadastrarAlunosAdmin from "./pages/admin/CadastrarAlunos";
-import ReservasPortaria from "./pages/portaria/ReservasPortaria";
+import CalendarioGeralPortaria from "./components/calendariogeral/CalendarioGeral";
+import PerfilPortaria from "./pages/portaria/PerfilPortaria";
 import MinhasReservas from "./pages/professor/MinhasReservas";
 import NovaReserva from "./pages/professor/NovaReserva";
 import Projetos from "./pages/professor/Projetos";
@@ -186,12 +187,20 @@ function App() {
             }
           />
 
-          {/* Rota protegida para visualizar reservas (portaria) */}
+          {/* Rotas protegidas para portaria */}
           <Route
-            path="/portaria/reservas"
+            path="/portaria/calendario-geral"
             element={
               <ProtectedRoute>
-                <ReservasPortaria />
+                <CalendarioGeralPortaria />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/portaria/perfil"
+            element={
+              <ProtectedRoute>
+                <PerfilPortaria />
               </ProtectedRoute>
             }
           />
