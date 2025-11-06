@@ -78,12 +78,30 @@ const Users = () => {
   }, []);
 
   // Filtrar usuários
-  const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.siape.includes(searchTerm) ||
-    u.role.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    // Se não há termo de busca, retorna todos
+    if (!searchTerm || !searchTerm.trim()) return true;
+    
+    // Verificar se o usuário existe
+    if (!u) return false;
+    
+    const searchLower = searchTerm.toLowerCase().trim();
+    
+    // Verificar nome (com segurança)
+    const nameMatch = u.name?.toLowerCase().includes(searchLower) || false;
+    
+    // Verificar email (com segurança)
+    const emailMatch = u.email?.toLowerCase().includes(searchLower) || false;
+    
+    // Verificar SIAPE ou Matrícula SIGAA (com segurança)
+    const siapeMatch = (u.siape && u.siape.toString().includes(searchTerm.trim())) || false;
+    const matriculaMatch = (u.matricula_sigaa && u.matricula_sigaa.toString().includes(searchTerm.trim())) || false;
+    
+    // Verificar role (com segurança)
+    const roleMatch = u.role?.toLowerCase().includes(searchLower) || false;
+    
+    return nameMatch || emailMatch || siapeMatch || matriculaMatch || roleMatch;
+  });
 
   // Abrir modal
   const openModal = (mode, userData = null) => {

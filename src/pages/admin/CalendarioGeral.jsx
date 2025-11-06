@@ -16,7 +16,8 @@ ChevronLeft,
 ChevronRight,
 AlertCircle,
 CheckCircle,
-X
+X,
+ChevronDown
 } from "lucide-react";
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -62,6 +63,7 @@ const [selectedDate, setSelectedDate] = useState(new Date());
 const [currentMonth, setCurrentMonth] = useState(new Date());
 const [selectedRoom, setSelectedRoom] = useState('');
 const [searchTerm, setSearchTerm] = useState('');
+const [showRoomSuggestions, setShowRoomSuggestions] = useState(false);
 
 // Estados dos dados filtrados
 const [calendarEvents, setCalendarEvents] = useState([]);
@@ -248,6 +250,29 @@ const filteredRooms = rooms.filter(room =>
     room.location.toLowerCase().includes(searchTerm.toLowerCase())
 );
 
+// Obter sala selecionada para exibição
+const selectedRoomData = rooms.find(room => room.id.toString() === selectedRoom);
+
+// Selecionar sala
+const handleRoomSelect = (roomId) => {
+    if (roomId === '') {
+        setSelectedRoom('');
+        setSearchTerm('');
+    } else {
+        const room = rooms.find(r => r.id.toString() === roomId.toString());
+        setSelectedRoom(roomId.toString());
+        setSearchTerm(room ? `${room.name} - ${room.location}` : '');
+    }
+    setShowRoomSuggestions(false);
+};
+
+// Limpar seleção
+const handleClearSelection = () => {
+    setSelectedRoom('');
+    setSearchTerm('');
+    setShowRoomSuggestions(false);
+};
+
 // Gerar dias do calendário pequeno
 const generateCalendarDays = () => {
     const startOfMonth = moment(currentMonth).startOf('month');
@@ -396,13 +421,13 @@ return (
                 <div className="flex gap-1">
                     <button
                     onClick={() => navigateMonth(-1)}
-                    className="p-1 hover:bg-gray-100 rounded"
+                    className="p-1 hover:bg-gray-100/10 rounded"
                     >
                     <ChevronLeft size={16} />
                     </button>
                     <button
                     onClick={() => navigateMonth(1)}
-                    className="p-1 hover:bg-gray-100 rounded"
+                    className="p-1 hover:bg-gray-100/10 rounded"
                     >
                     <ChevronRight size={16} />
                     </button>
@@ -430,7 +455,7 @@ return (
                         className={`
                         relative p-2 text-xs rounded hover:bg-blue-300 transition-colors
                         ${!isCurrentMonth ? 'text-gray-400' : 'text-gray-700'}
-                        ${isToday ? 'bg-gray-500 text-blue-800 font-semibold' : ''}
+                        ${isToday ? 'bg-gray-500/10 text-blue-800 font-semibold' : ''}
                         ${isSelected ? 'bg-blue-700 text-white' : ''}
                         `}
                     >
@@ -485,45 +510,94 @@ return (
 
             {/* Coluna Direita - Calendário Principal */}
             <div className="xl:col-span-3">
-            {/* Filtros */}
+            {/* Filtros - Buscador de Sala com Sugestões */}
             <div className="bg-white rounded-lg shadow border p-4 mb-6">
-                <div className="flex flex-col sm:flex-row gap-4">
-                {/* Busca por Sala */}
-                <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Buscar Sala
-                    </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Buscar e Filtrar por Sala
+                </label>
+                <div className="relative">
                     <div className="relative">
-                    <Search className="absolute left-3 top-3 text-gray-400" size={16} />
-                    <input
-                        type="text"
-                        placeholder="Nome ou localização da sala..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Digite para buscar sala ou localização..."
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setShowRoomSuggestions(true);
+                                if (e.target.value === '') {
+                                    setSelectedRoom('');
+                                }
+                            }}
+                            onFocus={() => setShowRoomSuggestions(true)}
+                            className="w-full pl-9 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                        {selectedRoom && (
+                            <button
+                                onClick={handleClearSelection}
+                                className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                title="Limpar seleção"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+                        <ChevronDown 
+                            className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 transition-transform ${showRoomSuggestions ? 'rotate-180' : ''}`}
+                            size={16}
+                        />
                     </div>
+                    
+                    {/* Dropdown de Sugestões */}
+                    {showRoomSuggestions && (
+                        <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {/* Opção "Todas as salas" */}
+                            <button
+                                onClick={() => handleRoomSelect('')}
+                                className={`w-full text-left px-4 py-2 hover:bg-gray-100/10 transition-colors text-sm ${
+                                    selectedRoom === '' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                }`}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <MapPin size={14} className="text-gray-400" />
+                                    <span>Todas as salas</span>
+                                </div>
+                            </button>
+                            
+                            {/* Lista de salas filtradas */}
+                            {filteredRooms.length > 0 ? (
+                                filteredRooms.map(room => (
+                                    <button
+                                        key={room.id}
+                                        onClick={() => handleRoomSelect(room.id)}
+                                        className={`w-full text-left px-4 py-2 hover:bg-gray-100/10 transition-colors text-sm border-t border-gray-100 ${
+                                            selectedRoom === room.id.toString() ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <MapPin size={14} className="text-gray-400" />
+                                            <div>
+                                                <div className="font-medium">{room.name}</div>
+                                                <div className="text-xs text-gray-500">{room.location}</div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                ))
+                            ) : (
+                                <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                    Nenhuma sala encontrada
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
-
-                {/* Seletor de Sala */}
-                <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Filtrar por Sala
-                    </label>
-                    <select
-                    value={selectedRoom}
-                    onChange={(e) => setSelectedRoom(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    >
-                    <option value="">Todas as salas</option>
-                    {filteredRooms.map(room => (
-                        <option key={room.id} value={room.id}>
-                        {room.name} - {room.location}
-                        </option>
-                    ))}
-                    </select>
-                </div>
-                </div>
+                
+                {/* Sala selecionada (feedback visual) */}
+                {selectedRoom && selectedRoomData && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-blue-700">
+                        <CheckCircle size={14} />
+                        <span>Filtrando por: <strong>{selectedRoomData.name} - {selectedRoomData.location}</strong></span>
+                    </div>
+                )}
             </div>
 
             {/* Calendário Principal */}
@@ -594,6 +668,14 @@ return (
             </div>
             </div>
         </div>
+        )}
+
+        {/* Overlay para fechar dropdown quando clicar fora */}
+        {showRoomSuggestions && (
+            <div
+                className="fixed inset-0 z-[90]"
+                onClick={() => setShowRoomSuggestions(false)}
+            />
         )}
 
         {/* Modal de Detalhes da Reserva */}
