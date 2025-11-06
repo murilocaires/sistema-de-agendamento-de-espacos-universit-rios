@@ -18,6 +18,16 @@ const nextConfig = {
     ];
   },
 
+  // Rewrites para garantir que as rotas da API funcionem
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
+      },
+    ];
+  },
+
   // Configurações experimentais para ESM
   experimental: {
     esmExternals: true,

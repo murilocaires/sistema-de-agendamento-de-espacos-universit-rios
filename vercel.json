@@ -2,17 +2,14 @@
   "version": 2,
   "builds": [
     {
+      "src": "backend/package.json",
+      "use": "@vercel/next"
+    },
+    {
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "dist"
-      }
-    },
-    {
-      "src": "backend/package.json",
-      "use": "@vercel/next",
-      "config": {
-        "zeroConfig": false
       }
     }
   ],
@@ -23,11 +20,9 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/$1",
+      "continue": true
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
 
