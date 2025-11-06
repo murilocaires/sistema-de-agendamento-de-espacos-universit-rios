@@ -178,7 +178,7 @@ const expandRecurringReservations = (reservation) => {
         if (recurrenceType === 'daily') {
             currentDate.add(1, 'day');
         } else if (recurrenceType === 'weekly') {
-            currentDate.add(1, 'week');
+        currentDate.add(1, 'week');
         } else if (recurrenceType === 'monthly') {
             currentDate.add(1, 'month');
         } else {
@@ -440,14 +440,14 @@ useEffect(() => {
         let approvedReservations = allReservations.filter(reservation => 
             reservation.status === 'approved'
         );
-
+        
         // Expandir reservas recorrentes
         let expandedReservations = [];
         approvedReservations.forEach(reservation => {
             const occurrences = expandRecurringReservations(reservation);
             expandedReservations.push(...occurrences);
         });
-
+        
         // Filtrar por sala se selecionada
         if (selectedRoom) {
             expandedReservations = expandedReservations.filter(
@@ -459,18 +459,18 @@ useEffect(() => {
         events = expandedReservations.map(reservation => {
             const room = rooms.find(r => r.id === reservation.room_id);
             return {
-                id: reservation.id,
-                title: reservation.title,
-                start: new Date(reservation.start_time),
-                end: new Date(reservation.end_time),
-                resource: {
+            id: reservation.id,
+            title: reservation.title,
+            start: new Date(reservation.start_time),
+            end: new Date(reservation.end_time),
+            resource: {
                     user: reservation.user_name || 'Usuário',
                     room: room?.name || 'Sala não encontrada',
                     room_id: reservation.room_id,
-                    status: reservation.status,
+                status: reservation.status,
                     description: reservation.description,
                     isPreview: false
-                }
+            }
             };
         });
     }
@@ -1257,13 +1257,13 @@ const content = (
                     }
                     // Eventos normais (azul)
                     return {
-                        style: {
-                            backgroundColor: '#3b82f6',
-                            borderColor: '#1d4ed8',
-                            color: 'white',
-                            fontSize: '12px',
-                            borderRadius: '4px'
-                        }
+                    style: {
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#1d4ed8',
+                    color: 'white',
+                    fontSize: '12px',
+                    borderRadius: '4px'
+                    }
                     };
                 }}
                 components={{

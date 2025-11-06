@@ -1,8 +1,9 @@
 import moment from 'moment';
+import 'moment/locale/pt-br';
 import { momentLocalizer } from 'react-big-calendar';
 
-// Configurar moment para português
-moment.locale('pt-br', {
+// Configurar moment para português usando updateLocale (locale já existe)
+moment.updateLocale('pt-br', {
     months: [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -18,6 +19,9 @@ moment.locale('pt-br', {
     weekdaysShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
     weekdaysMin: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 });
+
+// Definir como locale padrão
+moment.locale('pt-br');
 
 export const localizer = momentLocalizer(moment);
 

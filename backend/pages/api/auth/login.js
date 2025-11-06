@@ -3,11 +3,22 @@ import { verifyPassword, generateToken } from '../../../lib/auth.js';
 import { logLogin } from '../../../lib/auditLog.js';
 
 export default async function handler(req, res) {
-  // Configurar CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // Configurar CORS ANTES de qualquer coisa
+  const origin = req.headers.origin;
+  
+  // Permitir origem específica do frontend
+  if (origin && (origin.includes('vercel.app') || origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight por 24 horas
 
+  // Responder a preflight requests ANTES de qualquer processamento
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
