@@ -15,13 +15,11 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "/$1",
-      "continue": true
+      "dest": "/$1"
     }
   ]
 }

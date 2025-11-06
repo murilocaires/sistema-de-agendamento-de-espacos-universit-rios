@@ -1,14 +1,12 @@
 import { query } from '../../../lib/database.js';
 import { hashPassword, generateToken } from '../../../lib/auth.js';
+import { setCorsHeaders } from '../../../lib/cors.js';
 
 export default async function handler(req, res) {
   // Configurar CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  const isPreflight = setCorsHeaders(req, res);
+  if (isPreflight) {
+    return; // Preflight já foi respondido
   }
 
   if (req.method !== 'POST') {

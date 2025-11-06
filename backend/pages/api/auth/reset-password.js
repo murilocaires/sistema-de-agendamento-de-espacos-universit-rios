@@ -2,15 +2,13 @@ import { authMiddleware, requireRole } from '../../../lib/auth.js';
 import { query } from '../../../lib/database.js';
 import { hashPassword } from '../../../lib/auth.js';
 import { withAuditLog, logUpdate } from '../../../lib/auditLog.js';
+import { setCorsHeaders } from '../../../lib/cors.js';
 
 async function handler(req, res) {
   // Configurar CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  const isPreflight = setCorsHeaders(req, res);
+  if (isPreflight) {
+    return; // Preflight já foi respondido
   }
 
   if (req.method === 'POST') {

@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { setCorsHeaders } from './cors.js';
 
 // Hash da senha
 export const hashPassword = async (password) => {
@@ -40,21 +41,9 @@ export const verifyToken = (token) => {
 export const authMiddleware = (handler) => {
   return async (req, res) => {
     // Configurar CORS sempre ANTES de qualquer verificação
-    // Permitir origem específica do frontend ou usar * (sem credentials)
-    const origin = req.headers.origin;
-    if (origin && (origin.includes('vercel.app') || origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-    } else {
-      res.setHeader('Access-Control-Allow-Origin', '*');
-    }
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    // Responder a preflight requests ANTES de qualquer outra verificação
-    if (req.method === 'OPTIONS') {
-      res.status(200).end();
-      return;
+    const isPreflight = setCorsHeaders(req, res);
+    if (isPreflight) {
+      return; // Preflight já foi respondido
     }
 
     try {
