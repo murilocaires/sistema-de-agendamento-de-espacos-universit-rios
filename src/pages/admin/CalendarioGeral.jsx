@@ -109,7 +109,7 @@ useEffect(() => {
     }
 }, [reservations, selectedRoom, selectedDate, currentMonth]);
 
-// Função para expandir reservas recorrentes simples
+// Função para expandir reservas recorrentes
 const expandRecurringReservations = (reservation) => {
     if (!reservation.is_recurring || !reservation.recurrence_end_date) {
         return [reservation];
@@ -121,12 +121,30 @@ const expandRecurringReservations = (reservation) => {
     const startTime = moment(reservation.start_time).format('HH:mm');
     const endTime = moment(reservation.end_time).format('HH:mm');
 
-    // Para reservas semanais simples, gerar uma ocorrência por semana
-    let currentDate = moment(startDate);
-    let weekCount = 0;
-    const maxWeeks = 52; // Limite de 1 ano
+    // Determinar o tipo de recorrência (padrão: weekly se não especificado)
+    const recurrenceType = reservation.recurrence_type || 'weekly';
+    
+    // Normalizar datas para comparação apenas por dia (ignorar horas)
+    const startDateDay = moment(startDate).startOf('day');
+    const endDateDay = moment(endDate).startOf('day');
+    
+    let currentDate = moment(startDateDay);
+    let count = 0;
+    
+    // Limites baseados no tipo de recorrência
+    let maxCount;
+    if (recurrenceType === 'daily') {
+        maxCount = 365; // Limite de 1 ano para recorrências diárias
+    } else if (recurrenceType === 'weekly') {
+        maxCount = 52; // Limite de 1 ano (52 semanas)
+    } else if (recurrenceType === 'monthly') {
+        maxCount = 12; // Limite de 1 ano (12 meses)
+    } else {
+        maxCount = 52; // Padrão: 52 semanas
+    }
 
-    while (currentDate.isSameOrBefore(endDate, 'day') && weekCount < maxWeeks) {
+    // Gerar ocorrências enquanto a data atual for menor ou igual à data final
+    while (currentDate.isSameOrBefore(endDateDay, 'day') && count < maxCount) {
         const occurrenceStart = moment(currentDate).set({
             hour: moment(startTime, 'HH:mm').hour(),
             minute: moment(startTime, 'HH:mm').minute(),
@@ -150,8 +168,17 @@ const expandRecurringReservations = (reservation) => {
             original_reservation_id: reservation.id
         });
 
-        currentDate.add(1, 'week');
-        weekCount++;
+        // Incrementar baseado no tipo de recorrência ANTES de verificar novamente
+        if (recurrenceType === 'daily') {
+            currentDate.add(1, 'day');
+        } else if (recurrenceType === 'weekly') {
+            currentDate.add(1, 'week');
+        } else if (recurrenceType === 'monthly') {
+            currentDate.add(1, 'month');
+        } else {
+            currentDate.add(1, 'week'); // Padrão: semanal
+        }
+        count++;
     }
 
     return occurrences.length > 0 ? occurrences : [reservation];
