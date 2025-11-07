@@ -3,11 +3,6 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   
-  // Desabilitar geração de páginas estáticas (apenas API routes)
-  generateBuildId: async () => {
-    return 'build-' + Date.now().toString();
-  },
-  
   // Configurações para API - Headers CORS
   // Incluindo origem específica do frontend
   async headers() {
