@@ -3,15 +3,17 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   
-  // Configurações para API - Headers CORS configurados dinamicamente nas rotas
-  // O next.config.js não permite origem dinâmica, então usamos o helper cors.js
+  // Configurações para API - Headers CORS
+  // Incluindo origem específica do frontend
   async headers() {
     return [
       {
         source: '/api/:path*',
         headers: [
+          { key: 'Access-Control-Allow-Origin', value: 'https://siruufc.vercel.app' },
           { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
           { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
           { key: 'Access-Control-Max-Age', value: '86400' },
         ],
       },
