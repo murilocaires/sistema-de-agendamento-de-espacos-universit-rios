@@ -1,10 +1,5 @@
-// Página 404 customizada - dinâmica para evitar geração estática
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
-
+// Página 404 customizada
+// Páginas de erro não podem usar getServerSideProps ou getInitialProps
 export default function Custom404() {
   return (
     <div style={{ padding: '20px', textAlign: 'center' }}>

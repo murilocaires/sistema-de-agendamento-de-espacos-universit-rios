@@ -1,10 +1,5 @@
-// Página 500 customizada - dinâmica para evitar geração estática
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}
-
+// Página 500 customizada
+// Páginas de erro não podem usar getServerSideProps ou getInitialProps
 export default function Custom500() {
   return (
     <div style={{ padding: '20px', textAlign: 'center' }}>
