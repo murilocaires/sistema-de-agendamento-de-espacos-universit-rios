@@ -9,6 +9,8 @@ const nextConfig = {
     return 'build-' + Date.now().toString();
   },
   
+  // Desabilitar exportação estática - apenas serverless functions
+  output: 'standalone',
   // Configurações para API - Headers CORS
   // Incluindo origem específica do frontend
   async headers() {
