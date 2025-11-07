@@ -12,13 +12,16 @@ const nextConfig = {
   // Desabilitar exportação estática - apenas serverless functions
   output: 'standalone',
   // Configurações para API - Headers CORS
-  // Incluindo origem específica do frontend
+  // Aceita múltiplas origens (Vercel e Render)
   async headers() {
     return [
       {
         source: '/api/:path*',
         headers: [
-          { key: 'Access-Control-Allow-Origin', value: 'https://siruufc.vercel.app' },
+          { 
+            key: 'Access-Control-Allow-Origin', 
+            value: process.env.ALLOWED_ORIGIN || 'https://siruufc.vercel.app' 
+          },
           { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
           { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization' },
           { key: 'Access-Control-Allow-Credentials', value: 'true' },

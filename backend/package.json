@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "next start -p 3001",
+    "start": "node server.js",
     "lint": "next lint",
     "init-db": "node scripts/init-db-commonjs.js",
     "setup-env": "powershell -ExecutionPolicy Bypass -File setup-env.ps1"
