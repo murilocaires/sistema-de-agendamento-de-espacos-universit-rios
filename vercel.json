@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "backend/package.json",
-      "use": "@vercel/next"
+      "use": "@vercel/next",
+      "config": {
+        "zeroConfig": false
+      }
     },
     {
       "src": "package.json",
@@ -19,8 +22,7 @@
     },
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1",
-      "continue": true
+      "dest": "/api/$1"
     },
     {
       "src": "/((?!api).*)",
