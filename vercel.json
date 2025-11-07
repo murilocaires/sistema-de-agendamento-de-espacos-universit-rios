@@ -3,10 +3,7 @@
   "builds": [
     {
       "src": "backend/package.json",
-      "use": "@vercel/next",
-      "config": {
-        "zeroConfig": false
-      }
+      "use": "@vercel/next"
     },
     {
       "src": "package.json",
@@ -14,12 +11,6 @@
       "config": {
         "distDir": "dist"
       }
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
     }
   ]
 }
