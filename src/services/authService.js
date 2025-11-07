@@ -20,10 +20,27 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    
+    // Ler o texto da resposta uma vez
+    const text = await response.text();
+    
+    // Verificar se a resposta é JSON antes de fazer parse
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        throw new Error(`Erro ao processar resposta: ${response.status} ${response.statusText}`);
+      }
+    } else {
+      // Se não for JSON, criar um objeto de erro
+      throw new Error(`Erro na requisição: ${response.status} ${response.statusText} - ${text.substring(0, 100)}`);
+    }
 
     if (!response.ok) {
-      throw new Error(data.error || 'Erro na requisição');
+      throw new Error(data.error || `Erro na requisição: ${response.status} ${response.statusText}`);
     }
 
     return data;
@@ -46,10 +63,27 @@ const apiRequestNoAuth = async (endpoint, options = {}) => {
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    
+    // Ler o texto da resposta uma vez
+    const text = await response.text();
+    
+    // Verificar se a resposta é JSON antes de fazer parse
+    const contentType = response.headers.get('content-type');
+    let data;
+    
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseError) {
+        throw new Error(`Erro ao processar resposta: ${response.status} ${response.statusText}`);
+      }
+    } else {
+      // Se não for JSON, criar um objeto de erro
+      throw new Error(`Erro na requisição: ${response.status} ${response.statusText} - ${text.substring(0, 100)}`);
+    }
 
     if (!response.ok) {
-      throw new Error(data.error || 'Erro na requisição');
+      throw new Error(data.error || `Erro na requisição: ${response.status} ${response.statusText}`);
     }
 
     return data;
