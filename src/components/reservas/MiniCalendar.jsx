@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { isSameDate, getBrazilNow } from "../../utils/dateUtils";
+import { isSameDate, getBrazilNow, isDateInPast } from "../../utils/dateUtils";
 
 const MiniCalendar = ({
   currentDate,
@@ -16,9 +16,9 @@ const MiniCalendar = ({
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
-    
+
     const days = [];
-    
+
     // Adicionar dias do mês anterior
     const prevMonth = new Date(year, month - 1, 0);
     const prevMonthDays = prevMonth.getDate();
@@ -29,7 +29,7 @@ const MiniCalendar = ({
         isCurrentMonth: false
       });
     }
-    
+
     // Adicionar dias do mês atual
     for (let day = 1; day <= daysInMonth; day++) {
       days.push({
@@ -37,7 +37,7 @@ const MiniCalendar = ({
         isCurrentMonth: true
       });
     }
-    
+
     // Adicionar dias do próximo mês para completar a grade
     const remainingDays = 42 - days.length;
     for (let day = 1; day <= remainingDays; day++) {
@@ -46,18 +46,22 @@ const MiniCalendar = ({
         isCurrentMonth: false
       });
     }
-    
+
     return days;
   };
 
   const recurringDays = getRecurringDays();
+  const todayBrazil = getBrazilNow();
+  const todayYear = todayBrazil.getFullYear();
+  const todayMonth = todayBrazil.getMonth();
+  const todayDate = todayBrazil.getDate();
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-3 md:p-4">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium text-gray-900">
-          {currentDate.toLocaleDateString('pt-BR', { 
-            month: 'long', 
+          {currentDate.toLocaleDateString('pt-BR', {
+            month: 'long',
             year: 'numeric',
             timeZone: 'America/Sao_Paulo'
           })}
@@ -84,20 +88,23 @@ const MiniCalendar = ({
             {day}
           </div>
         ))}
-        
+
         {getDaysInMonth(currentDate).map((day, index) => {
-          const isToday = isSameDate(day.date, getBrazilNow());
+          const isToday = day.date.getFullYear() === todayYear && day.date.getMonth() === todayMonth && day.date.getDate() === todayDate;
           const dayString = day.date.toISOString().split('T')[0];
           const isSelected = formData.date && dayString === formData.date;
           const isRecurring = recurringDays.includes(dayString);
-          
+
+          // Impede o clique em datas passadas
+          const isPast = isDateInPast(dayString) && !isToday;
+
           // Para recorrência diária, verificar se é primeiro, último ou intermediário
           let recurringStyle = '';
           if (isRecurring && !isSelected && formData.is_recurring && formData.recurrence_frequency === 'daily') {
             const isFirstDay = dayString === formData.date;
             const isLastDay = dayString === formData.recurrence_end_date;
             const isMiddleDay = !isFirstDay && !isLastDay;
-            
+
             if (isFirstDay || isLastDay) {
               recurringStyle = 'bg-blue-600 text-white hover:bg-blue-600';
             } else if (isMiddleDay) {
@@ -106,15 +113,14 @@ const MiniCalendar = ({
           } else if (isRecurring && !isSelected) {
             recurringStyle = 'bg-blue-600 text-white hover:bg-blue-600';
           }
-          
+
           return (
             <button
               key={index}
               onClick={() => onDateSelect(dayString)}
-              disabled={false}
-              className={`text-center p-1 rounded text-xs font-medium focus:outline-none ${
-                !day.isCurrentMonth ? 'text-gray-400' : 'text-gray-900'
-              } ${isToday ? 'border-2 border-blue-600' : ''} ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-600' : ''} ${recurringStyle} ${!isSelected && !isRecurring && day.isCurrentMonth ? 'hover:bg-blue-100' : ''}`}
+              disabled={isPast}
+              className={`text-center p-1 rounded text-xs font-medium focus:outline-none ${!day.isCurrentMonth || isPast ? 'text-gray-400' : 'text-gray-900'
+                } ${isPast ? 'cursor-not-allowed opacity-50' : ''} ${isToday ? 'border-2 border-blue-600' : ''} ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-600' : ''} ${recurringStyle} ${!isSelected && !isRecurring && day.isCurrentMonth && !isPast ? 'hover:bg-blue-100' : ''}`}
             >
               {day.date.getDate()}
             </button>

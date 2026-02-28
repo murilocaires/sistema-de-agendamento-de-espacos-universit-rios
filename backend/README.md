@@ -42,7 +42,7 @@ curl -X POST http://localhost:3001/api/init
 
 ### 4. Executar o servidor
 ```bash
-npm run dev
+npmdev run 
 ```
 
 O servidor estará rodando em `http://localhost:3001`
@@ -68,11 +68,11 @@ POST /api/auth/register
 Content-Type: application/json
 
 {
-  "name": "Nome do Usuário",
-  "email": "usuario@exemplo.com",
+  "name": "Servidor teste (Murilo)",
+  "email": "servidor@exemplo.com",
   "siape": "123456",
-  "password": "senha123",
-  "role": "professor"
+  "password": "servidor123",
+  "role": "servidor"
 }
 ```
 

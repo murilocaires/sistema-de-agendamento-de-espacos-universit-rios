@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { 
+import {
   getRooms,
   createReservation,
   getReservations,
@@ -8,9 +8,9 @@ import {
   getProfessorProjects
 } from "../../services/authService";
 import { RefreshCw, Monitor, Wifi, AirVent } from "lucide-react";
-import { 
-  isSameDate, 
-  isDateInPast, 
+import {
+  isSameDate,
+  isDateInPast,
   getBrazilNow,
   createBrazilDateTimeISO
 } from "../../utils/dateUtils";
@@ -23,11 +23,11 @@ import SuccessModal from "./SuccessModal";
 import ErrorMessage from "./ErrorMessage";
 import SuccessToast from "./SuccessToast";
 
-const NovaReserva = ({ 
+const NovaReserva = ({
   title = "Nova Reserva",
   userType = "student",
   showProjectSelection = true,
-  onReservationCreated = null 
+  onReservationCreated = null
 }) => {
   const { user } = useAuth();
 
@@ -42,11 +42,13 @@ const NovaReserva = ({
   const [successMessage, setSuccessMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [createdReservation, setCreatedReservation] = useState(null);
+  const [searchCriteria, setSearchCriteria] = useState(null);
+  const [isSearchingRooms, setIsSearchingRooms] = useState(false);
 
   // Estados do formulário
   const [formData, setFormData] = useState({
     project_id: "",
-    project_text: "", // Texto digitado pelo usuário
+    project_text: "",
     description: "",
     date: "",
     start_time: "",
@@ -65,10 +67,9 @@ const NovaReserva = ({
   // Estados para o dropdown de projetos
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const [filteredProjects, setFilteredProjects] = useState([]);
-  const [searchProjectText, setSearchProjectText] = useState(""); // Texto para filtrar projetos
+  const [searchProjectText, setSearchProjectText] = useState("");
 
   const [errors, setErrors] = useState({});
-  const [availableRooms, setAvailableRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
 
   // Estados do calendário
@@ -81,31 +82,140 @@ const NovaReserva = ({
     { key: 'air_conditioning', label: 'Ar Condicionado', icon: AirVent }
   ];
 
+  // -------------------------------------------------------------
+  // USEMEMOS CORRIGIDOS (Mapeamento de disponibilidade e salas)
+  // -------------------------------------------------------------
+  const reservationsByRoom = useMemo(() => {
+    const map = {};
+    reservations.forEach(res => {
+      if (res.status !== "approved") return;
+      if (!map[res.room_id]) map[res.room_id] = [];
+      map[res.room_id].push(res);
+    });
+    return map;
+  }, [reservations]);
+
+  const handleSearchRooms = () => {
+    if (!formData.date || !formData.start_time || !formData.end_time || !formData.people_count) {
+      setError("Preencha data, horários e quantidade de participantes para buscar salas.");
+      return;
+    }
+
+    setError("");
+    setIsSearchingRooms(true);
+
+    // Pequeno delay para dar o feedback visual de "buscando"
+    setTimeout(() => {
+      setSearchCriteria({
+        date: formData.date,
+        start: formData.start_time,
+        end: formData.end_time,
+        people: formData.people_count,
+        recurring: formData.is_recurring,
+        recurrenceEnd: formData.recurrence_end_date,
+        recurrenceFreq: formData.recurrence_frequency,
+        resources: formData.room_resources
+      });
+      setIsSearchingRooms(false);
+    }, 600);
+  };
+
+  const availableRooms = useMemo(() => {
+    if (!searchCriteria) return [];
+
+    const {
+      date,
+      start,
+      end,
+      people,
+      recurring,
+      recurrenceEnd,
+      resources
+    } = searchCriteria;
+
+    if (!date || !start || !end || !people || people <= 0) {
+      return [];
+    }
+
+    if (recurring && !recurrenceEnd) {
+      return [];
+    }
+
+    const requiredResources = Object.entries(resources)
+      .filter(([_, value]) => value)
+      .map(([key]) => key);
+
+    return rooms
+      .filter(room => room.is_active)
+      .filter(room => {
+        if (recurring) {
+          const isFixed = room.is_fixed_reservation === true || room.is_fixed_reservation === 1;
+          if (isFixed) return false;
+        }
+        return true;
+      })
+      .filter(room => {
+        if (requiredResources.length === 0) return true;
+
+        const dbMap = {
+          projector: "has_projector",
+          internet: "has_internet",
+          air_conditioning: "has_air_conditioning"
+        };
+
+        return requiredResources.every(resource => {
+          const dbField = dbMap[resource];
+          return (
+            (room.resources && room.resources[resource] === true) ||
+            room[dbField] === true ||
+            room[dbField] === 1
+          );
+        });
+      })
+      .filter(room => {
+        const roomReservations = reservationsByRoom[room.id] || [];
+
+        return !roomReservations.some(res => {
+          if (!isSameDate(date, res.date)) return false;
+          return start < res.end_time && end > res.start_time;
+        });
+      });
+  }, [rooms, reservationsByRoom, searchCriteria]);
+  // -------------------------------------------------------------
+
+
   // Função para gerar dias recorrentes baseados no dia da semana
   const getRecurringDays = () => {
     if (!formData.is_recurring || !formData.date || !formData.recurrence_end_date) {
       return [];
     }
-    
+
     const startDate = new Date(formData.date);
     const endDate = new Date(formData.recurrence_end_date);
-    const startDayOfWeek = startDate.getDay(); // Dia da semana (0-6)
+
+    // Trava de segurança 1: não tentar calcular se a data final for menor
+    if (endDate < startDate) {
+      return [];
+    }
+
+    const startDayOfWeek = startDate.getDay();
     const recurringDays = [];
 
     let currentDate = new Date(startDate);
-    
-    while (currentDate <= endDate) {
+    let occurrencesCount = 0;
+    const MAX_OCCURRENCES = 365; // Trava de segurança 2: máximo 1 ano de ocorrências diárias na UI
+
+    while (currentDate <= endDate && occurrencesCount < MAX_OCCURRENCES) {
       if (formData.recurrence_frequency === 'daily') {
-        // Para diária, adiciona todos os dias
         recurringDays.push(currentDate.toISOString().split('T')[0]);
+        occurrencesCount++;
       } else {
-        // Para semanal e quinzenal, verifica o dia da semana
         if (currentDate.getDay() === startDayOfWeek) {
           recurringDays.push(currentDate.toISOString().split('T')[0]);
+          occurrencesCount++;
         }
       }
-      
-      // Avançar baseado na frequência
+
       if (formData.recurrence_frequency === 'daily') {
         currentDate.setDate(currentDate.getDate() + 1);
       } else if (formData.recurrence_frequency === 'weekly') {
@@ -127,11 +237,9 @@ const NovaReserva = ({
     const occurrences = [];
     const startDate = new Date(reservation.start_time);
     const endDate = new Date(reservation.recurrence_end_date);
-    
-    // Normalizar endDate para fim do dia para comparação correta
+
     endDate.setHours(23, 59, 59, 999);
-    
-    // Extrair hora de início e fim
+
     const startHour = new Date(reservation.start_time).getHours();
     const startMinute = new Date(reservation.start_time).getMinutes();
     const endHour = new Date(reservation.end_time).getHours();
@@ -139,12 +247,12 @@ const NovaReserva = ({
 
     let currentDate = new Date(startDate);
     let weekCount = 0;
-    const maxWeeks = 52; // Limite de 1 ano
+    const maxWeeks = 52;
 
     while (currentDate <= endDate && weekCount < maxWeeks) {
       const occurrenceStart = new Date(currentDate);
       occurrenceStart.setHours(startHour, startMinute, 0, 0);
-      
+
       const occurrenceEnd = new Date(currentDate);
       occurrenceEnd.setHours(endHour, endMinute, 0, 0);
 
@@ -158,7 +266,6 @@ const NovaReserva = ({
         original_reservation_id: reservation.id
       });
 
-      // Avançar uma semana
       currentDate = new Date(currentDate);
       currentDate.setDate(currentDate.getDate() + 7);
       weekCount++;
@@ -170,28 +277,23 @@ const NovaReserva = ({
   // Carregar dados iniciais
   const loadData = async (isRefresh = false) => {
     try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      
-      // Usar getProfessorProjects para professores/servidores, getMyProjects para alunos
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
+
       const getProjectsFunction = userType === 'professor' ? getProfessorProjects : getMyProjects;
-      
+
       const [roomsData, reservationsData, projectsData] = await Promise.all([
         getRooms(),
         getReservations(),
         showProjectSelection ? getProjectsFunction() : Promise.resolve([])
       ]);
-      
-      // Expandir reservas recorrentes
+
       let expandedReservations = [];
       (reservationsData || []).forEach(reservation => {
         const occurrences = expandRecurringReservations(reservation);
         expandedReservations.push(...occurrences);
       });
-      
+
       const activeRooms = roomsData.filter(room => room.is_active);
       setRooms(activeRooms);
       setReservations(expandedReservations);
@@ -200,15 +302,11 @@ const NovaReserva = ({
     } catch (err) {
       setError("Erro ao carregar dados: " + err.message);
     } finally {
-      if (isRefresh) {
-        setRefreshing(false);
-      } else {
-        setLoading(false);
-      }
+      if (isRefresh) setRefreshing(false);
+      else setLoading(false);
     }
   };
 
-  // Função para atualizar dados manualmente
   const handleRefresh = async () => {
     await loadData(true);
     setSuccessMessage("Dados atualizados com sucesso!");
@@ -219,7 +317,6 @@ const NovaReserva = ({
     loadData();
   }, []);
 
-  // Filtrar projetos com base no texto de busca
   useEffect(() => {
     if (!searchProjectText.trim()) {
       setFilteredProjects(myProjects);
@@ -232,86 +329,47 @@ const NovaReserva = ({
   }, [searchProjectText, myProjects]);
 
 
-  // Filtrar salas disponíveis baseado nos critérios selecionados
-  useEffect(() => {
-    filterAvailableRooms();
-  }, [formData.project_text, formData.description, formData.date, formData.start_time, formData.end_time, formData.people_count, formData.room_resources, formData.is_recurring, formData.recurrence_end_date, formData.recurrence_frequency, rooms, reservations, showProjectSelection]);
-
-  // Função para verificar se uma sala está disponível no horário selecionado
+  // Função para verificar se uma sala está disponível no horário selecionado (CORRIGIDA)
   const isRoomAvailable = (room) => {
     if (!formData.date || !formData.start_time || !formData.end_time) return false;
-    
-    // Se for recorrente, verificar todas as datas da recorrência
+
     if (formData.is_recurring && formData.recurrence_end_date) {
       const recurringDays = getRecurringDays();
-      
-      console.log(`📅 Verificando disponibilidade recorrente para sala ${room.name}:`, {
-        totalDias: recurringDays.length,
-        frequencia: formData.recurrence_frequency,
-        datas: recurringDays
-      });
-      
-      // Verificar se a sala está disponível em TODAS as datas recorrentes
+
       const allDaysAvailable = recurringDays.every(dateString => {
         const hasConflict = reservations.some(reservation => {
-          // Só verificar reservas aprovadas (não pendentes)
           if (reservation.status !== 'approved') return false;
           if (reservation.room_id !== room.id) return false;
-          
-          // Comparar datas usando timezone de Brasília
           if (!isSameDate(dateString, reservation.date)) return false;
-          
-          // Verificar se há sobreposição de horários
+
           const reservationStart = reservation.start_time;
           const reservationEnd = reservation.end_time;
-          
-          // Conflito se há qualquer sobreposição de horários
+
           return (formData.start_time < reservationEnd && formData.end_time > reservationStart);
         });
-        
-        if (hasConflict) {
-          console.log(`❌ Sala ${room.name} indisponível em ${dateString}`);
-        }
-        
         return !hasConflict;
       });
-      
-      if (allDaysAvailable) {
-        console.log(`✅ Sala ${room.name} disponível em todas as ${recurringDays.length} datas`);
-      }
-      
       return allDaysAvailable;
     }
-    
-    // Para reservas não recorrentes, verificar apenas a data selecionada
+
     const hasConflict = reservations.some(reservation => {
-      // Só verificar reservas aprovadas (não pendentes)
       if (reservation.status !== 'approved') return false;
       if (reservation.room_id !== room.id) return false;
-      
-      // Comparar datas usando timezone de Brasília
       if (!isSameDate(formData.date, reservation.date)) return false;
-      
-      // Verificar se há sobreposição de horários
+
       const reservationStart = reservation.start_time;
       const reservationEnd = reservation.end_time;
-      
-      // Conflito se há qualquer sobreposição de horários
-      // Nova reserva: [start_time, end_time]
-      // Reserva existente: [reservationStart, reservationEnd]
-      // Há conflito se: start_time < reservationEnd && end_time > reservationStart
+
       return (formData.start_time < reservationEnd && formData.end_time > reservationStart);
     });
-    
+
     return !hasConflict;
   };
 
-  // Função para selecionar uma sala
   const selectRoom = (room) => {
     setSelectedRoom(room);
   };
 
-  // Função para navegar no calendário
   const navigateCalendar = (direction) => {
     setCurrentDate(prev => {
       const newDate = new Date(prev);
@@ -320,120 +378,35 @@ const NovaReserva = ({
     });
   };
 
-  // Função para selecionar data no calendário
   const handleDateSelect = (dayString) => {
     setFormData(prev => ({ ...prev, date: dayString }));
   };
 
-  const filterAvailableRooms = () => {
-    // Verificar se todos os campos obrigatórios estão preenchidos
-    const hasProject = !showProjectSelection || (formData.project_id && formData.project_text.trim());
-    const hasDescription = formData.description.trim();
-    const hasDate = formData.date;
-    const hasStartTime = formData.start_time;
-    const hasEndTime = formData.end_time;
-    const hasParticipants = formData.people_count && formData.people_count > 0;
-    
-    // Se for recorrente, verificar campos adicionais
-    const hasRecurrenceFields = !formData.is_recurring || 
-      (formData.recurrence_frequency && formData.recurrence_end_date);
-    
-    // Não mostrar salas se campos obrigatórios não estão preenchidos
-    if (!hasProject || !hasDescription || !hasDate || !hasStartTime || !hasEndTime || !hasParticipants || !hasRecurrenceFields) {
-      setAvailableRooms([]);
-      return;
-    }
-
-    const requiredResources = Object.entries(formData.room_resources)
-      .filter(([key, value]) => value)
-      .map(([key]) => key);
-
-    // Filtrar salas baseado em reservas recorrentes
-    let roomsFiltered = rooms;
-    
-    // Se for recorrente, filtrar apenas salas que NÃO são de reserva fixa
-    if (formData.is_recurring) {
-      console.log('🔍 Filtrando salas para reserva recorrente...');
-      console.log('Salas antes do filtro de recorrência:', roomsFiltered.map(r => ({
-        name: r.name,
-        is_fixed_reservation: r.is_fixed_reservation,
-        tipo: typeof r.is_fixed_reservation
-      })));
-      
-      roomsFiltered = roomsFiltered.filter(room => {
-        // is_fixed_reservation = true significa que a sala é APENAS para reservas fixas
-        // Então, para reservas recorrentes avulsas, queremos salas onde is_fixed_reservation = false ou null
-        // Tratar valores booleanos, numéricos e null/undefined
-        const isFixed = room.is_fixed_reservation === true || room.is_fixed_reservation === 1;
-        const allowsRecurring = !isFixed;
-        
-        console.log(`🏢 Sala ${room.name}:`, {
-          is_fixed_reservation: room.is_fixed_reservation,
-          tipo: typeof room.is_fixed_reservation,
-          isFixed: isFixed,
-          allowsRecurring: allowsRecurring
-        });
-        
-        return allowsRecurring;
-      });
-      
-      console.log('✅ Salas após filtro de recorrência:', roomsFiltered.map(r => r.name));
-    }
-    
-    const roomsWithResources = roomsFiltered.filter(room => {
-      if (requiredResources.length === 0) return true;
-      return requiredResources.every(resource => {
-        // Mapear nomes dos recursos para os campos do banco de dados
-        const dbFieldMap = {
-          'projector': 'has_projector',
-          'internet': 'has_internet',
-          'air_conditioning': 'has_air_conditioning'
-        };
-        
-        const dbField = dbFieldMap[resource];
-        
-        // Verificar tanto em room.resources quanto diretamente na room
-        const roomHasResource = 
-          (room.resources && room.resources[resource] === true) || 
-          (room[dbField] === true) ||
-          (room[dbField] === 1);
-        
-        return roomHasResource;
-      });
-    });
-
-    // Filtrar salas disponíveis no horário selecionado
-    const availableRooms = roomsWithResources.filter(room => isRoomAvailable(room));
-    setAvailableRooms(availableRooms);
-  };
-
-  // Handler específico para o campo de data
   const handleDateChange = (e) => {
     const { name, value } = e.target;
-    
-    
-    // Sempre atualizar o valor do campo, mesmo se houver erro de validação
+
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Permitir campo vazio
+
     if (value === '') {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
       return;
     }
-    
-    // Validar formato da data - só validar se estiver completo
+
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(value)) {
-      // Limpar erro se ainda está digitando
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
       return;
     }
-    
+
     const year = value.split('-')[0];
-    const month = value.split('-')[1];
-    const day = value.split('-')[2];
-    
-    // Validar ano (4 dígitos) - só se a data estiver completa
     const yearNum = parseInt(year);
     if (year.length !== 4 || isNaN(yearNum)) {
       setErrors(prev => ({
@@ -442,66 +415,49 @@ const NovaReserva = ({
       }));
       return;
     }
-    
-    // Validar se a data é anterior à data atual (apenas para data principal)
-    if (name === 'date') {
-      // Usar timezone de Brasília para validação
-      if (isDateInPast(value)) {
-        setErrors(prev => ({
-          ...prev,
-          [name]: "A data não pode ser anterior a hoje"
-        }));
-      } else {
-        // Limpar erro se a data for válida
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors[name];
-          return newErrors;
-        });
+
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      let hasError = false;
+
+      if (name === 'date') {
+        if (isDateInPast(value)) {
+          newErrors.date = "A data não pode ser anterior a hoje";
+          hasError = true;
+        } else {
+          delete newErrors.date;
+        }
       }
-    }
-    
-    // Validar se a data final é anterior à data inicial (apenas para data final)
-    if (name === 'recurrence_end_date' && formData.date) {
-      // Usar timezone de Brasília para comparação
-      const selectedDate = new Date(value);
-      const startDate = new Date(formData.date);
-      
-      if (selectedDate < startDate) {
-        setErrors(prev => ({
-          ...prev,
-          [name]: "A data final deve ser posterior à data inicial"
-        }));
-      } else {
-        // Limpar erro se a data for válida
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors[name];
-          return newErrors;
-        });
+
+      if (name === 'recurrence_end_date' || (name === 'date' && formData.recurrence_end_date)) {
+        const dateToCheck = name === 'recurrence_end_date' ? value : formData.recurrence_end_date;
+        const startDateString = name === 'date' ? value : formData.date;
+
+        if (dateToCheck && startDateString) {
+          const selectedDate = new Date(dateToCheck);
+          const startDate = new Date(startDateString);
+
+          if (selectedDate < startDate) {
+            newErrors.recurrence_end_date = "A data final deve ser posterior à data inicial";
+            hasError = true;
+          } else {
+            delete newErrors.recurrence_end_date;
+          }
+        }
       }
-    }
-    
-    // Limpar erros de validação se o campo foi preenchido corretamente
-    if (!errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
+
+      return newErrors;
+    });
   };
 
-  // Manipular mudanças no formulário
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
-    // Usar handler específico para campos de data
+
     if (name === 'date' || name === 'recurrence_end_date') {
       handleDateChange(e);
       return;
     }
-    
+
     if (type === 'checkbox') {
       if (name === 'is_recurring') {
         setFormData(prev => ({
@@ -528,78 +484,71 @@ const NovaReserva = ({
         ...prev,
         [name]: value
       }));
-      
-      // Validar horário em tempo real se a data for hoje
-      if (name === 'start_time' && formData.date && value) {
-        const selectedDate = new Date(formData.date + 'T00:00:00');
+
+      if (name === 'start_time') {
+        const selectedDate = formData.date ? new Date(formData.date + 'T00:00:00') : null;
         const now = getBrazilNow();
-        const isToday = isSameDate(selectedDate, now);
-        
-        console.log('🕐 Validação de horário:', {
-          data_selecionada: formData.date,
-          selectedDate: selectedDate.toISOString(),
-          now: now.toISOString(),
-          isToday,
-          horario_digitado: value
-        });
-        
-        if (isToday) {
-          const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-          if (value <= currentTime) {
-            setErrors(prev => ({
-              ...prev,
-              start_time: "O horário deve ser posterior ao horário atual"
-            }));
-            return;
+        const isToday = selectedDate ? isSameDate(selectedDate, now) : false;
+
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          let hasStartError = false;
+
+          if (isToday) {
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            if (value <= currentTime) {
+              newErrors.start_time = "O horário deve ser posterior ao horário atual";
+              hasStartError = true;
+            } else {
+              delete newErrors.start_time;
+            }
+          } else {
+            delete newErrors.start_time;
           }
-        }
-        
-        // Se o horário de fim já foi definido, validar se ainda é válido
-        if (formData.end_time && value >= formData.end_time) {
-          setErrors(prev => ({
-            ...prev,
-            end_time: "O horário de fim deve ser posterior ao horário de início"
-          }));
-        } else if (formData.end_time) {
-          // Limpar erro do end_time se agora está válido
-          setErrors(prev => {
-            const newErrors = { ...prev };
-            delete newErrors.end_time;
-            return newErrors;
-          });
-        }
+
+          if (formData.end_time) {
+            if (value >= formData.end_time) {
+              newErrors.end_time = "O horário de fim deve ser posterior ao horário de início";
+            } else {
+              delete newErrors.end_time;
+            }
+          }
+          return newErrors;
+        });
       }
-      
-      // Validar horário de fim em tempo real
-      if (name === 'end_time' && formData.start_time && value) {
-        if (value <= formData.start_time) {
-          setErrors(prev => ({
-            ...prev,
-            end_time: "O horário de fim deve ser posterior ao horário de início"
-          }));
-          return;
-        }
+
+      if (name === 'end_time') {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          if (formData.start_time && value <= formData.start_time) {
+            newErrors.end_time = "O horário de fim deve ser posterior ao horário de início";
+          } else {
+            delete newErrors.end_time;
+          }
+          return newErrors;
+        });
       }
     }
 
-    // Limpar erro do campo quando o usuário começar a digitar
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ""
-      }));
+    // Limpar erros de campos de texto ou numéricos ao digitar
+    if (type !== 'date' && type !== 'time') {
+      if (errors[name]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[name];
+          return newErrors;
+        });
+      }
     }
   };
 
-  // Submeter formulário
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
-    // Verificar se a sala selecionada ainda está disponível
     if (selectedRoom && !isRoomAvailable(selectedRoom)) {
       setError("Esta sala não está mais disponível no horário selecionado. Por favor, escolha outra sala.");
       return;
@@ -609,13 +558,10 @@ const NovaReserva = ({
       setFormLoading(true);
       setError("");
 
-      // O título sempre será o nome do projeto selecionado (validado antes)
       const selectedProject = myProjects.find(p => p.id === formData.project_id);
-
-      // Criar datas ISO considerando o horário como sendo de Brasília
       const startTimeISO = createBrazilDateTimeISO(formData.date, formData.start_time);
       const endTimeISO = createBrazilDateTimeISO(formData.date, formData.end_time);
-      const recurrenceEndDateISO = formData.is_recurring && formData.recurrence_end_date 
+      const recurrenceEndDateISO = formData.is_recurring && formData.recurrence_end_date
         ? createBrazilDateTimeISO(formData.recurrence_end_date, "23:59")
         : null;
 
@@ -634,14 +580,13 @@ const NovaReserva = ({
       };
 
       const result = await createReservation(reservationData);
-      
+
       setCreatedReservation(result);
       setShowModal(true);
-      
+
       await loadData();
       resetForm();
 
-      // Callback para componente pai
       if (onReservationCreated) {
         onReservationCreated(result);
       }
@@ -653,7 +598,6 @@ const NovaReserva = ({
     }
   };
 
-  // Resetar formulário
   const resetForm = () => {
     setFormData({
       project_id: "",
@@ -672,12 +616,12 @@ const NovaReserva = ({
         air_conditioning: false
       }
     });
-    setSearchProjectText(""); // Limpar busca ao resetar
+    setSearchProjectText("");
     setSelectedRoom(null);
+    setSearchCriteria(null);
     setErrors({});
   };
 
-  // Validar formulário
   const validateForm = () => {
     const newErrors = {};
 
@@ -692,12 +636,9 @@ const NovaReserva = ({
     if (!formData.date) {
       newErrors.date = "Data é obrigatória";
     } else {
-      // Validar se a data é anterior à data atual usando timezone de Brasília
       if (isDateInPast(formData.date)) {
         newErrors.date = "A data não pode ser anterior a hoje";
       }
-      
-      // Validar se o ano tem exatamente 4 dígitos
       const year = formData.date.split('-')[0];
       if (year && (year.length !== 4 || isNaN(parseInt(year)))) {
         newErrors.date = "Ano deve ter 4 dígitos";
@@ -707,19 +648,10 @@ const NovaReserva = ({
     if (!formData.start_time) {
       newErrors.start_time = "Horário de início é obrigatório";
     } else if (formData.date) {
-      // Se a data for hoje, verificar se o horário é futuro
       const selectedDate = new Date(formData.date + 'T00:00:00');
       const now = getBrazilNow();
       const isToday = isSameDate(selectedDate, now);
-      
-      console.log('🕐 Validação final de horário:', {
-        data_selecionada: formData.date,
-        selectedDate: selectedDate.toISOString(),
-        now: now.toISOString(),
-        isToday,
-        horario: formData.start_time
-      });
-      
+
       if (isToday) {
         const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         if (formData.start_time <= currentTime) {
@@ -758,36 +690,30 @@ const NovaReserva = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handler para mudanças no campo de projeto
-  // Handler para buscar/filtrar projetos no dropdown
   const handleProjectSearchChange = (e) => {
     const value = e.target.value;
     setSearchProjectText(value);
     setShowProjectDropdown(true);
   };
 
-  // Handler para selecionar um projeto do dropdown
   const selectProject = (project) => {
     setFormData(prev => ({
       ...prev,
       project_text: project.name,
       project_id: project.id
     }));
-    setSearchProjectText(""); // Limpar busca
+    setSearchProjectText("");
     setShowProjectDropdown(false);
   };
 
-  // Handler para abrir o dropdown ao focar no campo
   const handleProjectFieldFocus = () => {
     if (!formData.project_id) {
-      // Se não há projeto selecionado, mostrar todos
       setSearchProjectText("");
       setFilteredProjects(myProjects);
     }
     setShowProjectDropdown(true);
   };
 
-  // Handler para limpar seleção
   const handleClearProject = (e) => {
     e.stopPropagation();
     setFormData(prev => ({
@@ -798,6 +724,14 @@ const NovaReserva = ({
     setSearchProjectText("");
     setShowProjectDropdown(true);
   };
+
+  const isSearchReady =
+    formData.date &&
+    formData.start_time &&
+    formData.end_time &&
+    formData.people_count &&
+    (!formData.is_recurring || (formData.recurrence_end_date && formData.recurrence_frequency)) &&
+    Object.values(errors).every(errorValue => !errorValue);
 
   if (loading) {
     return (
@@ -837,7 +771,6 @@ const NovaReserva = ({
         <SuccessToast message={successMessage} onClose={() => setSuccessMessage("")} />
         <ErrorMessage error={error} />
 
-        
         {/* Layout Principal - Formulário e Calendário */}
         <div className="flex flex-col md:flex-row gap-4 md:gap-8">
           {/* Formulário de Criação */}
@@ -856,7 +789,7 @@ const NovaReserva = ({
                 onClearProject={handleClearProject}
                 onToggleDropdown={setShowProjectDropdown}
               />
-              
+
               <FormFields
                 formData={formData}
                 errors={errors}
@@ -881,6 +814,27 @@ const NovaReserva = ({
               onDateSelect={handleDateSelect}
               getRecurringDays={getRecurringDays}
             />
+
+            <div className="bg-white rounded-lg shadow-sm border p-3 md:p-4">
+              <button
+                type="button"
+                onClick={handleSearchRooms}
+                disabled={!isSearchReady || isSearchingRooms}
+                className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors focus:outline-none flex justify-center items-center gap-2 ${isSearchReady && !isSearchingRooms
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
+                  : 'bg-blue-50 text-blue-300 cursor-not-allowed'
+                  }`}
+              >
+                {isSearchingRooms ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    Buscando...
+                  </>
+                ) : (
+                  "Buscar por salas"
+                )}
+              </button>
+            </div>
 
             <AvailableRoomsGrid
               availableRooms={availableRooms}
