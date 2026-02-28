@@ -1,5 +1,6 @@
 import React from "react";
 import { Monitor, Wifi, AirVent } from "lucide-react";
+import { getBrazilNow } from "../../utils/dateUtils";
 
 const FormFields = ({
   formData,
@@ -18,6 +19,9 @@ const FormFields = ({
     color: "#535964",
   };
 
+  const todayBrazil = getBrazilNow();
+  const todayString = `${todayBrazil.getFullYear()}-${String(todayBrazil.getMonth() + 1).padStart(2, '0')}-${String(todayBrazil.getDate()).padStart(2, '0')}`;
+
   return (
     <>
       {/* Descrição */}
@@ -30,9 +34,8 @@ const FormFields = ({
           value={formData.description}
           onChange={handleInputChange}
           rows={3}
-          className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 resize-none ${
-            errors.description ? "border-red-500" : ""
-          }`}
+          className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 resize-none ${errors.description ? "border-red-500" : ""
+            }`}
           style={{
             borderBottomColor: errors.description ? "#ef4444" : "#E3E5E8"
           }}
@@ -52,11 +55,10 @@ const FormFields = ({
             name="date"
             value={formData.date}
             onChange={handleInputChange}
-            min={new Date().toISOString().split('T')[0]}
+            min={todayString}
             max="2099-12-31"
-            className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
-              errors.date ? "border-red-500" : ""
-            }`}
+            className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${errors.date ? "border-red-500" : ""
+              }`}
             style={{
               borderBottomColor: errors.date ? "#ef4444" : "#E3E5E8"
             }}
@@ -72,9 +74,8 @@ const FormFields = ({
             name="start_time"
             value={formData.start_time}
             onChange={handleInputChange}
-            className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
-              errors.start_time ? "border-red-500" : ""
-            }`}
+            className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${errors.start_time ? "border-red-500" : ""
+              }`}
             style={{
               borderBottomColor: errors.start_time ? "#ef4444" : "#E3E5E8"
             }}
@@ -90,9 +91,8 @@ const FormFields = ({
             name="end_time"
             value={formData.end_time}
             onChange={handleInputChange}
-            className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
-              errors.end_time ? "border-red-500" : ""
-            }`}
+            className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${errors.end_time ? "border-red-500" : ""
+              }`}
             style={{
               borderBottomColor: errors.end_time ? "#ef4444" : "#E3E5E8"
             }}
@@ -112,9 +112,8 @@ const FormFields = ({
             max="999"
             maxLength="3"
             placeholder="0"
-            className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${
-              errors.people_count ? "border-red-500" : ""
-            }`}
+            className={`w-full py-2 border-0 border-b focus:outline-none focus:border-blue-500 ${errors.people_count ? "border-red-500" : ""
+              }`}
             style={{
               borderBottomColor: errors.people_count ? "#ef4444" : "#E3E5E8"
             }}
